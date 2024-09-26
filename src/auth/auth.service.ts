@@ -1,4 +1,4 @@
-import { Injectable, ConflictException, UnauthorizedException } from '@nestjs/common';
+import { Injectable, ConflictException, UnauthorizedException, BadRequestException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model, Types } from 'mongoose';
@@ -13,6 +13,16 @@ export class AuthService {
   ) {}
 
   async signin(username: string, password: string) {
+    const usernameRegex = /^[a-zA-Z0-9]{4,}$/;
+    if (!usernameRegex.test(username)) {
+      throw new BadRequestException('Username must be at least 4 characters long and cannot contain special characters.');
+    }
+
+    const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\W)[a-zA-Z\d\W]{6,}$/;
+    if (!passwordRegex.test(password)) {
+      throw new BadRequestException('Password must be at least 6 characters long, include at least one uppercase letter, one lowercase letter, and one special character.');
+    }
+    
     const existingUser = await this.userModel.findOne({ username });
     if (existingUser) {
       throw new ConflictException('This user already exists');
