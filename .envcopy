@@ -1,0 +1,2 @@
+MONGO_URI=mongodb+srv://solvd-team-3:2prHVO2HGozJkXOh@solvd-project.e9zpm.mongodb.net/aliasGame?retryWrites=true&w=majority&appName=solvd-project
+JWT_SECRET=9XEvn7G-Ip56QBVEo9cD4xC5BqtBTMyLGC5aj3Qcs1s=
