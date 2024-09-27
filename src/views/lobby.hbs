@@ -1,0 +1,30 @@
+<html lang='en'>
+  <head>
+    <meta charset='UTF-8' />
+    <meta name='viewport' content='width=device-width, initial-scale=1.0' />
+    <title>Alias Game - Lobby</title>
+    <script src='/socket.io/socket.io.js'></script>
+    <script src='/js/lobby.js'>
+    </script>
+  </head>
+  <body>
+    <h1>Welcome to the Alias Game Lobby</h1>
+
+    <button onclick='createRoom()'>Create Room</button>
+
+    <h2>Available Rooms</h2>
+
+    <ul id='room-list'>
+      {{!-- {{#each rooms}}
+        <li>
+          <button onclick="joinRoom('{{this.id}}')">Join Room:
+            {{this.id}}</button>
+        </li>
+      {{/each}} --}}
+    </ul>
+
+    <script>
+      document.addEventListener('DOMContentLoaded', () => { fetchRooms(); });
+    </script>
+  </body>
+</html>
