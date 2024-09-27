@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Login</title>
+</head>
+<body>
+  <h1>Login</h1>
+  <div id="message" style="color: green; display: none">Logged in successfully!</div>
+
+  <form id="loginForm">
+    <div>
+      <label for="username">Username:</label>
+      <input type="text" id="username" name="username" required>
+    </div>
+    <div>
+      <label for="password">Password:</label>
+      <input type="password" id="password" name="password" required>
+    </div>
+    <button type="submit">Login</button>
+  </form>
+
+  <script>
+    document.getElementById('loginForm').addEventListener('submit', async (e) => {
+      e.preventDefault()
+
+      const username = document.getElementById('username').value;
+      const password = document.getElementById('password').value;
+
+      try {
+        const response = await fetch('/auth/login', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ username, password }),
+        })
+
+        const data = await response.json()
+
+        if(response.ok) {
+          //Success message
+          document.getElementById('message').style.display = 'block';
+
+          //Redirect after a delay
+          setTimeout(() => {
+            window.location.href = 'dashboard'
+          }, 1000)
+        } else {
+          alert('Wrong credentials: ' + data.message)
+        }
+      } catch (error) {
+        console.error('Error logging in: ', error)
+        alert('An error occurred while logging in')
+      }
+    })
+  </script>
+</body>
+</html>
