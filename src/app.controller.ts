@@ -16,8 +16,8 @@ export class AppController {
   @Get()
   @Render('lobby')
   getLobby() {
-    const rooms: Room[] = this.lobbyService.getAllRooms();
-    console.log('Rendering lobby with rooms:', rooms);
+    // const rooms: Room[] = this.lobbyService.getAllRooms();
+    // console.log('Rendering lobby with rooms:', rooms);
     // return { rooms }
     return {};
   }
