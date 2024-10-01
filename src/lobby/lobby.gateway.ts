@@ -29,7 +29,7 @@ export class LobbyGateway implements OnGatewayConnection, OnGatewayDisconnect {
   constructor(private readonly lobbyService: LobbyService) {}
 
   handleConnection(client: Socket): void {
-    console.log(`Client connected: ${client.id}`);
+    console.log(`Client connected in lobby: ${client.id}`);
 
     const games = this.lobbyService.getSerializedGames();
     client.emit('games:updated', games);
@@ -37,7 +37,7 @@ export class LobbyGateway implements OnGatewayConnection, OnGatewayDisconnect {
   }
 
   handleDisconnect(client: Socket): void {
-    console.log(`Client disconnected: ${client.id}`);
+    console.log(`Client disconnected from lobby: ${client.id}`);
   }
 
   @SubscribeMessage('game:create')

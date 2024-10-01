@@ -1,4 +1,4 @@
-export const MAX_USERS = 4;
+export const MAX_USERS = 6;
 export const JOIN_TIMEOUT = 5000;
 
 export interface Game {

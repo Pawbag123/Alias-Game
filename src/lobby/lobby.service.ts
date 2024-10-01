@@ -12,6 +12,7 @@ import { plainToClass } from 'class-transformer';
 import { CreateGameDto } from './dto/create-game-dto';
 import { MAX } from 'class-validator';
 import { JoinGameDto } from './dto/join-game-dto';
+import { GameRoomDto } from 'src/game-room/dto/game-room-dto';
 
 @Injectable()
 export class LobbyService {
@@ -146,6 +147,163 @@ export class LobbyService {
 
     //* Add current socket ID to user
     user.socketId = socketId;
+  }
+
+  displayGames(): void {
+    console.log('Games:', this.games);
+  }
+
+  displayActiveUsers(): void {
+    console.log('Active users:', this.activeUsers);
+  }
+
+  removePlayerFromGame(gameId: string, userId: string): void {
+    console.log('in remove');
+    this.displayGames();
+    this.displayActiveUsers();
+    const game = this.games.find((game) => game.id === gameId);
+    if (!game) {
+      throw new Error('Game not found');
+    }
+
+    const user = this.activeUsers.find((user) => user.id === userId);
+    if (!user) {
+      throw new Error('User not found');
+    }
+
+    if (user.gameId !== gameId) {
+      throw new Error('User not in this game');
+    }
+
+    //* Remove user from game
+    game.redTeam = game.redTeam.filter((id) => id !== userId);
+    game.blueTeam = game.blueTeam.filter((id) => id !== userId);
+    game.noTeam = game.noTeam.filter((id) => id !== userId);
+
+    this.activeUsers = this.activeUsers.filter((user) => user.id !== userId);
+
+    if (
+      game.host === userId &&
+      game.redTeam.length + game.blueTeam.length + game.noTeam.length > 0
+    ) {
+      game.host = game.redTeam[0] || game.blueTeam[0] || game.noTeam[0];
+    } else if (
+      game.redTeam.length + game.blueTeam.length + game.noTeam.length ===
+      0
+    ) {
+      this.removeGameRoom(gameId);
+    }
+
+    //* Remove user from active users
+  }
+
+  removeGameRoom(gameId: string): void {
+    this.games = this.games.filter((game) => game.id !== gameId);
+    this.activeUsers = this.activeUsers.filter(
+      (user) => user.gameId !== gameId,
+    );
+  }
+
+  joinRedTeam(gameId: string, userId: string): void {
+    const game = this.games.find((game) => game.id === gameId);
+    if (!game) {
+      throw new Error('Game not found');
+    }
+
+    if (
+      !(
+        game.redTeam.includes(userId) ||
+        game.blueTeam.includes(userId) ||
+        game.noTeam.includes(userId)
+      )
+    ) {
+      throw new Error('User not allowed to join game');
+    }
+
+    if (game.noTeam.includes(userId)) {
+      game.noTeam = game.noTeam.filter((id) => id !== userId);
+      game.redTeam.push(userId);
+    } else if (game.blueTeam.includes(userId)) {
+      game.blueTeam = game.blueTeam.filter((id) => id !== userId);
+      game.redTeam.push(userId);
+    }
+  }
+
+  joinBlueTeam(gameId: string, userId: string): void {
+    const game = this.games.find((game) => game.id === gameId);
+    if (!game) {
+      throw new Error('Game not found');
+    }
+
+    if (
+      !(
+        game.redTeam.includes(userId) ||
+        game.blueTeam.includes(userId) ||
+        game.noTeam.includes(userId)
+      )
+    ) {
+      throw new Error('User not allowed to join game');
+    }
+
+    if (game.noTeam.includes(userId)) {
+      game.noTeam = game.noTeam.filter((id) => id !== userId);
+      game.blueTeam.push(userId);
+    } else if (game.redTeam.includes(userId)) {
+      game.redTeam = game.redTeam.filter((id) => id !== userId);
+      game.blueTeam.push(userId);
+    }
+  }
+
+  findUserBySocketId(socketId: string): ActiveUser {
+    console.log('users:', this.activeUsers);
+    return this.activeUsers.find((user) => user.socketId === socketId);
+  }
+
+  gameExists(gameId: string): boolean {
+    return this.games.some((game) => game.id === gameId);
+  }
+
+  getSerializedGameRoom(gameId: string): GameRoomDto {
+    const game = this.getGameById(gameId);
+
+    let redTeamNames, blueTeamNames, noTeamNames;
+
+    if (game.redTeam) {
+      redTeamNames = game.redTeam.map((userId) => {
+        const user = this.getActiveUserById(userId);
+        return user ? user.name : 'Unknown';
+      });
+    } else {
+      redTeamNames = [];
+    }
+
+    if (game.blueTeam) {
+      blueTeamNames = game.blueTeam.map((userId) => {
+        const user = this.getActiveUserById(userId);
+        return user ? user.name : 'Unknown';
+      });
+    } else {
+      blueTeamNames = [];
+    }
+
+    if (game.noTeam) {
+      noTeamNames = game.noTeam.map((userId) => {
+        const user = this.getActiveUserById(userId);
+        return user ? user.name : 'Unknown';
+      });
+    } else {
+      noTeamNames = [];
+    }
+
+    return plainToClass(GameRoomDto, {
+      id: game.id,
+      name: game.name,
+      host: game.host,
+      isGameStarted: game.isGameStarted,
+      redTeam: redTeamNames,
+      blueTeam: blueTeamNames,
+      noTeam: noTeamNames,
+    });
   }
 
   getSerializedGames(): InLobbyGameDto[] {

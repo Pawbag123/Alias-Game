@@ -107,6 +107,7 @@ function createGame() {
   socket.emit('game:create', {
     userId,
     userName,
+    gameName: `${userName}'s Game`,
   });
 }
 
