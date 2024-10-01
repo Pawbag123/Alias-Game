@@ -9,12 +9,15 @@ import {
 } from '@nestjs/websockets';
 import { Server, Socket } from 'socket.io';
 import { LobbyService } from './lobby.service';
-import { CreateRoomDto } from './dto/create-room-dto';
-import { JoinRoomDto } from './dto/join-room-dto';
-import { InGameUser, UserTeam } from './types';
+import { UseInterceptors } from '@nestjs/common';
+import { GameSerializationInterceptor } from 'src/interceptors/game-serialization.interceptor';
+import { CreateGameDto } from './dto/create-game-dto';
+import { JoinGameDto } from './dto/join-game-dto';
+import { join } from 'path';
 
 //TODO: add error emitters, handlers, try catch blocks
 @WebSocketGateway({
+  namespace: '/lobby',
   cors: {
     origin: '*',
   },
@@ -27,142 +30,58 @@ export class LobbyGateway implements OnGatewayConnection, OnGatewayDisconnect {
 
   handleConnection(client: Socket): void {
     console.log(`Client connected: ${client.id}`);
+
+    const games = this.lobbyService.getSerializedGames();
+    client.emit('games:updated', games);
+    console.log('Emitting games:', games);
   }
 
-  //TODO: add leaving room logic
   handleDisconnect(client: Socket): void {
     console.log(`Client disconnected: ${client.id}`);
   }
 
-  @SubscribeMessage('createRoom')
-  handleCreateRoom(
+  @SubscribeMessage('game:create')
+  handleGameCreate(
     @ConnectedSocket() client: Socket,
-    @MessageBody() createRoomDto: CreateRoomDto,
+    @MessageBody() createGameDto: CreateGameDto,
   ): void {
-    // TODO: leaving logic if user is in other room
-    // Create new room
-    const newRoom = this.lobbyService.createRoom(createRoomDto, client.id);
+    console.log('Creating game:', createGameDto);
 
-    console.log('Room created:', newRoom);
+    try {
+      const gameId = this.lobbyService.createGame(createGameDto);
 
-    // join socket room
-    client.join(newRoom.id);
+      const games = this.lobbyService.getSerializedGames();
 
-    // Emit roomCreated event to the client that created the room
-    client.emit('roomCreated', newRoom);
+      client.emit('game:created', gameId);
 
-    console.log('Emitted roomCreated event for:', newRoom.id);
-
-    const allRooms = this.lobbyService.getAllRooms();
-
-    // Emit updated rooms list to all clients
-    this.server.emit('updateRooms', allRooms);
-
-    console.log('Emitted updated rooms list:', allRooms);
+      this.server.emit('games:updated', games);
+    } catch (error) {
+      console.log('Error creating game:', error);
+      client.emit('game:create:error', error.message);
+    }
   }
 
-  @SubscribeMessage('getRooms')
-  handleGetRooms(@ConnectedSocket() client: Socket): void {
-    const allRooms = this.lobbyService.getAllRooms();
-
-    // Emit roomsList event to the client that requested rooms
-    client.emit('roomsList', allRooms);
-
-    console.log('Client requested rooms, sent rooms list:', allRooms);
-  }
-
-  @SubscribeMessage('joinRoom')
-  handleJoinRoom(
+  @SubscribeMessage('game:join')
+  handleGameJoin(
     @ConnectedSocket() client: Socket,
-    @MessageBody() joinRoomDto: JoinRoomDto,
+    @MessageBody() joinGameDto: JoinGameDto,
   ): void {
-    const { roomId, userId, userName } = joinRoomDto;
+    console.log('Joining game:', joinGameDto.gameId);
 
-    console.log(
-      `Client ${userName} (${userId}) is attempting to join room: ${roomId}`,
-    );
-    // TODO: add leaving logic if user is in other room
+    try {
+      this.lobbyService.joinGame(joinGameDto, () => {
+        const games = this.lobbyService.getSerializedGames();
+        this.server.emit('games:updated', games);
+      });
 
-    const room = this.lobbyService.findRoomById(roomId);
+      const games = this.lobbyService.getSerializedGames();
 
-    // TODO: add validation if user is in the same room
-    // validate if room exists
-    if (!room) {
-      client.emit('joinError', `Room ${roomId} not found`);
-      console.log(`Room ${roomId} not found`);
-      return;
+      client.emit('game:joined', joinGameDto.gameId);
+
+      this.server.emit('games:updated', games);
+    } catch (error) {
+      console.log('Error joining game:', error);
+      client.emit('game:join:error', error.message);
     }
-
-    // validate if room is full
-    if (room.users.length >= room.maxUsers) {
-      client.emit('joinError', `Room ${roomId} is full`);
-      console.log(`Room ${roomId} is full`);
-      return;
-    }
-
-    // Create new user
-    const newUser: InGameUser = {
-      id: userId,
-      socketId: client.id,
-      name: userName,
-      isHost: false,
-      team: UserTeam.NONE,
-    };
-
-    // Add user to room
-    this.lobbyService.addUserToRoom(roomId, newUser);
-
-    // Join socket room
-    client.join(roomId);
-
-    // Emit roomJoined event to the client that joined the room
-    client.emit('roomJoined', room);
-
-    // Emit updateRooms event to all clients
-    this.server.emit('updateRooms', this.lobbyService.getAllRooms());
-
-    // Emit updateRoom event to all remaining clients in the room
-    client.broadcast.to(roomId).emit('updateRoom', room);
-
-    console.log(`Client ${userName} (${userId}) joined room: ${roomId}`);
-  }
-
-  @SubscribeMessage('leaveRoom')
-  handleLeaveRoom(
-    @ConnectedSocket() client: Socket,
-    @MessageBody() roomId: string,
-  ): void {
-    const user = this.lobbyService.findUserBySocketId(client.id, roomId);
-
-    if (!user) {
-      client.emit('leaveError', 'User not found');
-      console.log('User not found');
-      return;
-    }
-
-    const room = this.lobbyService.findRoomById(roomId);
-
-    if (!room) {
-      client.emit('leaveError', `Room ${roomId} not found`);
-      console.log(`Room ${roomId} not found`);
-      return;
-    }
-
-    // remove user from room data
-    this.lobbyService.removeUserFromRoom(roomId, user.socketId);
-
-    // leave socket room
-    client.leave(roomId);
-
-    // emit roomLeft event to the client that left the room
-    client.emit('roomLeft', roomId);
-
-    // broadcast updateRoom event to all remaining clients in the room
-    client.broadcast.to(roomId).emit('updateRoom', room);
-
-    // emit updateRooms event to all clients
-    this.server.emit('updateRooms', this.lobbyService.getAllRooms());
-
-    console.log(`Client ${user.name} (${user.id}) left room: ${roomId}`);
   }
 }

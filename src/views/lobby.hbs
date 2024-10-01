@@ -4,29 +4,30 @@
     <meta name='viewport' content='width=device-width, initial-scale=1.0' />
     <title>Alias Game - Lobby</title>
     <script src='/socket.io/socket.io.js'></script>
-    <script src='/js/lobby.js'>
-    </script>
+    <script
+      src='https://cdn.jsdelivr.net/npm/handlebars@latest/dist/handlebars.js'
+    ></script>
+    <script src='/js/lobby.js' defer></script>
   </head>
   <body>
     <h1>Welcome to the Alias Game Lobby</h1>
 
-    <button onclick='createRoom()'>Create Room</button>
+    <!-- Placeholder for the dynamic content rendered by Handlebars -->
+    <div id='content'></div>
 
-    <h2>Available Rooms</h2>
+    <!-- Handlebars template for the user info form -->
+    <script id='user-info-template' type='text/x-handlebars-template'>
+      <div id="user-info-form"> <label for="user-id">Enter your ID:</label>
+      <input type="text" id="user-id" required /> <br /> <label
+      for="user-name">Enter your Name:</label> <input type="text" id="user-name"
+      required /> <br /> <button onclick="saveUserInfo()">Join Lobby</button>
+      </div>
+    </script>
 
-    <ul id='room-list'>
-      {{!-- {{#each rooms}}
-        <li>
-          <button onclick="joinRoom('{{this.id}}')">Join Room:
-            {{this.id}}</button>
-        </li>
-      {{/each}} --}}
-    </ul>
-
-    <div id='room'></div>
-
-    {{! <script>
-      //document.addEventListener('DOMContentLoaded', () => { fetchRooms(); });
-    </script> }}
+    <!-- Handlebars template for the lobby content -->
+    <script id='lobby-template' type='text/x-handlebars-template'>
+      <h2>Available Games</h2> <ul id="game-list"></ul> <div id="game"></div>
+      </div>
+    </script>
   </body>
 </html>

@@ -2,7 +2,7 @@ import { Controller, Get, Param, Render } from '@nestjs/common';
 import { AppService } from './app.service';
 import { LobbyService } from './lobby/lobby.service';
 
-interface Room {
+interface Game {
   id: string;
 }
 
@@ -16,15 +16,15 @@ export class AppController {
   @Get()
   @Render('lobby')
   getLobby() {
-    // const rooms: Room[] = this.lobbyService.getAllRooms();
-    // console.log('Rendering lobby with rooms:', rooms);
-    // return { rooms }
+    // const games: Game[] = this.lobbyService.getAllGames();
+    // console.log('Rendering lobby with games:', games);
+    // return { games }
     return {};
   }
 
-  @Get('room/:roomId')
-  @Render('room')
-  getRoom(@Param('roomId') roomId: string) {
-    return { roomId }; // Return room ID for rendering
+  @Get('game/:gameId')
+  @Render('game-room')
+  getGame(@Param('gameId') gameId: string) {
+    return { gameId }; // Return game ID for rendering
   }
 }

@@ -1,6 +1,6 @@
 import { IsString, IsNotEmpty } from 'class-validator';
 
-export class CreateRoomDto {
+export class JoinGameDto {
   @IsString()
   @IsNotEmpty()
   userId: string;
@@ -11,5 +11,5 @@ export class CreateRoomDto {
 
   @IsString()
   @IsNotEmpty()
-  roomName: string;
+  gameId: string;
 }
