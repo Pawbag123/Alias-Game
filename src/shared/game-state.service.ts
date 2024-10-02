@@ -4,10 +4,14 @@ import { GameRoomDto } from 'src/game-room/dto/game-room-dto';
 import { InLobbyGameDto } from 'src/lobby/dto/in-lobby-game-dto';
 import { ActiveUser, DUMMY_GAMES, DUMMY_USERS, Game } from 'src/lobby/types';
 
+/**
+ * Service that handles the state of the game,
+ * so it stores all real-time data about the games and users
+ */
 @Injectable()
 export class GameStateService {
-  private games: Game[] = DUMMY_GAMES;
-  private activeUsers: ActiveUser[] = DUMMY_USERS;
+  private games: Game[] = [];
+  private activeUsers: ActiveUser[] = [];
 
   getAllGames(): Game[] {
     return [...this.games];
@@ -21,7 +25,7 @@ export class GameStateService {
     return this.activeUsers.find((user) => user.id === userId);
   }
 
-  checkIfUserIsInGame(userId: string): boolean {
+  isUserActive(userId: string): boolean {
     return this.activeUsers.some((user) => user.id === userId);
   }
 
@@ -170,9 +174,30 @@ export class GameStateService {
     return this.games.some((game) => game.id === gameId);
   }
 
+  /**
+   * Function that is called when an user doesn't join a game from the lobby
+   * after creation of a game in a certain amount of time
+   * @param userId - id of the user that didn't join
+   * @param gameId - id of the game that the user didn't join
+   * @param emitGamesUpdated - function to emit updated games to all clients
+   */
+  handleUserCreateGameTimeout(
+    userId: string,
+    gameId: string,
+    emitGamesUpdated: () => void,
+  ): void {
+    // this.activeUsers = this.activeUsers.filter(
+    //   (user) => user.id !== userId && user.gameId !== gameId,
+    // );
+    // const game = this.games.find((game) => game.id === gameId);
+    // game.noTeam = game.noTeam.filter((id) => id !== userId);
+
+    emitGamesUpdated();
+  }
+
   //TODO: implement handlers for edge cases
   /**
-   * Function that is called when a user doesn't join a game from the lobby in a certain amount of time
+   * Function that is called when an user doesn't join a game from the lobby in a certain amount of time
    * it removes the user from the game and the active users array
    * and then emits passed function to emit games updated to all clients
    * @param userId - id of the user that didn't join

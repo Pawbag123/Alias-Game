@@ -31,7 +31,7 @@ export class LobbyService {
    * @returns id of created games
    */
   createGame({ gameName, userId, userName }: CreateGameDto): string {
-    if (this.gameStateService.checkIfUserIsInGame(userId)) {
+    if (this.gameStateService.isUserActive(userId)) {
       throw new Error('User already in game');
     }
 
@@ -90,7 +90,7 @@ export class LobbyService {
     emitGamesUpdated: () => void,
   ): void {
     // if (this.gameStateService.activeUsers.find((user) => user.id === userId)) {
-    if (this.gameStateService.checkIfUserIsInGame(userId)) {
+    if (this.gameStateService.isUserActive(userId)) {
       throw new Error('User already in game');
     }
 

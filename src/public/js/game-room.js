@@ -2,11 +2,73 @@ let socket;
 
 const gameRoomId = window.location.pathname.split('/').pop();
 
-let gameRoomTemplateHbs =
-  "<body> <h1>Game Room:{{name}}</h1> <div style='display: flex; justify-content:space-around;'> <div> <h2>Red Team</h2> <button id='join-red-team-button' onclick='joinRedTeam()'>Join Red Team</button> <ul id='red-team'>{{#each redTeam}}<li>{{this}}</li>{{/each}}</ul> </div> <div> <h2>Blue Team</h2> <button id='join-blue-team-button' onclick='joinBlueTeam()'>Join Blue Team</button> <ul id='blue-team'>{{#each blueTeam}}<li>{{this}}</li>{{/each}}</ul> </div> <div> <h2>No Team</h2> <ul id='no-team'>{{#each noTeam}}<li>{{this}}</li>{{/each}}</ul> </div> </div> <button id='leave-game-button' onclick='leaveRoom()'>Leave Game</button>{{#if isHost}}<button id='start-game-button'>Start Game</button>{{/if}} </body>";
+// handlebars templates, compilation and render functions
+const gameRoomTemplateHbs = `<body> 
+  <h1>Game Room:{{name}}</h1>
+  <div style='display: flex; justify-content:space-around;'>
+    <div> 
+      <h2>Red Team</h2> 
+      <button id='join-red-team-button' onclick='joinRedTeam()'>Join Red Team</button>
+      <ul id='red-team'>
+        {{#each redTeam}}
+        <li>
+          {{this}}
+        </li>
+        {{/each}}
+      </ul> 
+    </div> 
+    <div> 
+      <h2>Blue Team</h2> 
+      <button id='join-blue-team-button' onclick='joinBlueTeam()'>Join Blue Team</button> 
+      <ul id='blue-team'>
+        {{#each blueTeam}}
+        <li>
+          {{this}}
+        </li>
+        {{/each}}
+      </ul> 
+    </div> 
+    <div> 
+      <h2>No Team</h2>
+      <ul id='no-team'>
+        {{#each noTeam}}
+        <li>
+          {{this}}
+        </li>
+        {{/each}}
+      </ul> 
+    </div> 
+  </div> 
+  <button id='leave-game-button' onclick='leaveRoom()'>Leave Game</button>
+  {{#if isHost}}<button id='start-game-button'>Start Game</button>{{/if}} 
+  </body>`;
 
-let errorTemplateHbs = '<body> <h1>Error</h1> <p>{{errorMessage}}</p> </body>';
-let loadingTemplateHbs = '<body> <h1>Loading...</h1> </body>';
+const errorTemplateHbs =
+  '<body> <h1>Error</h1> <p>{{errorMessage}}</p> </body>';
+const loadingTemplateHbs = '<body> <h1>Loading...</h1> </body>';
+
+const errorTemplate = Handlebars.compile(errorTemplateHbs);
+const loadingTemplate = Handlebars.compile(loadingTemplateHbs);
+const gameRoomTemplate = Handlebars.compile(gameRoomTemplateHbs);
+
+const renderError = (message) => {
+  console.log('Error Message: ', message);
+  const contentDiv = document.getElementById('content');
+  contentDiv.innerHTML = errorTemplate({ errorMessage: message });
+};
+
+const renderLoading = () => {
+  const contentDiv = document.getElementById('content');
+  contentDiv.innerHTML = loadingTemplate();
+};
+
+const renderGameRoom = (gameRoom) => {
+  const isHost = gameRoom.host === localStorage.getItem('userId');
+  const contentDiv = document.getElementById('content');
+  contentDiv.innerHTML = '';
+  console.log('Game Room: ', gameRoom);
+  contentDiv.innerHTML = gameRoomTemplate({ ...gameRoom, isHost });
+};
 
 function getUserInfo() {
   const userId = localStorage.getItem('userId');
@@ -32,61 +94,7 @@ function joinBlueTeam() {
   console.log('joining blue team');
 }
 
-const errorTemplate = Handlebars.compile(
-  //   document.getElementById('error-template').innerHTML,
-  errorTemplateHbs,
-);
-
-// const renderError = (message) => {
-//   const contentDiv = document.getElementById('content');
-//   contentDiv.innerHTML = errorTemplate({ errorMessage: message });
-// };
-
-const renderError = (message) => {
-  console.log('Error Message: ', message); // Add this for debugging
-  const contentDiv = document.getElementById('content');
-  contentDiv.innerHTML = errorTemplate({ errorMessage: message });
-};
-
-const loadingTemplate = Handlebars.compile(
-  //   document.getElementById('loading-template').innerHTML,
-  loadingTemplateHbs,
-);
-
-const renderLoading = () => {
-  const contentDiv = document.getElementById('content');
-  contentDiv.innerHTML = loadingTemplate();
-};
-
-const gameRoomTemplate = Handlebars.compile(
-  //   document.getElementById('game-room-template').innerHTML,
-  gameRoomTemplateHbs,
-);
-
-const renderGameRoom = (gameRoom) => {
-  const isHost = gameRoom.host === localStorage.getItem('userId');
-  const contentDiv = document.getElementById('content');
-  contentDiv.innerHTML = '';
-  console.log('Game Room: ', gameRoom);
-  contentDiv.innerHTML = gameRoomTemplate({ ...gameRoom, isHost });
-};
-
-const initGameRoom = () => {
-  renderLoading();
-  const { userId, userName } = getUserInfo();
-
-  if (userId && userName) {
-    startGameRoom(userId, userName);
-    // renderGameRoom({
-    //   gameRoomName: 'The Beatles',
-    //   blueTeam: ['john', 'paul'],
-    //   redTeam: ['george', 'ringo'],
-    // });
-  } else {
-    renderError('User info not found');
-  }
-};
-
+// Socket.io connection and event handling
 const startGameRoom = (userId, userName) => {
   socket = io('/game-room', {
     query: { userId, gameId: gameRoomId },
@@ -118,6 +126,17 @@ const startGameRoom = (userId, userName) => {
       console.error('Error starting game room:', error);
     });
   });
+};
+
+const initGameRoom = () => {
+  renderLoading();
+  const { userId, userName } = getUserInfo();
+
+  if (userId && userName) {
+    startGameRoom(userId, userName);
+  } else {
+    renderError('User info not found');
+  }
 };
 
 window.onload = initGameRoom;

@@ -1,6 +1,17 @@
 export const MAX_USERS = 6;
 export const JOIN_TIMEOUT = 5000;
 
+/**
+ * Type for storing game data
+ * @property {string} id - game id
+ * @property {string} name - game name
+ * @property {string} host - user id of the game host
+ * @property {boolean} isGameStarted - flag indicating if the game has started
+ * @property {string[]} redTeam - array of user ids in the red team
+ * @property {string[]} blueTeam - array of user ids in the blue team
+ * @property {string[]} noTeam - array of user ids not in any team
+ * @property {number} maxUsers - maximum number of users in the game
+ */
 export interface Game {
   id: string;
   name: string;
@@ -12,13 +23,19 @@ export interface Game {
   maxUsers: number;
 }
 
+/**
+ * Type representing an active user (already in a game, not in the lobby)
+ * @property {string} id - user id
+ * @property {string} name - user name
+ * @property {string} [socketId] - socket id of the user. Let's us see if user has active connection in game room
+ * @property {string} [gameId] - id of the game the user is in
+ * @property {NodeJS.Timeout} [initialJoinTimeout] - timeout to remove user from game if they don't join from the lobby (on redirect)
+ */
 export interface ActiveUser {
   id: string;
   name: string;
   socketId?: string;
   gameId?: string;
-  // timeout to remove user from game if they don't join from lobby
-  // in certain amount of time
   initialJoinTimeout?: NodeJS.Timeout;
 }
 

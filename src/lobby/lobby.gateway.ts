@@ -16,7 +16,7 @@ import { JoinGameDto } from './dto/join-game-dto';
 import { join } from 'path';
 import { GameStateService } from 'src/shared/game-state.service';
 
-//TODO: add error emitters, handlers, try catch blocks
+//TODO: add error emitters, handlers
 /**
  * Gateway that handles connections in lobby, using lobby namespace
  * Handles game creation and joining
@@ -38,7 +38,7 @@ export class LobbyGateway implements OnGatewayConnection, OnGatewayDisconnect {
 
   /**
    * On connection, emit games to client
-   * @param client
+   * @param client - socket client
    */
   handleConnection(client: Socket): void {
     console.log(`Client connected in lobby: ${client.id}`);
@@ -53,10 +53,11 @@ export class LobbyGateway implements OnGatewayConnection, OnGatewayDisconnect {
     console.log(`Client disconnected from lobby: ${client.id}`);
   }
 
+  //TODO: change games:updated to be emitted only after user joins game (not before redirecting)
   /**
    * Create game by calling lobby service,
    * then emit game:updated to redirect client and emit updated games to all clients
-   * @param client
+   * @param client - socket client
    * @param createGameDto - data to create game (userId, userName, gameName)
    */
   @SubscribeMessage('game:create')
@@ -69,7 +70,6 @@ export class LobbyGateway implements OnGatewayConnection, OnGatewayDisconnect {
     try {
       const gameId = this.lobbyService.createGame(createGameDto);
 
-      // const games = this.lobbyService.getSerializedGames();
       const games = this.gameStateService.getSerializedGames();
 
       client.emit('game:created', gameId);
@@ -96,12 +96,10 @@ export class LobbyGateway implements OnGatewayConnection, OnGatewayDisconnect {
 
     try {
       this.lobbyService.joinGame(joinGameDto, () => {
-        // const games = this.lobbyService.getSerializedGames();
         const games = this.gameStateService.getSerializedGames();
         this.server.emit('games:updated', games);
       });
 
-      // const games = this.lobbyService.getSerializedGames();
       const games = this.gameStateService.getSerializedGames();
 
       client.emit('game:joined', joinGameDto.gameId);
