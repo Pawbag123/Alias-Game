@@ -14,8 +14,13 @@ import { GameSerializationInterceptor } from 'src/interceptors/game-serializatio
 import { CreateGameDto } from './dto/create-game-dto';
 import { JoinGameDto } from './dto/join-game-dto';
 import { join } from 'path';
+import { GameStateService } from 'src/shared/game-state.service';
 
 //TODO: add error emitters, handlers, try catch blocks
+/**
+ * Gateway that handles connections in lobby, using lobby namespace
+ * Handles game creation and joining
+ */
 @WebSocketGateway({
   namespace: '/lobby',
   cors: {
@@ -26,12 +31,20 @@ export class LobbyGateway implements OnGatewayConnection, OnGatewayDisconnect {
   @WebSocketServer()
   server: Server;
 
-  constructor(private readonly lobbyService: LobbyService) {}
+  constructor(
+    private readonly lobbyService: LobbyService,
+    private readonly gameStateService: GameStateService,
+  ) {}
 
+  /**
+   * On connection, emit games to client
+   * @param client
+   */
   handleConnection(client: Socket): void {
     console.log(`Client connected in lobby: ${client.id}`);
 
-    const games = this.lobbyService.getSerializedGames();
+    // const games = this.lobbyService.getSerializedGames();
+    const games = this.gameStateService.getSerializedGames();
     client.emit('games:updated', games);
     console.log('Emitting games:', games);
   }
@@ -40,6 +53,12 @@ export class LobbyGateway implements OnGatewayConnection, OnGatewayDisconnect {
     console.log(`Client disconnected from lobby: ${client.id}`);
   }
 
+  /**
+   * Create game by calling lobby service,
+   * then emit game:updated to redirect client and emit updated games to all clients
+   * @param client
+   * @param createGameDto - data to create game (userId, userName, gameName)
+   */
   @SubscribeMessage('game:create')
   handleGameCreate(
     @ConnectedSocket() client: Socket,
@@ -50,7 +69,8 @@ export class LobbyGateway implements OnGatewayConnection, OnGatewayDisconnect {
     try {
       const gameId = this.lobbyService.createGame(createGameDto);
 
-      const games = this.lobbyService.getSerializedGames();
+      // const games = this.lobbyService.getSerializedGames();
+      const games = this.gameStateService.getSerializedGames();
 
       client.emit('game:created', gameId);
 
@@ -61,6 +81,12 @@ export class LobbyGateway implements OnGatewayConnection, OnGatewayDisconnect {
     }
   }
 
+  /**
+   * Handler for joining game
+   * Calls lobby service to join game, then emits game:joined to client that redirects him and games:updated to all clients
+   * @param client - socket client
+   * @param joinGameDto - data to join game (userId, userName, gameId)
+   */
   @SubscribeMessage('game:join')
   handleGameJoin(
     @ConnectedSocket() client: Socket,
@@ -70,11 +96,13 @@ export class LobbyGateway implements OnGatewayConnection, OnGatewayDisconnect {
 
     try {
       this.lobbyService.joinGame(joinGameDto, () => {
-        const games = this.lobbyService.getSerializedGames();
+        // const games = this.lobbyService.getSerializedGames();
+        const games = this.gameStateService.getSerializedGames();
         this.server.emit('games:updated', games);
       });
 
-      const games = this.lobbyService.getSerializedGames();
+      // const games = this.lobbyService.getSerializedGames();
+      const games = this.gameStateService.getSerializedGames();
 
       client.emit('game:joined', joinGameDto.gameId);
 

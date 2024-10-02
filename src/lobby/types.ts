@@ -12,6 +12,16 @@ export interface Game {
   maxUsers: number;
 }
 
+export interface ActiveUser {
+  id: string;
+  name: string;
+  socketId?: string;
+  gameId?: string;
+  // timeout to remove user from game if they don't join from lobby
+  // in certain amount of time
+  initialJoinTimeout?: NodeJS.Timeout;
+}
+
 // export interface Game {
 //   id: string;
 //   name: string;
@@ -32,16 +42,6 @@ export interface Game {
 //   name: string;
 //   team: Team;
 // }
-
-export interface ActiveUser {
-  id: string;
-  name: string;
-  socketId?: string;
-  gameId?: string;
-  // timeout to remove user from game if they don't join from lobby
-  // in certain amount of time
-  initialJoinTimeout?: NodeJS.Timeout;
-}
 
 export const DUMMY_GAMES: Game[] = [
   {
