@@ -40,7 +40,7 @@ const gameRoomTemplateHbs = `<body>
     </div> 
   </div> 
   <button id='leave-game-button' onclick='leaveRoom()'>Leave Game</button>
-  {{#if isHost}}<button id='start-game-button'>Start Game</button>{{/if}} 
+  {{#if isHost}}<button id='start-game-button' onclick='startGame()'>Start Game</button>{{/if}} 
   </body>`;
 
 const errorTemplateHbs =
@@ -54,8 +54,8 @@ const startedGameRoomTemplateHbs = `<body>
       <h2>Red Team</h2>
       <ul id='red-team'>
         {{#each redTeam}}
-        <li>
-          {{this}}
+        <li style='color: {{#if this.[1]}}black{{else}}red{{/if}}'>
+          {{this.[0]}}
         </li>
         {{/each}}
       </ul>
@@ -64,13 +64,14 @@ const startedGameRoomTemplateHbs = `<body>
       <h2>Blue Team</h2>
       <ul id='blue-team'>
         {{#each blueTeam}}
-        <li>
-          {{this}}
+        <li style='color: {{#if this.[1]}}black{{else}}red{{/if}}'>
+          {{this.[0]}}
         </li>
         {{/each}}
       </ul>
     </div>
   </div>
+  <button id='end-game-button' onclick='sendMessageToTeam()'>SendMessageToTeam</button>
   {{#if isHost}}<button id='end-game-button'>End Game</button>{{/if}}
   </body>`;
 
@@ -113,21 +114,28 @@ function getUserInfo() {
 }
 
 function leaveRoom() {
-  const userId = localStorage.getItem('userId');
   socket.emit('game-room:leave');
   console.log('leaving room');
 }
 
 function joinRedTeam() {
-  const userId = localStorage.getItem('userId');
   socket.emit('game-room:join:red');
   console.log('joining red team');
 }
 
 function joinBlueTeam() {
-  const userId = localStorage.getItem('userId');
   socket.emit('game-room:join:blue');
   console.log('joining blue team');
+}
+
+function startGame() {
+  socket.emit('game-room:start');
+  console.log('starting game');
+}
+
+function sendMessageToTeam() {
+  socket.emit('game-started:send-message');
+  console.log('sending message to team');
 }
 
 // Socket.io connection and event handling
@@ -160,6 +168,15 @@ const startGameRoom = (userId, userName) => {
 
     socket.on('game-room:start:error', (error) => {
       console.error('Error starting game room:', error);
+    });
+
+    socket.on('game-started:updated', (gameRoom) => {
+      console.log('Game started:', gameRoom);
+      renderStartedGameRoom(gameRoom);
+    });
+
+    socket.on('game-started:message-received', (message) => {
+      console.log(`Message from ${message.sender}: ${message.text}`);
     });
   });
 };

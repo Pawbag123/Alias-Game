@@ -7,9 +7,25 @@ export class GameMechanicsService {
     console.log('GameMechanicsService created');
   }
 
-  public startGame(gameId: string): void {
+  startGame(gameId: string): void {
     // add validation
-    const game = this.gameStateService.getGameById(gameId);
-    game.isGameStarted = true;
+    this.gameStateService.setGameStarted(gameId);
+  }
+
+  reconnectPlayer(userId: string, gameId: string, socketId: string): void {
+    const user = this.gameStateService.getActiveUserById(userId);
+    if (!user) {
+      throw new Error('User not found');
+    }
+    if (!this.gameStateService.isUserAllowedInGame(userId, gameId)) {
+      throw new Error('User not allowed to join game');
+    }
+    if (user.gameId !== gameId) {
+      throw new Error('User not added to this game');
+    }
+    if (user.socketId) {
+      throw new Error('User already in game');
+    }
+    this.gameStateService.addPlayerSocketId(userId, socketId);
   }
 }

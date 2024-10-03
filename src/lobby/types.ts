@@ -21,6 +21,7 @@ export interface Game {
 
 /**
  * Type representing an active user (already in a game, not in the lobby)
+ * Holds the data about his connection and game he is in
  * @property {string} id - user id
  * @property {string} name - user name
  * @property {string} [socketId] - socket id of the user. Let's us see if user has active connection in game room
@@ -41,7 +42,13 @@ export enum Team {
 }
 
 /**
- * Type representing a player in the game
+ * Type representing a player sent to frontend, with his name and flag whether is he connected
+ */
+export type ActivePlayer = [string, boolean];
+
+/**
+ * Type representing a player in the game, will hold all the data about the player
+ * for example his score, chat and so on
  * @property {string} userId - user id
  * @property {string} name - user name
  * @property {Team} team - team the player is on

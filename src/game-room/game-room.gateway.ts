@@ -11,6 +11,7 @@ import { Namespace, Server, Socket } from 'socket.io';
 import { GameRoomService } from './game-room.service';
 import { GameStateService } from 'src/shared/game-state.service';
 import { GameMechanicsService } from './game-mechanics.service';
+import { Team } from 'src/lobby/types';
 
 //TODO: add error emitters, handlers, try catch blocks, extend logic after game is started
 /**
@@ -35,6 +36,9 @@ export class GameRoomGateway
   @WebSocketServer()
   lobby: Namespace;
 
+  @WebSocketServer()
+  gameRoom: Namespace;
+
   constructor(
     private readonly gameRoomService: GameRoomService,
     private readonly gameStateService: GameStateService,
@@ -47,6 +51,7 @@ export class GameRoomGateway
    */
   afterInit() {
     this.lobby = this.lobby.server.of('/lobby');
+    this.gameRoom = this.gameRoom.server.of('/game-room');
   }
 
   /**
@@ -67,8 +72,23 @@ export class GameRoomGateway
     client.data.userId = userId;
     client.data.gameId = gameId;
 
-    if (this.gameStateService.getGameById(gameId).isGameStarted) {
-      return;
+    if (
+      this.gameStateService.getGameById &&
+      this.gameStateService.getGameById(gameId).isGameStarted
+    ) {
+      try {
+        //TODO: ADD validation if user is allowed to join the game
+        this.gameMechanicsService.reconnectPlayer(userId, gameId, client.id);
+        this.server
+          .to(gameId)
+          .emit(
+            'game-started:updated',
+            this.gameStateService.getSerializedGameStarted(gameId),
+          );
+      } catch (error) {
+        client.emit('game-started:join:error', error.message);
+        console.log(error);
+      }
     } else {
       try {
         this.gameRoomService.addPlayerToGame(gameId, userId, client.id);
@@ -100,18 +120,18 @@ export class GameRoomGateway
   handleDisconnect(client: Socket): void {
     console.log(`Client disconnected from game room: ${client.id}`);
     const { gameId, userId } = client.data;
-    // const user = this.gameStateService.findUserBySocketId(client.id);
-    // console.log('User:', user);
-    // if (!user) {
-    //   return;
-    // }
-    // const gameId = user.gameId;
-    // if (!gameId) {
-    //   return;
-    // }
+    // if game is started, only remove socketId
     if (this.gameStateService.getGameById(gameId).isGameStarted) {
-      return;
+      //TODO implement updating game state
+      this.gameStateService.removePlayerSocketId(userId);
+      this.server
+        .to(gameId)
+        .emit(
+          'game-started:updated',
+          this.gameStateService.getSerializedGameStarted(gameId),
+        );
     } else {
+      // else remove player from game, and delete his ActiveUser data
       try {
         this.gameRoomService.removePlayerFromGame(gameId, userId);
       } catch (error) {
@@ -191,24 +211,53 @@ export class GameRoomGateway
     }
   }
 
-  // /**
-  //  * Handler to start game
-  //  * Calls game mechanics service to start the game
-  //  * @param gameId - id of the game to start
-  //  */
-  // @SubscribeMessage('game-room:start')
-  // handleStartGame(@MessageBody() gameId: string) {
-  //   try {
-  //     this.gameMechanicsService.startGame(gameId);
-  //     const sockets = this.gameStateService.getActiveSocketsInGame(gameId);
-  //     sockets.forEach((socketId: string) => {
-  //       const socket = this.server.sockets.sockets.get(socketId);
-  //       if (socket) {
-  //         socket.join(`${gameId}/team`);
-  //       }
-  //     });
-  //   } catch (error) {
-  //     console.log(error);
-  //   }
-  // }
+  /**
+   * Handler to start game
+   * Calls game mechanics service to start the game
+   * @param gameId - id of the game to start
+   */
+  @SubscribeMessage('game-room:start')
+  handleStartGame(@ConnectedSocket() client: Socket) {
+    const { gameId } = client.data;
+    try {
+      this.gameMechanicsService.startGame(gameId);
+      const sockets = this.gameStateService.getPlayersWithSocketsInGame(gameId);
+      console.log(sockets);
+      sockets.forEach(
+        ({ socketId, team }: { socketId: string; team: Team }) => {
+          console.log('socket');
+          console.log(socketId, team);
+          const socket: Socket = this.gameRoom.sockets.get(socketId);
+          if (socket) {
+            socket.join(`${gameId}/${team}`);
+            socket.data.team = team;
+          }
+        },
+      );
+      this.server
+        .to(gameId)
+        .emit(
+          'game-started:updated',
+          this.gameStateService.getSerializedGameStarted(gameId),
+        );
+    } catch (error) {
+      console.log(error);
+      this.server.to(gameId).emit('game-room:start:error', error.message);
+    }
+  }
+
+  /**
+   * Handler to send message
+   * Emits message to all clients in the room
+   * @param message - message to send
+   */
+  @SubscribeMessage('game-started:send-message')
+  handleMessage(@ConnectedSocket() client: Socket): void {
+    const { gameId, userId, team } = client.data;
+    const playerName = this.gameStateService.getPlayerById(userId, gameId).name;
+    this.server.to(`${gameId}/${team}`).emit('game-started:message-received', {
+      sender: playerName,
+      text: 'hello world',
+    });
+  }
 }
