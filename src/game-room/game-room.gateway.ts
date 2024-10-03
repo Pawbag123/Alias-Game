@@ -122,7 +122,6 @@ export class GameRoomGateway
     const { gameId, userId } = client.data;
     // if game is started, only remove socketId
     if (this.gameStateService.getGameById(gameId).isGameStarted) {
-      //TODO implement updating game state
       this.gameStateService.removePlayerSocketId(userId);
       this.server
         .to(gameId)
@@ -248,7 +247,7 @@ export class GameRoomGateway
 
   /**
    * Handler to send message
-   * Emits message to all clients in the room
+   * Emits message to all clients in the team
    * @param message - message to send
    */
   @SubscribeMessage('game-started:send-message')
