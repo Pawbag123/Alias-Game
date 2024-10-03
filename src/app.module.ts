@@ -1,14 +1,26 @@
 import { Module } from '@nestjs/common';
+
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
-
-import { AuthModule } from './auth/auth.module';
-
 import { MongooseModule } from '@nestjs/mongoose';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 
+import { AuthModule } from './auth/auth.module';
+import { LobbyModule } from './lobby/lobby.module';
+import { LobbyService } from './lobby/lobby.service';
+import { LobbyGateway } from './lobby/lobby.gateway';
+import { GameRoomModule } from './game-room/game-room.module';
+import { GameRoomGateway } from './game-room/game-room.gateway';
+import { GameRoomService } from './game-room/game-room.service';
+import { GameStateModule } from './shared/game-state.module';
+import { GameStateService } from './shared/game-state.service';
+import { GameMechanicsService } from './game-room/game-mechanics.service';
+
 @Module({
   imports: [
+    LobbyModule,
+    GameRoomModule,
+    GameStateModule,
     AuthModule,
     ConfigModule.forRoot(),
     MongooseModule.forRootAsync({
@@ -20,6 +32,14 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
     }),
   ],
   controllers: [AppController],
-  providers: [AppService],
+  providers: [
+    AppService,
+    LobbyService,
+    GameRoomService,
+    LobbyGateway,
+    GameRoomGateway,
+    GameStateService,
+    GameMechanicsService,
+  ],
 })
 export class AppModule {}
