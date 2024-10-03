@@ -17,6 +17,34 @@ export class GameStateService {
     return [...this.games];
   }
 
+  // getActiveSocketsInGame(gameId: string): string[] {
+  //   const game = this.getGameById(gameId);
+  //   return [...game.redTeam, ...game.blueTeam, ...game.noTeam].map((userId) => {
+  //     const user = this.getActiveUserById(userId);
+  //     return user ? user.socketId : '';
+  //   });
+  // }
+
+  // getSocketIdAndTeam(gameId: string): { socketId: string; team: string } {
+  //   const game = this.getGameById(gameId);
+  //   const redTeamIds = game.redTeam;
+  //   const blueTeamIds = game.blueTeam;
+  //   const noTeamIds = game.noTeam;
+  //   const redTeam = redTeamIds.map((userId) => {
+  //     const user = this.getActiveUserById(userId);
+  //     return user ? user.socketId : '';
+  //   });
+  //   const blueTeam = blueTeamIds.map((userId) => {
+  //     const user = this.getActiveUserById(userId);
+  //     return user ? user.socketId : '';
+  //   });
+  //   const noTeam = noTeamIds.map((userId) => {
+  //     const user = this.getActiveUserById(userId);
+  //     return user ? user.socketId : '';
+  //   });
+
+  // }
+
   getGameById(gameId: string): Game {
     return this.games.find((game) => game.id === gameId);
   }

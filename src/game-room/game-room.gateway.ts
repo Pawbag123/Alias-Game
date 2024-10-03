@@ -9,8 +9,8 @@ import {
 } from '@nestjs/websockets';
 import { Namespace, Server, Socket } from 'socket.io';
 import { GameRoomService } from './game-room.service';
-import { LobbyService } from 'src/lobby/lobby.service';
 import { GameStateService } from 'src/shared/game-state.service';
+import { GameMechanicsService } from './game-mechanics.service';
 
 //TODO: add error emitters, handlers, try catch blocks, extend logic after game is started
 /**
@@ -38,6 +38,7 @@ export class GameRoomGateway
   constructor(
     private readonly gameRoomService: GameRoomService,
     private readonly gameStateService: GameStateService,
+    private readonly gameMechanicsService: GameMechanicsService,
   ) {}
 
   /**
@@ -62,21 +63,26 @@ export class GameRoomGateway
       gameId: string;
       userId: string;
     };
-    try {
-      this.gameRoomService.addPlayerToGame(gameId, userId, client.id);
-    } catch (error) {
-      client.emit('game-room:join:error', error.message);
-      console.log(error);
-      return;
-    }
 
-    client.join(gameId);
-    this.server
-      .to(gameId)
-      .emit(
-        'game-room:updated',
-        this.gameStateService.getSerializedGameRoom(gameId),
-      );
+    if (this.gameStateService.getGameById(gameId).isGameStarted) {
+      return;
+    } else {
+      try {
+        this.gameRoomService.addPlayerToGame(gameId, userId, client.id);
+      } catch (error) {
+        client.emit('game-room:join:error', error.message);
+        console.log(error);
+        return;
+      }
+
+      client.join(gameId);
+      this.server
+        .to(gameId)
+        .emit(
+          'game-room:updated',
+          this.gameStateService.getSerializedGameRoom(gameId),
+        );
+    }
   }
 
   /**
@@ -99,24 +105,28 @@ export class GameRoomGateway
     if (!gameId) {
       return;
     }
-    try {
-      this.gameRoomService.removePlayerFromGame(gameId, user.id);
-    } catch (error) {
-      console.log(error);
-    }
-    if (this.gameStateService.gameExists(gameId)) {
-      this.server
-        .to(gameId)
-        .emit(
-          'game-room:updated',
-          this.gameStateService.getSerializedGameRoom(gameId),
-        );
-    }
+    if (this.gameStateService.getGameById(gameId).isGameStarted) {
+      return;
+    } else {
+      try {
+        this.gameRoomService.removePlayerFromGame(gameId, user.id);
+      } catch (error) {
+        console.log(error);
+      }
+      if (this.gameStateService.gameExists(gameId)) {
+        this.server
+          .to(gameId)
+          .emit(
+            'game-room:updated',
+            this.gameStateService.getSerializedGameRoom(gameId),
+          );
+      }
 
-    this.lobby.emit(
-      'games:updated',
-      this.gameStateService.getSerializedGames(),
-    );
+      this.lobby.emit(
+        'games:updated',
+        this.gameStateService.getSerializedGames(),
+      );
+    }
   }
 
   /**
@@ -178,4 +188,25 @@ export class GameRoomGateway
         );
     }
   }
+
+  // /**
+  //  * Handler to start game
+  //  * Calls game mechanics service to start the game
+  //  * @param gameId - id of the game to start
+  //  */
+  // @SubscribeMessage('game-room:start')
+  // handleStartGame(@MessageBody() gameId: string) {
+  //   try {
+  //     this.gameMechanicsService.startGame(gameId);
+  //     const sockets = this.gameStateService.getActiveSocketsInGame(gameId);
+  //     sockets.forEach((socketId: string) => {
+  //       const socket = this.server.sockets.sockets.get(socketId);
+  //       if (socket) {
+  //         socket.join(`${gameId}/team`);
+  //       }
+  //     });
+  //   } catch (error) {
+  //     console.log(error);
+  //   }
+  // }
 }

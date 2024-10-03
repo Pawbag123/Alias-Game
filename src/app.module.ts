@@ -9,6 +9,7 @@ import { GameRoomGateway } from './game-room/game-room.gateway';
 import { GameRoomService } from './game-room/game-room.service';
 import { GameStateModule } from './shared/game-state.module';
 import { GameStateService } from './shared/game-state.service';
+import { GameMechanicsService } from './game-room/game-mechanics.service';
 
 @Module({
   imports: [LobbyModule, GameRoomModule, GameStateModule],
@@ -20,6 +21,7 @@ import { GameStateService } from './shared/game-state.service';
     LobbyGateway,
     GameRoomGateway,
     GameStateService,
+    GameMechanicsService,
   ],
 })
 export class AppModule {}

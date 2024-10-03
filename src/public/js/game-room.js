@@ -47,9 +47,37 @@ const errorTemplateHbs =
   '<body> <h1>Error</h1> <p>{{errorMessage}}</p> </body>';
 const loadingTemplateHbs = '<body> <h1>Loading...</h1> </body>';
 
+const startedGameRoomTemplateHbs = `<body>
+  <h1>Game Room:{{name}}, gameStarted</h1>
+  <div style='display: flex; justify-content:space-around;'>
+    <div>
+      <h2>Red Team</h2>
+      <ul id='red-team'>
+        {{#each redTeam}}
+        <li>
+          {{this}}
+        </li>
+        {{/each}}
+      </ul>
+    </div>
+    <div>
+      <h2>Blue Team</h2>
+      <ul id='blue-team'>
+        {{#each blueTeam}}
+        <li>
+          {{this}}
+        </li>
+        {{/each}}
+      </ul>
+    </div>
+  </div>
+  {{#if isHost}}<button id='end-game-button'>End Game</button>{{/if}}
+  </body>`;
+
 const errorTemplate = Handlebars.compile(errorTemplateHbs);
 const loadingTemplate = Handlebars.compile(loadingTemplateHbs);
 const gameRoomTemplate = Handlebars.compile(gameRoomTemplateHbs);
+const startedGameRoomTemplate = Handlebars.compile(startedGameRoomTemplateHbs);
 
 const renderError = (message) => {
   console.log('Error Message: ', message);
@@ -68,6 +96,14 @@ const renderGameRoom = (gameRoom) => {
   contentDiv.innerHTML = '';
   console.log('Game Room: ', gameRoom);
   contentDiv.innerHTML = gameRoomTemplate({ ...gameRoom, isHost });
+};
+
+const renderStartedGameRoom = (gameRoom) => {
+  const isHost = gameRoom.host === localStorage.getItem('userId');
+  const contentDiv = document.getElementById('content');
+  contentDiv.innerHTML = '';
+  console.log('started Game Room: ', gameRoom);
+  contentDiv.innerHTML = startedGameRoomTemplate({ ...gameRoom, isHost });
 };
 
 function getUserInfo() {
