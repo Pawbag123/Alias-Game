@@ -14,6 +14,7 @@ import { GameMechanicsService } from './game-mechanics.service';
 import { Team } from 'src/lobby/types';
 
 //TODO: add error emitters, handlers, try catch blocks, extend logic after game is started
+//TODO: change server emit to namespace emit
 /**
  * Gateway that handles connections in game room, using game-room namespace
  * Handles connecting and disconnecting from game room, joining teams, leaving game
@@ -73,12 +74,17 @@ export class GameRoomGateway
     client.data.gameId = gameId;
 
     if (
-      this.gameStateService.getGameById &&
+      this.gameStateService.gameExists(gameId) &&
       this.gameStateService.getGameById(gameId).isGameStarted
     ) {
       try {
         //TODO: ADD validation if user is allowed to join the game
         this.gameMechanicsService.reconnectPlayer(userId, gameId, client.id);
+        client.join(gameId);
+        //TODO: connect to game/team room
+        const team = this.gameStateService.getTeamOfPlayer(userId, gameId);
+        client.data.team = team;
+        client.join(`${gameId}/${team}`);
         this.server
           .to(gameId)
           .emit(
@@ -121,7 +127,10 @@ export class GameRoomGateway
     console.log(`Client disconnected from game room: ${client.id}`);
     const { gameId, userId } = client.data;
     // if game is started, only remove socketId
-    if (this.gameStateService.getGameById(gameId).isGameStarted) {
+    if (
+      this.gameStateService.gameExists(gameId) &&
+      this.gameStateService.getGameById(gameId).isGameStarted
+    ) {
       this.gameStateService.removePlayerSocketId(userId);
       this.server
         .to(gameId)
@@ -222,6 +231,7 @@ export class GameRoomGateway
       this.gameMechanicsService.startGame(gameId);
       const sockets = this.gameStateService.getPlayersWithSocketsInGame(gameId);
       console.log(sockets);
+      // join separate rooms for each team
       sockets.forEach(
         ({ socketId, team }: { socketId: string; team: Team }) => {
           console.log('socket');

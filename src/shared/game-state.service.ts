@@ -116,6 +116,12 @@ export class GameStateService {
     return game.isGameStarted;
   }
 
+  getTeamOfPlayer(userId: string, gameId: string): Team {
+    const game = this.getGameById(gameId);
+    const player = game.players.find((player) => player.userId === userId);
+    return player ? player.team : Team.NO_TEAM;
+  }
+
   gameExists(gameId: string): boolean {
     return this.games.some((game) => game.id === gameId);
   }
