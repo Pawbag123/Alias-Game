@@ -1,5 +1,6 @@
 import { Injectable } from '@nestjs/common';
-import { LobbyService } from 'src/lobby/lobby.service';
+
+import { Team } from 'src/lobby/types';
 import { GameStateService } from 'src/shared/game-state.service';
 
 @Injectable()
@@ -60,7 +61,7 @@ export class GameRoomService {
     }
 
     //* Remove user from game
-    this.gameStateService.removeUserFromGame(userId, gameId);
+    this.gameStateService.removePlayerFromGame(userId, gameId);
 
     this.gameStateService.removeActiveUser(userId);
 
@@ -86,13 +87,7 @@ export class GameRoomService {
       throw new Error('User not allowed to join game');
     }
 
-    if (game.noTeam.includes(userId)) {
-      game.noTeam = game.noTeam.filter((id) => id !== userId);
-      game.redTeam.push(userId);
-    } else if (game.blueTeam.includes(userId)) {
-      game.blueTeam = game.blueTeam.filter((id) => id !== userId);
-      game.redTeam.push(userId);
-    }
+    this.gameStateService.movePlayerToTeam(userId, gameId, Team.RED);
   }
 
   joinBlueTeam(gameId: string, userId: string): void {
@@ -105,12 +100,6 @@ export class GameRoomService {
       throw new Error('User not allowed to join game');
     }
 
-    if (game.noTeam.includes(userId)) {
-      game.noTeam = game.noTeam.filter((id) => id !== userId);
-      game.blueTeam.push(userId);
-    } else if (game.redTeam.includes(userId)) {
-      game.redTeam = game.redTeam.filter((id) => id !== userId);
-      game.blueTeam.push(userId);
-    }
+    this.gameStateService.movePlayerToTeam(userId, gameId, Team.BLUE);
   }
 }

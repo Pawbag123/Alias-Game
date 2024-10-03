@@ -8,12 +8,10 @@ import {
   ConnectedSocket,
 } from '@nestjs/websockets';
 import { Server, Socket } from 'socket.io';
+
 import { LobbyService } from './lobby.service';
-import { UseInterceptors } from '@nestjs/common';
-import { GameSerializationInterceptor } from 'src/interceptors/game-serialization.interceptor';
 import { CreateGameDto } from './dto/create-game-dto';
 import { JoinGameDto } from './dto/join-game-dto';
-import { join } from 'path';
 import { GameStateService } from 'src/shared/game-state.service';
 
 //TODO: add error emitters, handlers
@@ -42,6 +40,9 @@ export class LobbyGateway implements OnGatewayConnection, OnGatewayDisconnect {
    */
   handleConnection(client: Socket): void {
     console.log(`Client connected in lobby: ${client.id}`);
+    const { userId, userName } = client.handshake.query;
+    client.data.userId = userId;
+    client.data.userName = userName;
 
     // const games = this.lobbyService.getSerializedGames();
     const games = this.gameStateService.getSerializedGames();
@@ -63,8 +64,13 @@ export class LobbyGateway implements OnGatewayConnection, OnGatewayDisconnect {
   @SubscribeMessage('game:create')
   handleGameCreate(
     @ConnectedSocket() client: Socket,
-    @MessageBody() createGameDto: CreateGameDto,
+    @MessageBody() { gameName }: { gameName: string },
   ): void {
+    const createGameDto: CreateGameDto = {
+      userId: client.data.userId,
+      userName: client.data.userName,
+      gameName,
+    };
     console.log('Creating game:', createGameDto);
 
     try {
@@ -90,8 +96,13 @@ export class LobbyGateway implements OnGatewayConnection, OnGatewayDisconnect {
   @SubscribeMessage('game:join')
   handleGameJoin(
     @ConnectedSocket() client: Socket,
-    @MessageBody() joinGameDto: JoinGameDto,
+    @MessageBody() { gameId }: { gameId: string },
   ): void {
+    const joinGameDto: JoinGameDto = {
+      userId: client.data.userId,
+      userName: client.data.userName,
+      gameId,
+    };
     console.log('Joining game:', joinGameDto.gameId);
 
     try {

@@ -1,20 +1,9 @@
 import { Injectable } from '@nestjs/common';
-import {
-  ActiveUser,
-  DUMMY_GAMES,
-  DUMMY_USERS,
-  Game,
-  JOIN_TIMEOUT,
-  MAX_USERS,
-} from './types';
-import { InLobbyGameDto } from './dto/in-lobby-game-dto';
-import { plainToClass } from 'class-transformer';
+
+import { JOIN_TIMEOUT, MAX_USERS } from './types';
 import { CreateGameDto } from './dto/create-game-dto';
-import { MAX } from 'class-validator';
 import { JoinGameDto } from './dto/join-game-dto';
-import { GameRoomDto } from 'src/game-room/dto/game-room-dto';
 import { GameStateService } from 'src/shared/game-state.service';
-import { emit } from 'process';
 
 @Injectable()
 export class LobbyService {
@@ -35,6 +24,7 @@ export class LobbyService {
       throw new Error('User already in game');
     }
 
+    //* Create a new game
     return this.gameStateService.createGame(
       gameName,
       userId,
@@ -43,34 +33,8 @@ export class LobbyService {
       JOIN_TIMEOUT,
       () => {},
     );
-    // //* Create a new game
-    // const newGame: Game = {
-    //   id: Math.random().toString(36).substr(2, 9),
-    //   name: gameName,
-    //   host: userId,
-    //   isGameStarted: false,
-    //   redTeam: [],
-    //   blueTeam: [],
-    //   noTeam: [userId],
-    //   maxUsers: MAX_USERS,
-    // };
-    // this.gameStateService.games.push(newGame);
-
-    // //* Add the user to the game
-    // const newActiveUser: ActiveUser = {
-    //   id: userId,
-    //   name: userName,
-    //   gameId: newGame.id,
-    // };
-    // this.gameStateService.activeUsers.push(newActiveUser);
-
     //TODO: implement for creation
     //* Set a timeout to remove the user from the game if they don't join from the lobby in a certain amount of time
-    // newActiveUser.initialJoinTimeout = setTimeout(() => {
-    //   // this.handleUserJoinTimeout();
-    // }, JOIN_TIMEOUT);
-
-    // return newGame.id;
   }
 
   /**
@@ -89,46 +53,29 @@ export class LobbyService {
     { gameId, userId, userName }: JoinGameDto,
     emitGamesUpdated: () => void,
   ): void {
-    // if (this.gameStateService.activeUsers.find((user) => user.id === userId)) {
     if (this.gameStateService.isUserActive(userId)) {
       throw new Error('User already in game');
     }
 
     //* Find the game
-    // const game = this.gameStateService.games.find((game) => game.id === gameId);
-    // if (!game) {
     if (!this.gameStateService.getGameById(gameId)) {
       throw new Error('Game not found');
     }
 
-    // if (
-    //   game.maxUsers <=
-    //   game.redTeam.length + game.blueTeam.length + game.noTeam.length
-    // )
     if (this.gameStateService.isGameFull(gameId)) {
       throw new Error('Game is full');
     }
 
+    //* Add the user to the game
     this.gameStateService.createJoinUser(
       userId,
-      userName,
       gameId,
       JOIN_TIMEOUT,
       emitGamesUpdated,
     );
 
-    this.gameStateService.addUserToGame(userId, gameId);
-    //* Add the user to the game
-    // const newActiveUser: ActiveUser = {
-    //   id: userId,
-    //   name: userName,
-    //   gameId: gameId,
-    // };
-    // this.gameStateService.activeUsers.push(newActiveUser);
-    // game.noTeam.push(userId);
-    // newActiveUser.initialJoinTimeout = setTimeout(() => {
-    //   this.handleUserJoinTimeout(userId, gameId, emitGamesUpdated);
-    // }, JOIN_TIMEOUT);
+    this.gameStateService.addUserToGame(userId, userName, gameId);
+
     console.log(
       'User joined game:',
       this.gameStateService.getActiveUserById(userId),

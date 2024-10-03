@@ -1,8 +1,9 @@
 import { Injectable } from '@nestjs/common';
 import { plainToClass } from 'class-transformer';
+
 import { GameRoomDto } from 'src/game-room/dto/game-room-dto';
 import { InLobbyGameDto } from 'src/lobby/dto/in-lobby-game-dto';
-import { ActiveUser, DUMMY_GAMES, DUMMY_USERS, Game } from 'src/lobby/types';
+import { ActiveUser, Game, Player, Team } from 'src/lobby/types';
 
 /**
  * Service that handles the state of the game,
@@ -17,34 +18,6 @@ export class GameStateService {
     return [...this.games];
   }
 
-  // getActiveSocketsInGame(gameId: string): string[] {
-  //   const game = this.getGameById(gameId);
-  //   return [...game.redTeam, ...game.blueTeam, ...game.noTeam].map((userId) => {
-  //     const user = this.getActiveUserById(userId);
-  //     return user ? user.socketId : '';
-  //   });
-  // }
-
-  // getSocketIdAndTeam(gameId: string): { socketId: string; team: string } {
-  //   const game = this.getGameById(gameId);
-  //   const redTeamIds = game.redTeam;
-  //   const blueTeamIds = game.blueTeam;
-  //   const noTeamIds = game.noTeam;
-  //   const redTeam = redTeamIds.map((userId) => {
-  //     const user = this.getActiveUserById(userId);
-  //     return user ? user.socketId : '';
-  //   });
-  //   const blueTeam = blueTeamIds.map((userId) => {
-  //     const user = this.getActiveUserById(userId);
-  //     return user ? user.socketId : '';
-  //   });
-  //   const noTeam = noTeamIds.map((userId) => {
-  //     const user = this.getActiveUserById(userId);
-  //     return user ? user.socketId : '';
-  //   });
-
-  // }
-
   getGameById(gameId: string): Game {
     return this.games.find((game) => game.id === gameId);
   }
@@ -57,12 +30,17 @@ export class GameStateService {
     return this.activeUsers.some((user) => user.id === userId);
   }
 
+  movePlayerToTeam(userId: string, gameId: string, team: Team): void {
+    const game = this.getGameById(gameId);
+    const player = game.players.find((player) => player.userId === userId);
+    if (player) {
+      player.team = team;
+    }
+  }
+
   isGameFull(gameId: string): boolean {
     const game = this.getGameById(gameId);
-    return (
-      game.redTeam.length + game.blueTeam.length + game.noTeam.length >=
-      game.maxUsers
-    );
+    return game.players.length >= game.maxUsers;
   }
 
   isGameStarted(gameId: string): boolean {
@@ -78,37 +56,33 @@ export class GameStateService {
     timeout: number,
     timeoutCb: () => void,
   ): string {
+    const newPlayer: Player = {
+      userId,
+      name: userName,
+      team: Team.NO_TEAM,
+    };
+
     const newGame: Game = {
       id: Math.random().toString(36).substr(2, 9),
       name: gameName,
       host: userId,
       isGameStarted: false,
-      redTeam: [],
-      blueTeam: [],
-      noTeam: [userId],
+      players: [newPlayer],
       maxUsers: maxUsers,
     };
     this.games.push(newGame);
 
-    this.createUser(userId, userName, newGame.id, timeout, timeoutCb);
-
-    // const newActiveUser: ActiveUser = {
-    //   id: userId,
-    //   name: 'userName',
-    //   gameId: newGame.id,
-    // };
-    // this.activeUsers.push(newActiveUser);
+    this.createUser(userId, newGame.id, timeout, timeoutCb);
 
     return newGame.id;
   }
 
   isUserAllowedInGame(userId: string, gameId: string): boolean {
     const game = this.getGameById(gameId);
-    return (
-      game.redTeam.includes(userId) ||
-      game.blueTeam.includes(userId) ||
-      game.noTeam.includes(userId)
+    const playerExists = game.players.some(
+      (player) => player.userId === userId,
     );
+    return playerExists;
   }
 
   isGameHost(userId: string, gameId: string): boolean {
@@ -118,21 +92,17 @@ export class GameStateService {
 
   moveHostToNextUser(gameId: string): void {
     const game = this.getGameById(gameId);
-    game.host = game.redTeam[0] || game.blueTeam[0] || game.noTeam[0];
+    game.host = game.players[0].userId;
   }
 
   isGameEmpty(gameId: string): boolean {
     const game = this.getGameById(gameId);
-    return (
-      game.redTeam.length + game.blueTeam.length + game.noTeam.length === 0
-    );
+    return game.players.length === 0;
   }
 
-  removeUserFromGame(userId: string, gameId: string): void {
+  removePlayerFromGame(userId: string, gameId: string): void {
     const game = this.getGameById(gameId);
-    game.redTeam = game.redTeam.filter((id) => id !== userId);
-    game.blueTeam = game.blueTeam.filter((id) => id !== userId);
-    game.noTeam = game.noTeam.filter((id) => id !== userId);
+    game.players = game.players.filter((player) => player.userId !== userId);
   }
 
   removeActiveUser(userId: string): void {
@@ -141,14 +111,12 @@ export class GameStateService {
 
   createUser(
     userId: string,
-    userName: string,
     gameId: string,
     timeout: number,
     timeoutCb: () => void,
   ): void {
     this.activeUsers.push({
       id: userId,
-      name: userName,
       gameId: gameId,
       //   initialJoinTimeout: setTimeout(() => {
       //     timeoutCb();
@@ -158,14 +126,12 @@ export class GameStateService {
 
   createJoinUser(
     userId: string,
-    userName: string,
     gameId: string,
     timeout: number,
     timeoutCb: () => void,
   ): void {
     this.activeUsers.push({
       id: userId,
-      name: userName,
       gameId: gameId,
       initialJoinTimeout: setTimeout(() => {
         this.handleUserJoinTimeout(userId, gameId, timeoutCb);
@@ -173,9 +139,14 @@ export class GameStateService {
     });
   }
 
-  addUserToGame(userId: string, gameId: string): void {
+  addUserToGame(userId: string, userName: string, gameId: string): void {
     const game = this.getGameById(gameId);
-    game.noTeam.push(userId);
+    const newPlayer: Player = {
+      userId,
+      name: userName,
+      team: Team.NO_TEAM,
+    };
+    game.players.push(newPlayer);
   }
 
   displayGames(): void {
@@ -240,8 +211,7 @@ export class GameStateService {
     this.activeUsers = this.activeUsers.filter(
       (user) => user.id !== userId && user.gameId !== gameId,
     );
-    const game = this.games.find((game) => game.id === gameId);
-    game.noTeam = game.noTeam.filter((id) => id !== userId);
+    this.removePlayerFromGame(userId, gameId);
 
     emitGamesUpdated();
   }
@@ -251,8 +221,7 @@ export class GameStateService {
       plainToClass(InLobbyGameDto, {
         id: game.id,
         name: game.name,
-        players:
-          game.redTeam.length + game.blueTeam.length + game.noTeam.length,
+        players: game.players.length,
         maxPlayers: game.maxUsers,
         started: game.isGameStarted,
       }),
@@ -262,43 +231,20 @@ export class GameStateService {
   getSerializedGameRoom(gameId: string): GameRoomDto {
     const game = this.getGameById(gameId);
 
-    let redTeamNames, blueTeamNames, noTeamNames;
-
-    if (game.redTeam) {
-      redTeamNames = game.redTeam.map((userId) => {
-        const user = this.getActiveUserById(userId);
-        return user ? user.name : 'Unknown';
-      });
-    } else {
-      redTeamNames = [];
-    }
-
-    if (game.blueTeam) {
-      blueTeamNames = game.blueTeam.map((userId) => {
-        const user = this.getActiveUserById(userId);
-        return user ? user.name : 'Unknown';
-      });
-    } else {
-      blueTeamNames = [];
-    }
-
-    if (game.noTeam) {
-      noTeamNames = game.noTeam.map((userId) => {
-        const user = this.getActiveUserById(userId);
-        return user ? user.name : 'Unknown';
-      });
-    } else {
-      noTeamNames = [];
-    }
-
     return plainToClass(GameRoomDto, {
       id: game.id,
       name: game.name,
       host: game.host,
       isGameStarted: game.isGameStarted,
-      redTeam: redTeamNames,
-      blueTeam: blueTeamNames,
-      noTeam: noTeamNames,
+      redTeam: game.players
+        .filter((player) => player.team === Team.RED)
+        .map((player) => player.name),
+      blueTeam: game.players
+        .filter((player) => player.team === Team.BLUE)
+        .map((player) => player.name),
+      noTeam: game.players
+        .filter((player) => player.team === Team.NO_TEAM)
+        .map((player) => player.name),
     });
   }
 }

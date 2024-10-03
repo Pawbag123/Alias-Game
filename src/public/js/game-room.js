@@ -114,19 +114,19 @@ function getUserInfo() {
 
 function leaveRoom() {
   const userId = localStorage.getItem('userId');
-  socket.emit('game-room:leave', { userId, gameId: gameRoomId });
+  socket.emit('game-room:leave');
   console.log('leaving room');
 }
 
 function joinRedTeam() {
   const userId = localStorage.getItem('userId');
-  socket.emit('game-room:join:red', { userId, gameId: gameRoomId });
+  socket.emit('game-room:join:red');
   console.log('joining red team');
 }
 
 function joinBlueTeam() {
   const userId = localStorage.getItem('userId');
-  socket.emit('game-room:join:blue', { userId, gameId: gameRoomId });
+  socket.emit('game-room:join:blue');
   console.log('joining blue team');
 }
 

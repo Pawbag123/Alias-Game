@@ -2,12 +2,12 @@ import {
   WebSocketGateway,
   WebSocketServer,
   SubscribeMessage,
-  MessageBody,
   OnGatewayConnection,
   OnGatewayDisconnect,
   ConnectedSocket,
 } from '@nestjs/websockets';
 import { Namespace, Server, Socket } from 'socket.io';
+
 import { GameRoomService } from './game-room.service';
 import { GameStateService } from 'src/shared/game-state.service';
 import { GameMechanicsService } from './game-mechanics.service';
@@ -64,6 +64,9 @@ export class GameRoomGateway
       userId: string;
     };
 
+    client.data.userId = userId;
+    client.data.gameId = gameId;
+
     if (this.gameStateService.getGameById(gameId).isGameStarted) {
       return;
     } else {
@@ -96,20 +99,21 @@ export class GameRoomGateway
    */
   handleDisconnect(client: Socket): void {
     console.log(`Client disconnected from game room: ${client.id}`);
-    const user = this.gameStateService.findUserBySocketId(client.id);
-    console.log('User:', user);
-    if (!user) {
-      return;
-    }
-    const gameId = user.gameId;
-    if (!gameId) {
-      return;
-    }
+    const { gameId, userId } = client.data;
+    // const user = this.gameStateService.findUserBySocketId(client.id);
+    // console.log('User:', user);
+    // if (!user) {
+    //   return;
+    // }
+    // const gameId = user.gameId;
+    // if (!gameId) {
+    //   return;
+    // }
     if (this.gameStateService.getGameById(gameId).isGameStarted) {
       return;
     } else {
       try {
-        this.gameRoomService.removePlayerFromGame(gameId, user.id);
+        this.gameRoomService.removePlayerFromGame(gameId, userId);
       } catch (error) {
         console.log(error);
       }
@@ -147,9 +151,8 @@ export class GameRoomGateway
    * emits updated game room to all clients in the room
    */
   @SubscribeMessage('game-room:join:red')
-  handleJoinRedTeam(
-    @MessageBody() { gameId, userId }: { gameId: string; userId: string },
-  ) {
+  handleJoinRedTeam(@ConnectedSocket() client: Socket) {
+    const { gameId, userId } = client.data;
     try {
       this.gameRoomService.joinRedTeam(gameId, userId);
     } catch (error) {
@@ -170,9 +173,8 @@ export class GameRoomGateway
    * emits updated game room to all clients in the room
    */
   @SubscribeMessage('game-room:join:blue')
-  handleJoinBlueTeam(
-    @MessageBody() { gameId, userId }: { gameId: string; userId: string },
-  ) {
+  handleJoinBlueTeam(@ConnectedSocket() client: Socket) {
+    const { gameId, userId } = client.data;
     try {
       this.gameRoomService.joinBlueTeam(gameId, userId);
     } catch (error) {

@@ -1,10 +1,7 @@
 import { Controller, Get, Param, Render } from '@nestjs/common';
+
 import { AppService } from './app.service';
 import { LobbyService } from './lobby/lobby.service';
-
-interface Game {
-  id: string;
-}
 
 @Controller()
 export class AppController {
@@ -16,9 +13,6 @@ export class AppController {
   @Get()
   @Render('lobby')
   getLobby() {
-    // const games: Game[] = this.lobbyService.getAllGames();
-    // console.log('Rendering lobby with games:', games);
-    // return { games }
     return {};
   }
 

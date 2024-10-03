@@ -67,8 +67,6 @@ function renderLobby(games = []) {
 
 // Function to start the lobby and initialize the socket
 function startLobby(userId, userName) {
-  // const contentDiv = document.getElementById('content');
-  // contentDiv.innerHTML = lobbyTemplate(); // Render the lobby content using Handlebars
   renderLoading();
 
   // Initialize socket connection, passing user info
@@ -137,10 +135,7 @@ function saveUserInfo() {
 
 function joinGame(gameId) {
   console.log(`Joining game with ID: ${gameId}`);
-  const { userId, userName } = getUserInfo();
   socket.emit('game:join', {
-    userId,
-    userName,
     gameId,
   });
 }
@@ -149,8 +144,6 @@ function createGame() {
   console.log('Creating a new game...');
   const { userId, userName } = getUserInfo();
   socket.emit('game:create', {
-    userId,
-    userName,
     gameName: `${userName}'s Game`,
   });
 }
