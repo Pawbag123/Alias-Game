@@ -130,14 +130,10 @@
         e.preventDefault();
         const message = messageInput.value;
         const { userId, userName } = getUserInfo();
-        console.log(`
-          userId: ${userId}, 
-          userName: ${userName}, 
-          gameId: ${gameRoomId}, 
-          message: ${message}, 
-        `)
+        
         if(message && userName) {
-          socket.emit('chat:message', { userId, userName, gameId: gameRoomId, message });
+          const data = { userId, userName, gameId: gameRoomId, message }
+          socket.emit('chat:message', data);
           messageInput.value = '';
         }
       });

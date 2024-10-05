@@ -5,6 +5,7 @@ import {
   OnGatewayConnection,
   OnGatewayDisconnect,
   ConnectedSocket,
+  MessageBody,
 } from '@nestjs/websockets';
 import { Namespace, Server, Socket } from 'socket.io';
 
@@ -272,34 +273,19 @@ export class GameRoomGateway
     });
   }
 
-  // @SubscribeMessage('chat:message')
-  // async handleChatMessage(
-  //   @ConnectedSocket() client: Socket,
-  //   { userId, userName, gameId, message }: { userId: string, userName: string, gameId: string, message: string }
-  // ): Promise<void> {
-  //   const { /*gameId, userId,*/ team } = client.data;
-  //   console.log('Chat, client data', client.data);
-    
-  //   const playerName = this.gameStateService.getPlayerById(userId, gameId).name;
-  //   const chatResponse = await this.chatService.handleChatMessage(userId, userName, gameId, message)
-  //   this.server.to(gameId).emit('chat:message', chatResponse);
-  // }
-
   @SubscribeMessage('chat:message')
   async handleChatMessage(
     @ConnectedSocket() client: Socket,
-    payload: any  // Temporarily use 'any' to inspect the payload
+    @MessageBody() payload: any  // Temporarily 'any' 
   ): Promise<void> {
-    const { gameId, userId } = client.data;
-    console.log('client data', client.data);
-    console.log(payload);
+    // const { gameId, userId } = client.data;
+
+    // console.log('payload: ', payload);
+    const { userId, userName, gameId, message } = payload
     
-    
-    
-    // // Proceed with the rest of your logic
     // const playerName = this.gameStateService.getPlayerById(userId, gameId).name;
-    // const chatResponse = await this.chatService.handleChatMessage(userId, userName, gameId, message)
-    this.server.to(gameId).emit('chat:message', {message: 'chatResponse'});
+    const chatResponse = await this.chatService.handleChatMessage(userId, userName, gameId, message)
+    this.server.to(gameId).emit('chat:message', chatResponse);
   }
 
 }
