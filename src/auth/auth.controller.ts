@@ -1,8 +1,9 @@
-import { Controller, Post, Body, HttpCode, HttpStatus } from '@nestjs/common';
+import { Controller, Post, Body, HttpCode, HttpStatus, Get, UseGuards } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { CreateUserDto } from './dto/create-user.dto';
 import { LoginUserDto } from './dto/login-user.dto';
 import { RefreshTokenDto } from './dto/refresh-token.dto'; 
+import { JwtAuthGuard } from './jwtAuthGuard';
 
 @Controller('auth')
 export class AuthController {
@@ -30,5 +31,13 @@ export class AuthController {
   async refresh(@Body() refreshTokenDto: RefreshTokenDto) {
     const tokens = await this.authService.refresh(refreshTokenDto.refreshToken);
     return tokens;
+  }
+
+  @Get('verify-token')
+  @UseGuards(JwtAuthGuard)  // Only allows requests with valid tokens
+  async verifyToken() {
+    console.log('guard::');
+    
+    return { valid: true };  // Return a simple response if the token is valid
   }
 }

@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <script src='/socket.io/socket.io.js'></script>
+  <title>Game Room</title>
+  <!-- Bootstrap CSS CDN -->
+  <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body class="bg-light">
+  <div class="container">
+
+    <h1 id="game-room-name"></h1>
+    <div style='display: flex; justify-content:space-around;'>
+      <div> 
+        <h2>Red Team</h2> 
+        <button id='join-red-team-button' onclick='joinRedTeam()'>Join Red Team</button>
+        <ul id='red-team'>
+          <!-- Red team members will be updated here dynamically -->
+        </ul> 
+      </div>
+
+      <div> 
+        <h2>Blue Team</h2> 
+        <button id='join-blue-team-button' onclick='joinBlueTeam()'>Join Blue Team</button> 
+        <ul id='blue-team'>
+          <!-- Blue team members will be updated here dynamically -->
+        </ul> 
+      </div> 
+
+      <div> 
+        <h2>No Team</h2>
+        <ul id='no-team'>
+          <!-- No team members will be updated here dynamically -->
+        </ul> 
+      </div>
+
+    </div> 
+    <button id='leave-game-button' onclick='leaveRoom()'>Leave Game</button>
+    <button id='start-game-button' onclick='startGame()'>Start Game</button>
+
+
+    
+  </div>
+
+  <!-- Bootstrap and JavaScript dependencies -->
+  <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.5.2/dist/js/bootstrap.bundle.min.js"></script>
+
+  <script>
+    let socket;
+
+    window.onload = function() {
+      const { userId, userName } = getUserInfo();
+      const gameRoomId = window.location.pathname.split('/').pop();
+
+      if(!socket) {
+        socket = io('/game-room', {
+          query: { userId, gameId: gameRoomId },
+        });
+      }
+
+      socket.on('connect', () => {
+        console.log(`Connected as ${userName} (ID: ${userId})`);
+
+        socket.on('game-room:updated', (gameRoom) => {
+          console.log('Game Room updated:', gameRoom);
+          renderGameRoom(gameRoom);
+        });
+
+        /*
+        socket.on('game-room:left', () => {
+          console.log('Left game room');
+          // Redirect to the lobby
+          window.location.href = '/';
+        });
+
+        socket.on('game-room:join:error', (error) => {
+          console.error('Error joining game room:', error);
+          renderError(error);
+        });
+
+        socket.on('game-room:leave:error', (error) => {
+          console.error('Error leaving game room:', error);
+        });
+
+        socket.on('game-room:start:error', (error) => {
+          console.error('Error starting game room:', error);
+        });
+
+        socket.on('game-started:updated', (gameRoom) => {
+          console.log('Game started:', gameRoom);
+          renderStartedGameRoom(gameRoom);
+        });
+
+        socket.on('game-started:message-received', (message) => {
+          console.log(`Message from ${message.sender}: ${message.text}`);
+        });*/
+      });
+    }
+ 
+
+    function getUserInfo() {
+      const userId = localStorage.getItem('userId');
+      const userName = localStorage.getItem('userName');
+      return { userId, userName };
+    }
+
+    const renderGameRoom = (gameRoom) => {
+
+      const h1Name = document.getElementById('game-room-name');
+      h1Name.textContent = `Game Room: ${gameRoom.name}`;
+
+      // Update Red Team
+      const redTeamList = document.getElementById('red-team');
+      redTeamList.innerHTML = '';  // Clear the list
+      gameRoom.redTeam.forEach(player => {
+        const li = document.createElement('li');
+        li.textContent = player;
+        redTeamList.appendChild(li);
+      });
+
+      // Update Blue Team
+      const blueTeamList = document.getElementById('blue-team');
+      blueTeamList.innerHTML = '';
+      gameRoom.blueTeam.forEach(player => {
+        const li = document.createElement('li');
+        li.textContent = player;
+        blueTeamList.appendChild(li);
+      });
+
+      // Update No Team
+      const noTeamList = document.getElementById('no-team');
+      noTeamList.innerHTML = '';
+      gameRoom.noTeam.forEach(player => {
+        const li = document.createElement('li');
+        li.textContent = player;
+        noTeamList.appendChild(li);
+      });
+
+      // Check if the current user is the host and display Start Game button
+      const isHost = gameRoom.host === localStorage.getItem('userId');
+      const startGameBtn = document.getElementById('start-game-button');
+      startGameBtn.style.display = isHost ? 'block' : 'none';
+    };
+
+    function leaveRoom() {
+      socket.emit('game-room:leave');
+      console.log('leaving room');
+    }
+
+    function joinRedTeam() {
+      socket.emit('game-room:join:red');
+      console.log('joining red team');
+    }
+
+    function joinBlueTeam() {
+      socket.emit('game-room:join:blue');
+      console.log('joining blue team');
+    }
+
+
+  </script>
+</body>
+</html>
