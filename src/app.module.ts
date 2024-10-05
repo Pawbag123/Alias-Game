@@ -15,6 +15,7 @@ import { GameRoomService } from './game-room/game-room.service';
 import { GameStateModule } from './shared/game-state.module';
 import { GameStateService } from './shared/game-state.service';
 import { GameMechanicsService } from './game-room/game-mechanics.service';
+import { ChatModule } from './chat/chat.module';
 
 @Module({
   imports: [
@@ -27,9 +28,10 @@ import { GameMechanicsService } from './game-room/game-mechanics.service';
       imports: [ConfigModule],
       inject: [ConfigService],
       useFactory: (configService: ConfigService) => ({
-        uri: configService.get<string>('MONGO_URI'),
+        uri: configService.get<string>('MONGO_URL'),
       }),
     }),
+    ChatModule,
   ],
   controllers: [AppController],
   providers: [

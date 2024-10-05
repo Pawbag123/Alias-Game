@@ -12,6 +12,7 @@ import { GameRoomService } from './game-room.service';
 import { GameStateService } from 'src/shared/game-state.service';
 import { GameMechanicsService } from './game-mechanics.service';
 import { Team } from 'src/lobby/types';
+import { ChatService } from 'src/chat/chat.service';
 
 //TODO: add error emitters, handlers, try catch blocks, extend logic after game is started
 //TODO: change server emit to namespace emit
@@ -44,6 +45,7 @@ export class GameRoomGateway
     private readonly gameRoomService: GameRoomService,
     private readonly gameStateService: GameStateService,
     private readonly gameMechanicsService: GameMechanicsService,
+    private readonly chatService: ChatService
   ) {}
 
   /**
@@ -269,4 +271,35 @@ export class GameRoomGateway
       text: 'hello world',
     });
   }
+
+  // @SubscribeMessage('chat:message')
+  // async handleChatMessage(
+  //   @ConnectedSocket() client: Socket,
+  //   { userId, userName, gameId, message }: { userId: string, userName: string, gameId: string, message: string }
+  // ): Promise<void> {
+  //   const { /*gameId, userId,*/ team } = client.data;
+  //   console.log('Chat, client data', client.data);
+    
+  //   const playerName = this.gameStateService.getPlayerById(userId, gameId).name;
+  //   const chatResponse = await this.chatService.handleChatMessage(userId, userName, gameId, message)
+  //   this.server.to(gameId).emit('chat:message', chatResponse);
+  // }
+
+  @SubscribeMessage('chat:message')
+  async handleChatMessage(
+    @ConnectedSocket() client: Socket,
+    payload: any  // Temporarily use 'any' to inspect the payload
+  ): Promise<void> {
+    const { gameId, userId } = client.data;
+    console.log('client data', client.data);
+    console.log(payload);
+    
+    
+    
+    // // Proceed with the rest of your logic
+    // const playerName = this.gameStateService.getPlayerById(userId, gameId).name;
+    // const chatResponse = await this.chatService.handleChatMessage(userId, userName, gameId, message)
+    this.server.to(gameId).emit('chat:message', {message: 'chatResponse'});
+  }
+
 }

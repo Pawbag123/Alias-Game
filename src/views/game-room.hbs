@@ -9,39 +9,53 @@
   <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
 </head>
 <body class="bg-light">
-  <div class="container">
+  <div class="container mt-5">
+    
+    <h1 id="game-room-name" class="text-center mb-4"></h1>
 
-    <h1 id="game-room-name"></h1>
-    <div style='display: flex; justify-content:space-around;'>
-      <div> 
+    <div class="card shadow-sm mb-4">
+      <div class="card-body">
+        <ul id="messages" class="list-group mb-4" style="height: 300px; overflow-y: auto;">
+          <!-- Messages will appear here -->
+        </ul>
+
+        <form id="chat-form" class="input-group mb-3">
+          <input type="text" class="form-control" id="message" placeholder="Type a message..." required>
+          <button type="submit" class="btn btn-primary">Send</button>
+        </form>
+      </div>
+    </div>
+
+    <div class="d-flex justify-content-around mb-4">
+      <div class="text-center">
         <h2>Red Team</h2> 
-        <button id='join-red-team-button' onclick='joinRedTeam()'>Join Red Team</button>
-        <ul id='red-team'>
+        <button id="join-red-team-button" class="btn btn-danger mb-3" onclick="joinRedTeam()">Join Red Team</button>
+        <ul id="red-team" class="list-group">
           <!-- Red team members will be updated here dynamically -->
         </ul> 
       </div>
 
-      <div> 
+      <div class="text-center">
         <h2>Blue Team</h2> 
-        <button id='join-blue-team-button' onclick='joinBlueTeam()'>Join Blue Team</button> 
-        <ul id='blue-team'>
+        <button id="join-blue-team-button" class="btn btn-primary mb-3" onclick="joinBlueTeam()">Join Blue Team</button> 
+        <ul id="blue-team" class="list-group">
           <!-- Blue team members will be updated here dynamically -->
         </ul> 
       </div> 
 
-      <div> 
+      <div class="text-center">
         <h2>No Team</h2>
-        <ul id='no-team'>
+        <ul id="no-team" class="list-group">
           <!-- No team members will be updated here dynamically -->
         </ul> 
       </div>
-
     </div> 
-    <button id='leave-game-button' onclick='leaveRoom()'>Leave Game</button>
-    <button id='start-game-button' onclick='startGame()'>Start Game</button>
 
+    <div class="d-flex justify-content-center">
+      <button id="leave-game-button" class="btn btn-secondary me-3" onclick="leaveRoom()">Leave Game</button>
+      <button id="start-game-button" class="btn btn-success" onclick="startGame()">Start Game</button>
+    </div>
 
-    
   </div>
 
   <!-- Bootstrap and JavaScript dependencies -->
@@ -60,6 +74,11 @@
           query: { userId, gameId: gameRoomId },
         });
       }
+
+      //chat messages elements
+      const form = document.getElementById('chat-form');
+      const messageInput = document.getElementById('message');
+      const messageList = document.getElementById('messages');
 
       socket.on('connect', () => {
         console.log(`Connected as ${userName} (ID: ${userId})`);
@@ -97,6 +116,30 @@
         socket.on('game-started:message-received', (message) => {
           console.log(`Message from ${message.sender}: ${message.text}`);
         });*/
+
+        //chat message events
+        socket.on('chat:message', (msg) => {
+          console.log(`Message received: ${msg}`)
+          const li = document.createElement('li');
+          li.textContent = `${msg.userName}: ${msg.message} [${new Date(msg.time).toLocaleTimeString()}]`;
+          messageList.appendChild(li);
+        });
+      });
+
+      form.addEventListener('submit', (e) => {
+        e.preventDefault();
+        const message = messageInput.value;
+        const { userId, userName } = getUserInfo();
+        console.log(`
+          userId: ${userId}, 
+          userName: ${userName}, 
+          gameId: ${gameRoomId}, 
+          message: ${message}, 
+        `)
+        if(message && userName) {
+          socket.emit('chat:message', { userId, userName, gameId: gameRoomId, message });
+          messageInput.value = '';
+        }
       });
     }
  
