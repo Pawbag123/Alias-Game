@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -8,9 +9,10 @@
   <!-- Bootstrap CSS CDN -->
   <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
 </head>
+
 <body class="bg-light">
   <div class="container mt-5">
-    
+
     <h1 id="game-room-name" class="text-center mb-4"></h1>
 
     <div class="card shadow-sm mb-4">
@@ -28,28 +30,28 @@
 
     <div class="d-flex justify-content-around mb-4">
       <div class="text-center">
-        <h2>Red Team</h2> 
+        <h2>Red Team</h2>
         <button id="join-red-team-button" class="btn btn-danger mb-3" onclick="joinRedTeam()">Join Red Team</button>
         <ul id="red-team" class="list-group">
           <!-- Red team members will be updated here dynamically -->
-        </ul> 
+        </ul>
       </div>
 
       <div class="text-center">
-        <h2>Blue Team</h2> 
-        <button id="join-blue-team-button" class="btn btn-primary mb-3" onclick="joinBlueTeam()">Join Blue Team</button> 
+        <h2>Blue Team</h2>
+        <button id="join-blue-team-button" class="btn btn-primary mb-3" onclick="joinBlueTeam()">Join Blue Team</button>
         <ul id="blue-team" class="list-group">
           <!-- Blue team members will be updated here dynamically -->
-        </ul> 
-      </div> 
+        </ul>
+      </div>
 
       <div class="text-center">
         <h2>No Team</h2>
         <ul id="no-team" class="list-group">
           <!-- No team members will be updated here dynamically -->
-        </ul> 
+        </ul>
       </div>
-    </div> 
+    </div>
 
     <div class="d-flex justify-content-center">
       <button id="leave-game-button" class="btn btn-secondary me-3" onclick="leaveRoom()">Leave Game</button>
@@ -65,11 +67,11 @@
   <script>
     let socket;
 
-    window.onload = function() {
+    window.onload = function () {
       const { userId, userName } = getUserInfo();
       const gameRoomId = window.location.pathname.split('/').pop();
 
-      if(!socket) {
+      if (!socket) {
         socket = io('/game-room', {
           query: { userId, gameId: gameRoomId },
         });
@@ -88,7 +90,6 @@
           renderGameRoom(gameRoom);
         });
 
-        /*
         socket.on('game-room:left', () => {
           console.log('Left game room');
           // Redirect to the lobby
@@ -109,13 +110,12 @@
         });
 
         socket.on('game-started:updated', (gameRoom) => {
-          console.log('Game started:', gameRoom);
-          renderStartedGameRoom(gameRoom);
+          console.log('Actual state of the game: ', gameRoom);
         });
 
         socket.on('game-started:message-received', (message) => {
           console.log(`Message from ${message.sender}: ${message.text}`);
-        });*/
+        });
 
         //chat message events
         socket.on('chat:message', (msg) => {
@@ -130,15 +130,15 @@
         e.preventDefault();
         const message = messageInput.value;
         const { userId, userName } = getUserInfo();
-        
-        if(message && userName) {
+
+        if (message && userName) {
           const data = { userId, userName, gameId: gameRoomId, message }
           socket.emit('chat:message', data);
           messageInput.value = '';
         }
       });
     }
- 
+
 
     function getUserInfo() {
       const userId = localStorage.getItem('userId');
@@ -199,7 +199,13 @@
       console.log('joining blue team');
     }
 
+    function startGame() {
+      // TODO Add validation (teams etc)
+      socket.emit('game-room:start');
+      console.log('starting game');
+    }
 
   </script>
 </body>
+
 </html>
