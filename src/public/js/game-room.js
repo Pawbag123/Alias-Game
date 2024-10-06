@@ -151,6 +151,14 @@ const startGameRoom = (userId, userName) => {
       renderGameRoom(gameRoom);
     });
 
+    socket.on('lobby:check', () => {
+      console.log('Checking lobby');
+    });
+
+    socket.on('game-room:check', () => {
+      console.log('Checking game room');
+    });
+
     socket.on('game-room:left', () => {
       console.log('Left game room');
       // Redirect to the lobby

@@ -41,6 +41,12 @@ const lobbyTemplateHbs = `
   </body>
 `;
 
+async function loadTemplate(templateName) {
+  const response = await fetch(`src/views/${templateName}.hbs`);
+  const templateHbs = await response.text();
+  return Handlebars.compile(templateHbs);
+}
+
 // Initialize Handlebars templates
 const loadingTemplate = Handlebars.compile(loadingTemplateHbs);
 const userInfoTemplate = Handlebars.compile(userInfoTemplateHbs);
@@ -64,6 +70,15 @@ function renderLobby(games = []) {
   });
   contentDiv.innerHTML = lobbyTemplate({ games, hasGames });
 }
+// async function renderLobby(games = []) {
+//   const contentDiv = document.getElementById('content');
+//   const hasGames = games.length > 0;
+//   games.forEach((game) => {
+//     game.isFull = game.players >= game.maxPlayers;
+//   });
+//   const template = await loadTemplate('testlobby');
+//   contentDiv.innerHTML = template({ games, hasGames });
+// }
 
 // Function to start the lobby and initialize the socket
 function startLobby(userId, userName) {
@@ -93,6 +108,14 @@ function startLobby(userId, userName) {
       console.log('Created game:', gameId);
       // Redirect to the game page
       redirectToGame(gameId);
+    });
+
+    socket.on('lobby:check', () => {
+      console.log('Checking lobby');
+    });
+
+    socket.on('game-room:check', () => {
+      console.log('Checking game room');
     });
 
     socket.on('game:join:error', (error) => {

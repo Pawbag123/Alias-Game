@@ -12,6 +12,7 @@ import { GameRoomService } from './game-room.service';
 import { GameStateService } from 'src/shared/game-state.service';
 import { GameMechanicsService } from './game-mechanics.service';
 import { Team } from 'src/lobby/types';
+import { Logger } from '@nestjs/common';
 
 //TODO: add error emitters, handlers, try catch blocks, extend logic after game is started
 //TODO: change server emit to namespace emit
@@ -20,7 +21,7 @@ import { Team } from 'src/lobby/types';
  * Handles connecting and disconnecting from game room, joining teams, leaving game
  */
 @WebSocketGateway({
-  namespace: '/game-room',
+  namespace: 'game-room',
   cors: {
     origin: '*',
   },
@@ -28,17 +29,19 @@ import { Team } from 'src/lobby/types';
 export class GameRoomGateway
   implements OnGatewayConnection, OnGatewayDisconnect
 {
+  private readonly logger = new Logger(GameRoomGateway.name);
+
   @WebSocketServer()
-  server: Server;
+  gameRoom: Namespace;
 
   /**
    * Lobby namespace
    */
-  @WebSocketServer()
+  // @WebSocketServer()
   lobby: Namespace;
 
-  @WebSocketServer()
-  gameRoom: Namespace;
+  // @WebSocketServer()
+  // gameRoom: Namespace;
 
   constructor(
     private readonly gameRoomService: GameRoomService,
@@ -51,8 +54,8 @@ export class GameRoomGateway
    * has to be done in order to emit events to lobby namespace, like updating games
    */
   afterInit() {
-    this.lobby = this.lobby.server.of('/lobby');
-    this.gameRoom = this.gameRoom.server.of('/game-room');
+    this.lobby = this.gameRoom.server.of('lobby');
+    // this.gameRoom = this.server.server.of('game-room');
   }
 
   /**
@@ -63,7 +66,9 @@ export class GameRoomGateway
    * @returns
    */
   handleConnection(client: Socket): void {
-    console.log(`Client connected in game room: ${client.id}`);
+    this.logger.log(`Client connected in game room: ${client.id}`);
+
+    this.gameRoom.emit('game-room:check');
 
     const { gameId, userId } = client.handshake.query as {
       gameId: string;
@@ -85,7 +90,7 @@ export class GameRoomGateway
         const team = this.gameStateService.getTeamOfPlayer(userId, gameId);
         client.data.team = team;
         client.join(`${gameId}/${team}`);
-        this.server
+        this.gameRoom
           .to(gameId)
           .emit(
             'game-started:updated',
@@ -93,19 +98,19 @@ export class GameRoomGateway
           );
       } catch (error) {
         client.emit('game-started:join:error', error.message);
-        console.log(error);
+        this.logger.error(error);
       }
     } else {
       try {
         this.gameRoomService.addPlayerToGame(gameId, userId, client.id);
       } catch (error) {
         client.emit('game-room:join:error', error.message);
-        console.log(error);
+        this.logger.error(error);
         return;
       }
 
       client.join(gameId);
-      this.server
+      this.gameRoom
         .to(gameId)
         .emit(
           'game-room:updated',
@@ -124,7 +129,7 @@ export class GameRoomGateway
    * @returns
    */
   handleDisconnect(client: Socket): void {
-    console.log(`Client disconnected from game room: ${client.id}`);
+    this.logger.log(`Client disconnected from game room: ${client.id}`);
     const { gameId, userId } = client.data;
     // if game is started, only remove socketId
     if (
@@ -132,7 +137,7 @@ export class GameRoomGateway
       this.gameStateService.getGameById(gameId).isGameStarted
     ) {
       this.gameStateService.removePlayerSocketId(userId);
-      this.server
+      this.gameRoom
         .to(gameId)
         .emit(
           'game-started:updated',
@@ -143,10 +148,10 @@ export class GameRoomGateway
       try {
         this.gameRoomService.removePlayerFromGame(gameId, userId);
       } catch (error) {
-        console.log(error);
+        this.logger.error(error);
       }
       if (this.gameStateService.gameExists(gameId)) {
-        this.server
+        this.gameRoom
           .to(gameId)
           .emit(
             'game-room:updated',
@@ -184,10 +189,10 @@ export class GameRoomGateway
     try {
       this.gameRoomService.joinRedTeam(gameId, userId);
     } catch (error) {
-      console.log(error);
+      this.logger.error(error);
     }
 
-    this.server
+    this.gameRoom
       .to(gameId)
       .emit(
         'game-room:updated',
@@ -206,11 +211,11 @@ export class GameRoomGateway
     try {
       this.gameRoomService.joinBlueTeam(gameId, userId);
     } catch (error) {
-      console.log(error);
+      this.logger.error(error);
     }
 
     if (this.gameStateService.gameExists(gameId)) {
-      this.server
+      this.gameRoom
         .to(gameId)
         .emit(
           'game-room:updated',
@@ -230,12 +235,9 @@ export class GameRoomGateway
     try {
       this.gameMechanicsService.startGame(gameId);
       const sockets = this.gameStateService.getPlayersWithSocketsInGame(gameId);
-      console.log(sockets);
       // join separate rooms for each team
       sockets.forEach(
         ({ socketId, team }: { socketId: string; team: Team }) => {
-          console.log('socket');
-          console.log(socketId, team);
           const socket: Socket = this.gameRoom.sockets.get(socketId);
           if (socket) {
             socket.join(`${gameId}/${team}`);
@@ -243,15 +245,15 @@ export class GameRoomGateway
           }
         },
       );
-      this.server
+      this.gameRoom
         .to(gameId)
         .emit(
           'game-started:updated',
           this.gameStateService.getSerializedGameStarted(gameId),
         );
     } catch (error) {
-      console.log(error);
-      this.server.to(gameId).emit('game-room:start:error', error.message);
+      this.logger.error(error);
+      this.gameRoom.to(gameId).emit('game-room:start:error', error.message);
     }
   }
 
@@ -264,9 +266,11 @@ export class GameRoomGateway
   handleMessage(@ConnectedSocket() client: Socket): void {
     const { gameId, userId, team } = client.data;
     const playerName = this.gameStateService.getPlayerById(userId, gameId).name;
-    this.server.to(`${gameId}/${team}`).emit('game-started:message-received', {
-      sender: playerName,
-      text: 'hello world',
-    });
+    this.gameRoom
+      .to(`${gameId}/${team}`)
+      .emit('game-started:message-received', {
+        sender: playerName,
+        text: 'hello world',
+      });
   }
 }
