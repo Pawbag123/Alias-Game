@@ -34,36 +34,6 @@ export class GameMechanicsService {
     this.gameStateService.addPlayerSocketId(userId, socketId);
   }
 
-  initGame(gameId: string) {
-    // Retrieve the game object using gameId
-    const game = this.gameStateService.getGameById(gameId);
-    if (!game) {
-      throw new Error('Game not found');
-    }
-  
-    const teamPlayers = game.players.filter(player => player.team === Team.RED || player.team === Team.BLUE);
-  
-    if (teamPlayers.length === 0) {
-      throw new Error('No players available in teams');
-    }
-  
-    // Randomly pick a player from the teamPlayers array
-    const randomIndex = Math.floor(Math.random() * teamPlayers.length);
-    const randomPlayer = teamPlayers[randomIndex];
-  
-    game.turn = {
-      alreadyDiscribe: [],
-      team: randomPlayer.team,
-      describer: randomPlayer.userId
-    };
-
-    game.currentWord = this.generateWord(game.wordsUsed)
-  
-    game.isGameStarted = true;
-  
-    this.gameStateService.saveCurrentState(game);
-  }
-
   generateWord(wordsUsed: string[]): string {
     const words = [
       // Fruits
@@ -91,22 +61,22 @@ export class GameMechanicsService {
       // Colors
       "red", "blue", "green", "yellow", "orange", "purple", "pink", "brown", "black", "white", "gray", "cyan", "magenta", "gold", "silver", "turquoise", "beige", "maroon", "navy", "teal"
     ];
-  
+
     let selectedWord: string;
-  
+
     do {
       const wordIndex = this.getRandomNumber(0, words.length - 1);
-      selectedWord = words[wordIndex];
+      selectedWord = words[ wordIndex ];
     } while (wordsUsed.includes(selectedWord));
-  
+
     return selectedWord;
   }
-  
+
   getRandomNumber(min: number, max: number): number {
     return Math.floor(Math.random() * (max - min + 1)) + min;
   }
 
-  async turns(gameId: string) {
+  /* async turns(gameId: string) {
     let rounds = 0;
                        //? const game = this.gameStateService.getGameById(gameId)
     console.log("ENTRO EN TURNS DE MECANICS");
@@ -124,43 +94,80 @@ export class GameMechanicsService {
   } 
   delay(ms: number): Promise<void> {
     return new Promise(resolve => setTimeout(resolve, ms));
-  }
+  } */
 
   nextTurn(gameId: string) {
     const game = this.gameStateService.getGameById(gameId);
-    console.log('GAME IN NEXT TURN FUNCTION: ', game);
-    const { turn, players } = game;
-  
-    turn.alreadyDiscribe.push(turn.describer);
-  
-    //Switch team
-    const oppositeTeam = turn.team === Team.RED ? Team.BLUE : Team.RED;
-    turn.team = oppositeTeam;
-  
-    const nextDescriber = players.find(player => 
-      player.team === oppositeTeam && !turn.alreadyDiscribe.includes(player.userId)
-    );
-  
-    if (nextDescriber) {
-      turn.describer = nextDescriber.userId;
+
+    // Initialize game and set the first turn if it's not already set
+    if (!game.turn) {
+      const teamPlayers = game.players.filter(player => player.team === Team.RED || player.team === Team.BLUE);
+
+      if (teamPlayers.length === 0) {
+        throw new Error('No players available in teams');
+      }
+
+      // Randomly pick a player from the teamPlayers array
+      const randomIndex = Math.floor(Math.random() * teamPlayers.length);
+      const randomPlayer = teamPlayers[ randomIndex ];
+
+      game.turn = {
+        alreadyDiscribe: [],
+        team: randomPlayer.team,
+        describer: randomPlayer.userId
+      };
+
+      // Optionally set the first word
+      game.currentWord = this.generateWord(game.wordsUsed);
     } else {
-      turn.alreadyDiscribe = turn.alreadyDiscribe.filter(playerId =>
-        players.some(player => player.userId === playerId && player.team !== oppositeTeam)
+      // Existing turn logic for subsequent turns
+      game.turn.alreadyDiscribe.push(game.turn.describer);
+
+      // Switch team
+      const oppositeTeam = game.turn.team === Team.RED ? Team.BLUE : Team.RED;
+      game.turn.team = oppositeTeam;
+
+      const nextDescriber = game.players.find(player =>
+        player.team === oppositeTeam && !game.turn.alreadyDiscribe.includes(player.userId)
       );
-  
-      turn.describer = players.find(player => player.team === oppositeTeam)?.userId || '';
+
+      if (nextDescriber) {
+        game.turn.describer = nextDescriber.userId;
+      } else {
+        game.turn.alreadyDiscribe = game.turn.alreadyDiscribe.filter(playerId =>
+          game.players.some(player => player.userId === playerId && player.team !== oppositeTeam)
+        );
+
+        game.turn.describer = game.players.find(player => player.team === oppositeTeam)?.userId || '';
+      }
     }
-  
+
     this.gameStateService.saveCurrentState(game);
     return game;
   }
 
   newWord(gameId: string) {
-    const game = this.gameStateService.getGameById(gameId);  
+    const game = this.gameStateService.getGameById(gameId);
     if (game.currentWord) {
       game.wordsUsed.push(game.currentWord);
     }
     game.currentWord = this.generateWord(game.wordsUsed);
     this.gameStateService.saveCurrentState(game);
+  }
+
+  playerGuessed(gameId: string) {
+    const game = this.gameStateService.getGameById(gameId);
+    const { turn, score } = game;
+
+    if (turn.team === 'red') {
+      score[ 0 ] += 1;
+    } else if (turn.team === 'blue') {
+      score[ 1 ] += 1;
+    }
+
+    this.newWord(gameId);
+
+    this.gameStateService.saveCurrentState(game);
+    return game;
   }
 }

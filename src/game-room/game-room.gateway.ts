@@ -29,8 +29,7 @@ import { GameStartedDto } from './dto/game-started-dto';
   },
 })
 export class GameRoomGateway
-  implements OnGatewayConnection, OnGatewayDisconnect
-{
+  implements OnGatewayConnection, OnGatewayDisconnect {
   @WebSocketServer()
   server: Server;
 
@@ -48,7 +47,7 @@ export class GameRoomGateway
     private readonly gameStateService: GameStateService,
     private readonly gameMechanicsService: GameMechanicsService,
     private readonly chatService: ChatService
-  ) {}
+  ) { }
 
   /**
    * After init, set lobby namespace,
@@ -249,11 +248,10 @@ export class GameRoomGateway
         },
       );
 
-      this.gameMechanicsService.initGame(gameId)
 
       this.handleTurns(gameId)
-       
-      //this.gameMechanicsService.turns(gameId);
+
+      //* this.gameMechanicsService.turns(gameId); this didn't work
 
     } catch (error) {
       console.log(error);
@@ -261,33 +259,52 @@ export class GameRoomGateway
     }
   }
 
-  async handleTurns(gameId: string){
+  //! Heres where turns are managed
+  async handleTurns(gameId: string) {
     let rounds = 0;
+    const totalRounds = 6;
 
+    while (rounds < totalRounds) {
+      this.gameMechanicsService.nextTurn(gameId); // Handles both game initialization and next turn
+      this.gameMechanicsService.newWord(gameId); // Generate a new word
 
-    while(rounds < 6)
-    {
-      this.gameMechanicsService.newWord(gameId);
-      this.gameMechanicsService.nextTurn(gameId);
       this.server.to(gameId).emit(
-        'game-started:updated', //? 'game-started:new-turn'
+        'game-started:updated',
         this.gameStateService.getSerializedGameStarted(gameId)
-      );  
-      console.log("LOG INSIDE THE WHILE: ", this.gameStateService.getGameById(gameId))
-      await this.delay(10000);
-      rounds ++;
+      );
+      const { turn } = this.gameStateService.getGameById(gameId)
+      console.log(`STATE NUMBER ${rounds}`, turn);
+
+      await this.startTimer(gameId, 10); // 10 seconds for each turn
+
+      rounds++;
     }
 
-    //! Game ends
     this.server.to(gameId).emit(
-      'game:end', 
+      'game:end',
       this.gameStateService.getSerializedGameStarted(gameId)
     );
+  }
 
-
+  async startTimer(gameId: string, duration: number) {
+    for (let remaining = duration; remaining > 0; remaining--) {
+      this.server.to(gameId).emit('timer:update', { remaining });
+      await this.delay(1000); // Wait for 1 second before next update
+    }
   }
   delay(ms: number): Promise<void> {
     return new Promise(resolve => setTimeout(resolve, ms));
+  }
+
+
+  //!
+  @SubscribeMessage('game:word-guessed')
+  async wordGuessed(gameId: string) {
+    this.gameMechanicsService.playerGuessed(gameId)
+    this.server.to(gameId).emit(
+      'game-started:updated', //? 'game-started:new-turn'
+      this.gameStateService.getSerializedGameStarted(gameId)
+    );
   }
 
   /**
@@ -314,7 +331,7 @@ export class GameRoomGateway
 
     // console.log('payload: ', payload);
     const { userId, userName, gameId, message } = payload
-    
+
     // const playerName = this.gameStateService.getPlayerById(userId, gameId).name;
     const chatResponse = await this.chatService.handleChatMessage(userId, userName, gameId, message)
     this.server.to(gameId).emit('chat:message', chatResponse);
