@@ -17,6 +17,16 @@ export interface Game {
   isGameStarted: boolean;
   players: Player[];
   maxUsers: number;
+  wordsUsed: string[],
+  currentWord: string,
+  score: [number, number],
+  turn: Turn | null
+}
+
+export interface Turn {
+  alreadyDiscribe: string[];
+  team: Team,
+  describer: string,
 }
 
 /**

@@ -14,7 +14,6 @@ import { ActiveUser, Game, Player, Team } from 'src/lobby/types';
 export class GameStateService {
   private games: Game[] = [];
   private activeUsers: ActiveUser[] = [];
-  private currentStates: GameStartedDto[] = [];
 
   getActiveUserById(userId: string): ActiveUser {
     return this.activeUsers.find((user) => user.id === userId);
@@ -95,7 +94,7 @@ export class GameStateService {
   }
 
   getAllGames(): Game[] {
-    return [...this.games];
+    return [ ...this.games ];
   }
 
   getGameById(gameId: string): Game {
@@ -146,8 +145,12 @@ export class GameStateService {
       name: gameName,
       host: userId,
       isGameStarted: false,
-      players: [newPlayer],
+      players: [ newPlayer ],
       maxUsers: maxUsers,
+      wordsUsed: [],
+      currentWord: '',
+      score: [0,0],
+      turn: null
     };
     this.games.push(newGame);
 
@@ -190,7 +193,7 @@ export class GameStateService {
 
   getSerializedGameStarted(gameId: string): GameStartedDto {
     const game = this.getGameById(gameId);
-
+  
     return plainToClass(GameStartedDto, {
       id: game.id,
       name: game.name,
@@ -202,9 +205,13 @@ export class GameStateService {
       blueTeam: game.players
         .filter((player) => player.team === Team.BLUE)
         .map((player) => [player.name, this.hasUserSocketId(player.userId)]),
-      noTeam: game.players
-        .filter((player) => player.team === Team.NO_TEAM)
-        .map((player) => [player.name, this.hasUserSocketId(player.userId)]),
+      turn: {
+        alreadyDiscribe: game.turn?.alreadyDiscribe ?? [],
+        team: game.turn?.team ?? Team.RED,
+        describer: game.turn?.describer ?? game.players.find(p => p.team === Team.RED)?.userId ?? '',
+      },
+      currentWord: game.currentWord,
+      score: game.score,
     });
   }
 
@@ -236,7 +243,7 @@ export class GameStateService {
 
   moveHostToNextUser(gameId: string): void {
     const game = this.getGameById(gameId);
-    game.host = game.players[0].userId;
+    game.host = game.players[ 0 ].userId;
   }
 
   removePlayerFromGame(userId: string, gameId: string): void {
@@ -312,14 +319,15 @@ export class GameStateService {
     emitGamesUpdated();
   }
 
-  //! What is happening in the game
-  saveCurrentState(gameStartedDto: GameStartedDto) {
-    try {
-      console.log('Saving game state for:', gameStartedDto.id);
-      console.log('Current state object:', gameStartedDto);
-  
-      // Save logic...
-      this.currentStates.push(gameStartedDto); // Or update an existing state
+  saveCurrentState(game: Game) {
+    try {  
+      // Save or update logic
+      const existingGameIndex = this.games.findIndex(g => g.id === game.id);
+      if (existingGameIndex !== -1) {
+        this.games[existingGameIndex] = game;  // Update existing game state
+      } else {
+        this.games.push(game);  // Save new game state
+      }
   
     } catch (error) {
       console.error('Error details:', error);
@@ -327,12 +335,14 @@ export class GameStateService {
     }
   }
 
-  getCurrentState(gameId : string){
+  getCurrentState(gameId: string): Game | undefined {
     try {
-      console.log("Aca es el estado la funcion get")
-      return this.currentStates.find((state) => state.id === gameId); 
+      console.log("Fetching the game state for:", gameId);
+      // Find the game in the 'games' array
+      return this.games.find((game) => game.id === gameId);
     } catch (error) {
-      throw new Error(error.message);
+      console.error('Error fetching the current game state:', error);
+      throw new Error('Error fetching the current game state');
     }
   }
 }

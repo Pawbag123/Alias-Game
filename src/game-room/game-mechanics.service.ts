@@ -1,11 +1,14 @@
 import { Injectable } from '@nestjs/common';
 import { GameStateService } from 'src/shared/game-state.service';
-import { GameStartedDto } from './dto/game-started-dto';
 import { Team } from 'src/lobby/types';
+import { GameRoomGateway } from './game-room.gateway';
 
 @Injectable()
 export class GameMechanicsService {
-  constructor(private readonly gameStateService: GameStateService) {
+  constructor(
+    private readonly gameStateService: GameStateService,
+    // private readonly gameGateWay: GameRoomGateway
+  ) {
     console.log('GameMechanicsService created');
   }
 
@@ -31,23 +34,37 @@ export class GameMechanicsService {
     this.gameStateService.addPlayerSocketId(userId, socketId);
   }
 
-  initGame(gameStartedDto : GameStartedDto){
-    //! First turn of the game
-    gameStartedDto.turn = {
-      alreadyDiscribe: [],
-      team: Team.RED,
-      describer: gameStartedDto.redTeam[0][0],
-      words: this.generateWords(10), // Change input to get different number of words
+  initGame(gameId: string) {
+    // Retrieve the game object using gameId
+    const game = this.gameStateService.getGameById(gameId);
+    if (!game) {
+      throw new Error('Game not found');
     }
-    gameStartedDto.score = [0, 0]
-    console.log("Before saving it ", gameStartedDto);
-    // save whats happening in game in the state service
-    this.gameStateService.saveCurrentState(gameStartedDto);
-    return gameStartedDto;
+  
+    const teamPlayers = game.players.filter(player => player.team === Team.RED || player.team === Team.BLUE);
+  
+    if (teamPlayers.length === 0) {
+      throw new Error('No players available in teams');
+    }
+  
+    // Randomly pick a player from the teamPlayers array
+    const randomIndex = Math.floor(Math.random() * teamPlayers.length);
+    const randomPlayer = teamPlayers[randomIndex];
+  
+    game.turn = {
+      alreadyDiscribe: [],
+      team: randomPlayer.team,
+      describer: randomPlayer.userId
+    };
+
+    game.currentWord = this.generateWord(game.wordsUsed)
+  
+    game.isGameStarted = true;
+  
+    this.gameStateService.saveCurrentState(game);
   }
 
-
-  generateWords(totalWords: number) {
+  generateWord(wordsUsed: string[]): string {
     const words = [
       // Fruits
       "apple", "banana", "grape", "orange", "peach", "lemon", "cherry", "mango", "plum", "melon", "kiwi", "strawberry", "blueberry", "pineapple", "watermelon", "pear", "papaya", "coconut",
@@ -74,66 +91,76 @@ export class GameMechanicsService {
       // Colors
       "red", "blue", "green", "yellow", "orange", "purple", "pink", "brown", "black", "white", "gray", "cyan", "magenta", "gold", "silver", "turquoise", "beige", "maroon", "navy", "teal"
     ];
-
-    const resultWords: string[] = [];
-
-    for (let i = 0; i < totalWords; i++) {
+  
+    let selectedWord: string;
+  
+    do {
       const wordIndex = this.getRandomNumber(0, words.length - 1);
-      resultWords.push(words[wordIndex]);
-      words.splice(wordIndex, 1);
-    }
-
-    return resultWords;
+      selectedWord = words[wordIndex];
+    } while (wordsUsed.includes(selectedWord));
+  
+    return selectedWord;
   }
+  
   getRandomNumber(min: number, max: number): number {
     return Math.floor(Math.random() * (max - min + 1)) + min;
   }
 
-  nextTurn(currentState: GameStartedDto) {
-    console.log('NEXT TURN FUNCTION');
-    // Retrieve the current game state using the provided game ID
-    const { turn, redTeam, blueTeam } = currentState;
+  async turns(gameId: string) {
+    let rounds = 0;
+                       //? const game = this.gameStateService.getGameById(gameId)
+    console.log("ENTRO EN TURNS DE MECANICS");
+    await this.delay(10000);
 
-    // Add the current describer to the already described list
-    currentState.turn.alreadyDiscribe.push(turn.describer);
-
-    // Check if the current team is RED and switch to BLUE
-    if (currentState.turn.team === Team.RED) {
-      currentState.turn.team = Team.BLUE;
-
-      // Look for a new describer in the blue team
-      for (let i = 0; i < blueTeam.length; i++) {
-        // Check if the player has not already described
-        if (!currentState.turn.alreadyDiscribe.includes(blueTeam[ i ][ 0 ])) {
-          currentState.turn.describer = blueTeam[ i ][ 0 ];
-          return currentState; 
-        }
-      }
-
-      currentState.turn.alreadyDiscribe = currentState.turn.alreadyDiscribe.filter(playerId => 
-        !blueTeam.some(player => player[0] === playerId)
-      );
-      currentState.turn.describer = blueTeam[0][0];
-      return currentState; 
-
-    } else {
-      // Switch to the RED team
-      currentState.turn.team = Team.RED;
-
-      // Look for a new describer in the red team
-      for (let i = 0; i < redTeam.length; i++) {
-        // Check if the player has not already described
-        if (!currentState.turn.alreadyDiscribe.includes(redTeam[ i ][ 0 ])) {
-          currentState.turn.describer = redTeam[ i ][ 0 ]; // Assign the first eligible player as describer
-          return currentState; // Exit the function once a describer is found
-        }
-      }
-      
-      currentState.turn.alreadyDiscribe = currentState.turn.alreadyDiscribe.filter(playerId => 
-        !redTeam.some(player => player[0] === playerId)
-      );
-      currentState.turn.describer = redTeam[0][0];
-      return currentState; 
+    while(rounds < 6)
+    {
+      this.newWord(gameId);
+      this.nextTurn(gameId);
+      //! Comunicates with gateWay to send the clientes the changes made in teams, describer and word.
+      console.log("LOG INSIDE THE WHILE: ", this.gameStateService.getGameById(gameId))
+      await this.delay(10000);
+      rounds ++;
     }
+  } 
+  delay(ms: number): Promise<void> {
+    return new Promise(resolve => setTimeout(resolve, ms));
+  }
+
+  nextTurn(gameId: string) {
+    const game = this.gameStateService.getGameById(gameId);
+    console.log('GAME IN NEXT TURN FUNCTION: ', game);
+    const { turn, players } = game;
+  
+    turn.alreadyDiscribe.push(turn.describer);
+  
+    //Switch team
+    const oppositeTeam = turn.team === Team.RED ? Team.BLUE : Team.RED;
+    turn.team = oppositeTeam;
+  
+    const nextDescriber = players.find(player => 
+      player.team === oppositeTeam && !turn.alreadyDiscribe.includes(player.userId)
+    );
+  
+    if (nextDescriber) {
+      turn.describer = nextDescriber.userId;
+    } else {
+      turn.alreadyDiscribe = turn.alreadyDiscribe.filter(playerId =>
+        players.some(player => player.userId === playerId && player.team !== oppositeTeam)
+      );
+  
+      turn.describer = players.find(player => player.team === oppositeTeam)?.userId || '';
+    }
+  
+    this.gameStateService.saveCurrentState(game);
+    return game;
+  }
+
+  newWord(gameId: string) {
+    const game = this.gameStateService.getGameById(gameId);  
+    if (game.currentWord) {
+      game.wordsUsed.push(game.currentWord);
+    }
+    game.currentWord = this.generateWord(game.wordsUsed);
+    this.gameStateService.saveCurrentState(game);
   }
 }

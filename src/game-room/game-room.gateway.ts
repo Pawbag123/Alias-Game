@@ -249,19 +249,11 @@ export class GameRoomGateway
         },
       );
 
-      let gameStartedDto =  this.gameStateService.getSerializedGameStarted(gameId);
+      this.gameMechanicsService.initGame(gameId)
 
-      //! Game first turn
-      gameStartedDto = this.gameMechanicsService.initGame(gameStartedDto)
-
-      //! Emits first turn
-      this.server.to(gameId).emit(
-        'game-started:updated',
-        gameStartedDto
-      ); 
-
-      //! Go inside handle turns to emit the rest
-      this.handleTurns(gameStartedDto);
+      this.handleTurns(gameId)
+       
+      //this.gameMechanicsService.turns(gameId);
 
     } catch (error) {
       console.log(error);
@@ -269,29 +261,31 @@ export class GameRoomGateway
     }
   }
 
-  async handleTurns(@ConnectedSocket() gameStartedDto: GameStartedDto) {
-    const gameId  = gameStartedDto.id;
-    let i = 0;
+  async handleTurns(gameId: string){
+    let rounds = 0;
 
-    //! Time of rounds and total rounds can be managed from here
-    while (i < 6) {
-      gameStartedDto.turn.words = this.gameMechanicsService.generateWords(10);
-      
-      await this.delay(8000);
-  
-      gameStartedDto = this.gameMechanicsService.nextTurn(gameStartedDto);
-      this.gameStateService.saveCurrentState(gameStartedDto);
 
-      this.server
-        .to(gameId)
-        .emit(
-          'game-started:updated',
-          gameStartedDto,
-        );
-  
-      i++;
+    while(rounds < 6)
+    {
+      this.gameMechanicsService.newWord(gameId);
+      this.gameMechanicsService.nextTurn(gameId);
+      this.server.to(gameId).emit(
+        'game-started:updated', //? 'game-started:new-turn'
+        this.gameStateService.getSerializedGameStarted(gameId)
+      );  
+      console.log("LOG INSIDE THE WHILE: ", this.gameStateService.getGameById(gameId))
+      await this.delay(10000);
+      rounds ++;
     }
-  } 
+
+    //! Game ends
+    this.server.to(gameId).emit(
+      'game:end', 
+      this.gameStateService.getSerializedGameStarted(gameId)
+    );
+
+
+  }
   delay(ms: number): Promise<void> {
     return new Promise(resolve => setTimeout(resolve, ms));
   }

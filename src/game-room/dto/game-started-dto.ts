@@ -21,15 +21,14 @@ export class GameStartedDto {
   blueTeam: [string, boolean][];
 
   @Expose()
-  noTeam: [string, boolean][];
-
-  @Expose()
   turn: {
     alreadyDiscribe: string[];
     team: Team,
     describer: string,
-    words: string[],
   }
+
+  @Expose()
+  currentWord: string;
 
   @Expose()
   score: [number, number]
