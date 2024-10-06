@@ -14,6 +14,7 @@ import { GameStateService } from 'src/shared/game-state.service';
 import { GameMechanicsService } from './game-mechanics.service';
 import { Team } from 'src/lobby/types';
 import { ChatService } from 'src/chat/chat.service';
+import { GameStartedDto } from './dto/game-started-dto';
 
 //TODO: add error emitters, handlers, try catch blocks, extend logic after game is started
 //TODO: change server emit to namespace emit
@@ -231,6 +232,7 @@ export class GameRoomGateway
   handleStartGame(@ConnectedSocket() client: Socket) {
     const { gameId } = client.data;
     try {
+
       this.gameMechanicsService.startGame(gameId);
       const sockets = this.gameStateService.getPlayersWithSocketsInGame(gameId);
       console.log(sockets);
@@ -246,16 +248,52 @@ export class GameRoomGateway
           }
         },
       );
-      this.server
-        .to(gameId)
-        .emit(
-          'game-started:updated',
-          this.gameStateService.getSerializedGameStarted(gameId),
-        );
+
+      let gameStartedDto =  this.gameStateService.getSerializedGameStarted(gameId);
+
+      //! Game first turn
+      gameStartedDto = this.gameMechanicsService.initGame(gameStartedDto)
+
+      //! Emits first turn
+      this.server.to(gameId).emit(
+        'game-started:updated',
+        gameStartedDto
+      ); 
+
+      //! Go inside handle turns to emit the rest
+      this.handleTurns(gameStartedDto);
+
     } catch (error) {
       console.log(error);
       this.server.to(gameId).emit('game-room:start:error', error.message);
     }
+  }
+
+  async handleTurns(@ConnectedSocket() gameStartedDto: GameStartedDto) {
+    const gameId  = gameStartedDto.id;
+    let i = 0;
+
+    //! Time of rounds and total rounds can be managed from here
+    while (i < 6) {
+      gameStartedDto.turn.words = this.gameMechanicsService.generateWords(10);
+      
+      await this.delay(8000);
+  
+      gameStartedDto = this.gameMechanicsService.nextTurn(gameStartedDto);
+      this.gameStateService.saveCurrentState(gameStartedDto);
+
+      this.server
+        .to(gameId)
+        .emit(
+          'game-started:updated',
+          gameStartedDto,
+        );
+  
+      i++;
+    }
+  } 
+  delay(ms: number): Promise<void> {
+    return new Promise(resolve => setTimeout(resolve, ms));
   }
 
   /**

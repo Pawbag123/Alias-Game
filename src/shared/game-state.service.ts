@@ -14,6 +14,7 @@ import { ActiveUser, Game, Player, Team } from 'src/lobby/types';
 export class GameStateService {
   private games: Game[] = [];
   private activeUsers: ActiveUser[] = [];
+  private currentStates: GameStartedDto[] = [];
 
   getActiveUserById(userId: string): ActiveUser {
     return this.activeUsers.find((user) => user.id === userId);
@@ -309,5 +310,29 @@ export class GameStateService {
     this.removePlayerFromGame(userId, gameId);
 
     emitGamesUpdated();
+  }
+
+  //! What is happening in the game
+  saveCurrentState(gameStartedDto: GameStartedDto) {
+    try {
+      console.log('Saving game state for:', gameStartedDto.id);
+      console.log('Current state object:', gameStartedDto);
+  
+      // Save logic...
+      this.currentStates.push(gameStartedDto); // Or update an existing state
+  
+    } catch (error) {
+      console.error('Error details:', error);
+      throw new Error('Error saving the current game state');
+    }
+  }
+
+  getCurrentState(gameId : string){
+    try {
+      console.log("Aca es el estado la funcion get")
+      return this.currentStates.find((state) => state.id === gameId); 
+    } catch (error) {
+      throw new Error(error.message);
+    }
   }
 }
