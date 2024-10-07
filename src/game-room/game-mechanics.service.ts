@@ -159,9 +159,9 @@ export class GameMechanicsService {
     const game = this.gameStateService.getGameById(gameId);
     const { turn, score } = game;
 
-    if (turn.team === 'red') {
+    if (turn.team === 'redTeam') {
       score[ 0 ] += 1;
-    } else if (turn.team === 'blue') {
+    } else if (turn.team === 'blueTeam') {
       score[ 1 ] += 1;
     }
 
