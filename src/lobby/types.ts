@@ -46,8 +46,8 @@ export interface ActiveUser {
 }
 
 export enum Team {
-  RED = 'red',
-  BLUE = 'blue',
+  RED = 'redTeam',
+  BLUE = 'blueTeam',
   NO_TEAM = 'noTeam',
 }
 
