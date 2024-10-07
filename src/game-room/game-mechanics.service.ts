@@ -7,7 +7,6 @@ import { GameRoomGateway } from './game-room.gateway';
 export class GameMechanicsService {
   constructor(
     private readonly gameStateService: GameStateService,
-    // private readonly gameGateWay: GameRoomGateway
   ) {
     console.log('GameMechanicsService created');
   }
@@ -152,6 +151,7 @@ export class GameMechanicsService {
       game.wordsUsed.push(game.currentWord);
     }
     game.currentWord = this.generateWord(game.wordsUsed);
+    console.log('new word : ', game.currentWord);
     this.gameStateService.saveCurrentState(game);
   }
 
@@ -169,5 +169,53 @@ export class GameMechanicsService {
 
     this.gameStateService.saveCurrentState(game);
     return game;
+  }
+
+  validateWord(userId: string, gameId: string, message: string) {
+    const game = this.gameStateService.getGameById(gameId);
+    const { turn, currentWord } = game;
+  
+    if (game.isGameStarted && turn) {
+      // Find the player's team
+      const player = game.players.find(p => p.userId === userId);
+      if (!player) {
+        console.log("Player not found!");
+        return message; // Early return if player not found
+      }
+  
+      if (player.team === turn.team) {
+  
+        if (turn.describer === userId) {
+  
+          if (message.toLowerCase() === currentWord.toLowerCase()) {
+            // Return the word censored with *
+            const censoredWord = currentWord.replace(/./g, '*');
+            return censoredWord;
+          } else {
+            return message;
+          }
+  
+        } else {
+          // The player is guessing
+  
+          // Compare the guess with the current word
+          if (message.toLowerCase() === currentWord.toLowerCase()) {
+            this.playerGuessed(gameId);
+            return message = `${message} ✅`;
+          } else {
+            // Return the message normally if it's a wrong guess
+            return message;
+          }
+        }
+  
+      } else {
+        // It's not the player's team's turn
+        return message;
+      }
+  
+    } else {
+      // Game hasn't started or turn is null
+      return message;
+    }
   }
 }

@@ -174,6 +174,8 @@ const startGameRoom = (userId, userName) => {
       console.log('Game started:', gameRoom);
       renderStartedGameRoom(gameRoom);
     });
+    
+    
 
     socket.on('game-started:message-received', (message) => {
       console.log(`Message from ${message.sender}: ${message.text}`);

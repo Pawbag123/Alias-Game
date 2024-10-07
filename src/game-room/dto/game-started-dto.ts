@@ -32,5 +32,8 @@ export class GameStartedDto {
 
   @Expose()
   score: [number, number]
-
+/* socore: {
+red: number, 
+blue: number
+}*/
 }

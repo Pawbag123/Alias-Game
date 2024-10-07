@@ -27,6 +27,7 @@
         </form>
       </div>
     </div>
+    
 
     <div class="d-flex justify-content-around mb-4">
       <div class="text-center">
@@ -51,6 +52,11 @@
           <!-- No team members will be updated here dynamically -->
         </ul>
       </div>
+    </div>
+
+    <!-- RENDER IF GAME IS STARTED-->
+    <div id="timer" class="text-center mt-4" style="font-size: 24px;"></div>
+      Time Remaining: <span id="time-remaining">0</span> seconds
     </div>
 
     <div class="d-flex justify-content-center">
@@ -115,6 +121,10 @@
 
         socket.on('game-started:message-received', (message) => {
           console.log(`Message from ${message.sender}: ${message.text}`);
+        });
+        
+        socket.on('timer:update', (data) => {
+          document.getElementById('time-remaining').textContent = data.remaining;
         });
 
         //chat message events

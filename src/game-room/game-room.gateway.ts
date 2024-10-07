@@ -247,11 +247,8 @@ export class GameRoomGateway
           }
         },
       );
-
-
-      this.handleTurns(gameId)
-
       //* this.gameMechanicsService.turns(gameId); this didn't work
+      this.handleTurns(gameId)
 
     } catch (error) {
       console.log(error);
@@ -262,7 +259,7 @@ export class GameRoomGateway
   //! Heres where turns are managed
   async handleTurns(gameId: string) {
     let rounds = 0;
-    const totalRounds = 6;
+    const totalRounds = 4;
 
     while (rounds < totalRounds) {
       this.gameMechanicsService.nextTurn(gameId); // Handles both game initialization and next turn
@@ -272,10 +269,11 @@ export class GameRoomGateway
         'game-started:updated',
         this.gameStateService.getSerializedGameStarted(gameId)
       );
-      const { turn } = this.gameStateService.getGameById(gameId)
+      const { turn, currentWord } = this.gameStateService.getGameById(gameId)
       console.log(`STATE NUMBER ${rounds}`, turn);
+      console.log(currentWord);
 
-      await this.startTimer(gameId, 10); // 10 seconds for each turn
+      await this.startTimer(gameId, 30); // 10 seconds for each turn
 
       rounds++;
     }
@@ -298,14 +296,14 @@ export class GameRoomGateway
 
 
   //!
-  @SubscribeMessage('game:word-guessed')
+/*   @SubscribeMessage('game:word-guessed')
   async wordGuessed(gameId: string) {
     this.gameMechanicsService.playerGuessed(gameId)
     this.server.to(gameId).emit(
       'game-started:updated', //? 'game-started:new-turn'
       this.gameStateService.getSerializedGameStarted(gameId)
     );
-  }
+  } */
 
   /**
    * Handler to send message
@@ -325,16 +323,23 @@ export class GameRoomGateway
   @SubscribeMessage('chat:message')
   async handleChatMessage(
     @ConnectedSocket() client: Socket,
-    @MessageBody() payload: any  // Temporarily 'any' 
+    @MessageBody() payload: any  // Temporarily 'any'
   ): Promise<void> {
-    // const { gameId, userId } = client.data;
-
-    // console.log('payload: ', payload);
-    const { userId, userName, gameId, message } = payload
-
-    // const playerName = this.gameStateService.getPlayerById(userId, gameId).name;
-    const chatResponse = await this.chatService.handleChatMessage(userId, userName, gameId, message)
+    const { userId, userName, gameId } = payload;
+    let { message } = payload;
+  
+    message = this.gameMechanicsService.validateWord(userId, gameId, message);
+    const chatResponse = await this.chatService.handleChatMessage(userId, userName, gameId, message);
+  
     this.server.to(gameId).emit('chat:message', chatResponse);
+    
+    if (message.includes('✅')) {
+      this.server.to(gameId).emit(
+        'game-started:updated', // or 'game-started:new-turn' if you want to indicate a new turn
+        this.gameStateService.getSerializedGameStarted(gameId)
+      );
+    }
+  
   }
 
 }
