@@ -288,6 +288,10 @@ export class GameRoomGateway
       rounds++;
     }
 
+    // Guardar en la base de datos
+    // Borrar el estado del juego
+    // Borrar active users que sean del juego
+    
     this.server.to(gameId).emit(
       'game:end',
       this.gameStateService.getSerializedGameStarted(gameId)
@@ -303,17 +307,6 @@ export class GameRoomGateway
   delay(ms: number): Promise<void> {
     return new Promise(resolve => setTimeout(resolve, ms));
   }
-
-
-  //!
-/*   @SubscribeMessage('game:word-guessed')
-  async wordGuessed(gameId: string) {
-    this.gameMechanicsService.playerGuessed(gameId)
-    this.server.to(gameId).emit(
-      'game-started:updated', //? 'game-started:new-turn'
-      this.gameStateService.getSerializedGameStarted(gameId)
-    );
-  } */
 
   /**
    * Handler to send message
@@ -349,7 +342,5 @@ export class GameRoomGateway
         this.gameStateService.getSerializedGameStarted(gameId)
       );
     }
-  
   }
-
 }

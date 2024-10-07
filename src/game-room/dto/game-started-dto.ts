@@ -1,5 +1,5 @@
 import { Expose } from 'class-transformer';
-import { Team } from 'src/lobby/types';
+import { Turn } from 'src/lobby/types';
 
 export class GameStartedDto {
   @Expose()
@@ -21,19 +21,11 @@ export class GameStartedDto {
   blueTeam: [string, boolean][];
 
   @Expose()
-  turn: {
-    alreadyDiscribe: string[];
-    team: Team,
-    describer: string,
-  }
+  turn: Turn;
 
   @Expose()
   currentWord: string;
 
   @Expose()
   score: [number, number]
-/* socore: {
-red: number, 
-blue: number
-}*/
 }

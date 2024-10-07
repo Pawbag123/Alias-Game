@@ -26,7 +26,8 @@ export interface Game {
 export interface Turn {
   alreadyDiscribe: string[];
   team: Team,
-  describer: string,
+  describerId: string,
+  describerName: string
 }
 
 /**

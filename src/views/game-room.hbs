@@ -43,6 +43,10 @@
         </div>
       </div>
     </div>
+    <!-- Timer -->
+    <div id="timer" class="text-center mt-4" style="font-size: 24px; display: none;">
+      Time Remaining: <span id="time-remaining">0</span> seconds
+    </div>
 
     <div class="card shadow-sm mb-4">
       <div class="card-body">
@@ -56,7 +60,7 @@
         </form>
       </div>
     </div>
-    
+
 
     <div class="d-flex justify-content-around mb-4">
       <div class="text-center">
@@ -83,10 +87,7 @@
       </div>
     </div>
 
-    <!-- RENDER IF GAME IS STARTED -->
-    <div id="timer" class="text-center mt-4" style="font-size: 24px;"></div>
-      Time Remaining: <span id="time-remaining">0</span> seconds
-    </div>
+
 
     <div class="d-flex justify-content-center">
       <button id="leave-game-button" class="btn btn-secondary me-3" onclick="leaveRoom()">Leave Game</button>
@@ -147,6 +148,9 @@
         socket.on('game-started:updated', (gameRoom) => {
           console.log('Actual state of the game: ', gameRoom);
 
+          //!
+          document.getElementById('timer').style.display = 'block';
+
           // Display the game info div
           const gameInfoDiv = document.getElementById('game-info');
           gameInfoDiv.style.display = 'block';
@@ -158,24 +162,24 @@
           gameInfoDiv.classList.remove('red-team-border', 'blue-team-border');
 
           // Add a border based on the current team's turn
-          if(gameRoom.turn.team === 'redTeam') {
+          if (gameRoom.turn.team === 'redTeam') {
             gameInfoDiv.classList.add('red-team-border');
-          } else if(gameRoom.turn.team === 'blueTeam') {
+          } else if (gameRoom.turn.team === 'blueTeam') {
             gameInfoDiv.classList.add('blue-team-border');
           }
 
           // Update game state details
           document.getElementById('team-turn').textContent = gameRoom.turn.team;
-          document.getElementById('score-team-red').textContent = gameRoom.score[0];
-          document.getElementById('score-team-blue').textContent = gameRoom.score[1];
-          document.getElementById('describer-name').textContent = gameRoom.turn.describer === userName;
-          document.getElementById('word-for-teammates').textContent = myTeam(userName, gameRoom) && (gameRoom.turn.describer === userId) ? gameRoom.currentWord : '';
+          document.getElementById('score-team-red').textContent = gameRoom.score[ 0 ];
+          document.getElementById('score-team-blue').textContent = gameRoom.score[ 1 ];
+          document.getElementById('describer-name').textContent = gameRoom.turn.describerName;
+          document.getElementById('word-for-teammates').textContent = myTeam(userName, gameRoom) && (gameRoom.turn.describerId === userId) ? gameRoom.currentWord : '*'.repeat(gameRoom.currentWord.length);
         });
 
         socket.on('game-started:message-received', (message) => {
           console.log(`Message from ${message.sender}: ${message.text}`);
         });
-        
+
         socket.on('timer:update', (data) => {
           document.getElementById('time-remaining').textContent = data.remaining;
         });
@@ -265,12 +269,13 @@
       // TODO Add validation (teams etc)
       socket.emit('game-room:start');
       console.log('starting game');
+
     }
 
     //extra functions
     function myTeam(userName, gameData) {
-      return gameData[gameData.turn.team].find(player => player[0] === userName);
-    } 
+      return gameData[ gameData.turn.team ].find(player => player[ 0 ] === userName);
+    }
 
   </script>
 </body>
