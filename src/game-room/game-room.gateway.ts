@@ -58,6 +58,15 @@ export class GameRoomGateway
     this.gameRoom = this.gameRoom.server.of('/game-room');
   }
 
+
+  updateGameState(gameId: string){
+    this.server
+    .to(gameId)
+    .emit(
+      'game-room:updated',
+      this.gameStateService.getSerializedGameRoom(gameId),
+    );
+  }
   /**
    * Connection handler, that will check if user can join the game,
    * add him to the game (that means setting his socketId),
