@@ -1,7 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { GameStateService } from 'src/shared/game-state.service';
 import { Team } from 'src/lobby/types';
-import { GameRoomGateway } from './game-room.gateway';
 
 @Injectable()
 export class GameMechanicsService {
@@ -75,26 +74,6 @@ export class GameMechanicsService {
     return Math.floor(Math.random() * (max - min + 1)) + min;
   }
 
-  /* async turns(gameId: string) {
-    let rounds = 0;
-                       //? const game = this.gameStateService.getGameById(gameId)
-    console.log("ENTRO EN TURNS DE MECANICS");
-    await this.delay(10000);
-
-    while(rounds < 6)
-    {
-      this.newWord(gameId);
-      this.nextTurn(gameId);
-      //! Comunicates with gateWay to send the clientes the changes made in teams, describer and word.
-      console.log("LOG INSIDE THE WHILE: ", this.gameStateService.getGameById(gameId))
-      await this.delay(10000);
-      rounds ++;
-    }
-  } 
-  delay(ms: number): Promise<void> {
-    return new Promise(resolve => setTimeout(resolve, ms));
-  } */
-
   nextTurn(gameId: string) {
     const game = this.gameStateService.getGameById(gameId);
 
@@ -113,14 +92,15 @@ export class GameMechanicsService {
       game.turn = {
         alreadyDiscribe: [],
         team: randomPlayer.team,
-        describer: randomPlayer.userId
+        describerId: randomPlayer.userId,
+        describerName: randomPlayer.name
       };
 
       // Optionally set the first word
       game.currentWord = this.generateWord(game.wordsUsed);
     } else {
       // Existing turn logic for subsequent turns
-      game.turn.alreadyDiscribe.push(game.turn.describer);
+      game.turn.alreadyDiscribe.push(game.turn.describerId);
 
       // Switch team
       const oppositeTeam = game.turn.team === Team.RED ? Team.BLUE : Team.RED;
@@ -131,13 +111,16 @@ export class GameMechanicsService {
       );
 
       if (nextDescriber) {
-        game.turn.describer = nextDescriber.userId;
+        game.turn.describerId = nextDescriber.userId;
+        game.turn.describerName = nextDescriber.name;
       } else {
         game.turn.alreadyDiscribe = game.turn.alreadyDiscribe.filter(playerId =>
           game.players.some(player => player.userId === playerId && player.team !== oppositeTeam)
         );
 
-        game.turn.describer = game.players.find(player => player.team === oppositeTeam)?.userId || '';
+        const fallbackDescriber = game.players.find(player => player.team === oppositeTeam);
+        game.turn.describerId = fallbackDescriber?.userId || '';
+        game.turn.describerName = fallbackDescriber?.name || '';
       }
     }
 
@@ -174,7 +157,6 @@ export class GameMechanicsService {
   validateWord(userId: string, gameId: string, message: string) {
     const game = this.gameStateService.getGameById(gameId);
     const { turn, currentWord } = game;
-  
     if (game.isGameStarted && turn) {
       // Find the player's team
       const player = game.players.find(p => p.userId === userId);
@@ -182,40 +164,79 @@ export class GameMechanicsService {
         console.log("Player not found!");
         return message; // Early return if player not found
       }
-  
       if (player.team === turn.team) {
-  
-        if (turn.describer === userId) {
-  
-          if (message.toLowerCase() === currentWord.toLowerCase()) {
+        // Check if the current player is the describer
+        if (turn.describerId === userId) {
+          // Check if the message is the current word or a derivative
+          if (message.toLowerCase() === currentWord.toLowerCase() || this.wordDerivates(message, currentWord)) {
             // Return the word censored with *
             const censoredWord = currentWord.replace(/./g, '*');
             return censoredWord;
           } else {
             return message;
           }
-  
         } else {
           // The player is guessing
-  
           // Compare the guess with the current word
           if (message.toLowerCase() === currentWord.toLowerCase()) {
             this.playerGuessed(gameId);
-            return message = `${message} ✅`;
+            return `${message} ✅`;
           } else {
             // Return the message normally if it's a wrong guess
             return message;
           }
         }
-  
       } else {
         // It's not the player's team's turn
         return message;
       }
-  
     } else {
       // Game hasn't started or turn is null
       return message;
     }
+  }
+  
+
+  wordDerivates(message: string, currentWord: string): boolean {
+    const normalizedMessage = message.toLowerCase().replace(/[.,!?:;]/g, ''); // Remove punctuation
+    const words = normalizedMessage.split(/\s+/); // Split message into words
+    const baseWord = currentWord.toLowerCase(); // Ensure comparison is case-insensitive
+    // Check if any word in the message is the base word or a derivative
+    for (let word of words) {
+      if (word === baseWord) {
+        return true; // Exact match
+      }
+      if (this.isDerivative(word, baseWord)) {
+        return true; // Found a derivative
+      }
+    }
+    return false; // No match or derivative found
+  }
+
+  // Helper function to check for simple derivatives
+  isDerivative(word: string, baseWord: string): boolean {
+    const suffixes = [ 's', 'es', 'ed', 'ing', 'er', 'est', 'ly' ]; // Common suffixes
+    const prefixes = [ 'un', 're', 'in', 'im', 'dis', 'non' ]; // Common prefixes
+
+    // Check if the word contains baseWord with a prefix or suffix
+    if (word.startsWith(baseWord) || word.endsWith(baseWord)) {
+      return true;
+    }
+
+    // Check for simple pluralization or conjugation (additions to the end of the word)
+    for (let suffix of suffixes) {
+      if (word === baseWord + suffix || word === baseWord + 'e' + suffix) {
+        return true;
+      }
+    }
+
+    // Check for common prefixes (additions to the start of the word)
+    for (let prefix of prefixes) {
+      if (word === prefix + baseWord) {
+        return true;
+      }
+    }
+
+    return false;
   }
 }

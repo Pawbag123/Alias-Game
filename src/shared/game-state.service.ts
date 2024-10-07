@@ -205,11 +205,14 @@ export class GameStateService {
       blueTeam: game.players
         .filter((player) => player.team === Team.BLUE)
         .map((player) => [player.name, this.hasUserSocketId(player.userId)]),
-      turn: {
-        alreadyDiscribe: game.turn?.alreadyDiscribe ?? [],
-        team: game.turn?.team ?? Team.RED,
-        describer: game.turn?.describer ?? game.players.find(p => p.team === Team.RED)?.userId ?? '',
-      },
+      turn: game.turn
+        ? {
+            alreadyDiscribe: game.turn.alreadyDiscribe,
+            team: game.turn.team,
+            describerId: game.turn.describerId,
+            describerName: game.turn.describerName
+          }
+        : null,
       currentWord: game.currentWord,
       score: game.score,
     });
@@ -333,5 +336,12 @@ export class GameStateService {
       console.error('Error details:', error);
       throw new Error('Error saving the current game state');
     }
+  }
+  
+  endGame(gameId: string){
+   // getGameById
+   // lo guarda en la base de datos
+   // Elimina a los active players del juego
+   // Lo elimina del array 
   }
 }
