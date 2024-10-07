@@ -2,10 +2,13 @@ import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Chat } from './schemas/chat.schema';
 import { Model } from 'mongoose';
+import { GameStateService } from 'src/shared/game-state.service';
 
 @Injectable()
 export class ChatService {
-  constructor(@InjectModel(Chat.name) private readonly chatModel: Model<Chat>) {}
+  constructor(@InjectModel(Chat.name) 
+  private readonly chatModel: Model<Chat>,
+) {}
 
   async handleChatMessage(userId: string, userName: string, gameId: string, message: string) {
     const timestamp = new Date();

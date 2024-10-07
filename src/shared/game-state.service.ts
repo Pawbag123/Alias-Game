@@ -334,15 +334,4 @@ export class GameStateService {
       throw new Error('Error saving the current game state');
     }
   }
-
-  getCurrentState(gameId: string): Game | undefined {
-    try {
-      console.log("Fetching the game state for:", gameId);
-      // Find the game in the 'games' array
-      return this.games.find((game) => game.id === gameId);
-    } catch (error) {
-      console.error('Error fetching the current game state:', error);
-      throw new Error('Error fetching the current game state');
-    }
-  }
 }
