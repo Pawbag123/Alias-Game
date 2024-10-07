@@ -187,7 +187,7 @@ export class GameMechanicsService {
   
         if (turn.describer === userId) {
   
-          if (message.toLowerCase() === currentWord.toLowerCase()) {
+          if (message.toLowerCase() === currentWord.toLowerCase() || this.wordDerivates(message, currentWord)) {
             // Return the word censored with *
             const censoredWord = currentWord.replace(/./g, '*');
             return censoredWord;
@@ -217,5 +217,52 @@ export class GameMechanicsService {
       // Game hasn't started or turn is null
       return message;
     }
+  }
+
+  wordDerivates(message: string, currentWord: string): boolean {
+    const normalizedMessage = message.toLowerCase().replace(/[.,!?:;]/g, ''); // Remove punctuation
+    const words = normalizedMessage.split(/\s+/); // Split message into words
+  
+    const baseWord = currentWord.toLowerCase(); // Ensure comparison is case-insensitive
+  
+    // Check if any word in the message is the base word or a derivative
+    for (let word of words) {
+      if (word === baseWord) {
+        return true; // Exact match
+      }
+  
+      if (this.isDerivative(word, baseWord)) {
+        return true; // Found a derivative
+      }
+    }
+  
+    return false; // No match or derivative found
+  }
+  
+  // Helper function to check for simple derivatives
+  isDerivative(word: string, baseWord: string): boolean {
+    const suffixes = ['s', 'es', 'ed', 'ing', 'er', 'est', 'ly']; // Common suffixes
+    const prefixes = ['un', 're', 'in', 'im', 'dis', 'non']; // Common prefixes
+  
+    // Check if the word contains baseWord with a prefix or suffix
+    if (word.startsWith(baseWord) || word.endsWith(baseWord)) {
+      return true;
+    }
+  
+    // Check for simple pluralization or conjugation (additions to the end of the word)
+    for (let suffix of suffixes) {
+      if (word === baseWord + suffix || word === baseWord + 'e' + suffix) {
+        return true;
+      }
+    }
+  
+    // Check for common prefixes (additions to the start of the word)
+    for (let prefix of prefixes) {
+      if (word === prefix + baseWord) {
+        return true;
+      }
+    }
+  
+    return false;
   }
 }
