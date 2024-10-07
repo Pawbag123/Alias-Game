@@ -37,7 +37,7 @@
           </div>
 
           <div class="col-md-6">
-            <p><strong>Guesser:</strong> <span id="guesser-name"></span></p>
+            <p><strong>Describer:</strong> <span id="describer-name"></span></p>
             <p><strong>Your word to describe:</strong> <span id="word-for-teammates"></span></p>
           </div>
         </div>
@@ -168,8 +168,8 @@
           document.getElementById('team-turn').textContent = gameRoom.turn.team;
           document.getElementById('score-team-red').textContent = gameRoom.score[0];
           document.getElementById('score-team-blue').textContent = gameRoom.score[1];
-          document.getElementById('guesser-name').textContent = gameRoom.turn.describer === userId ? userName : '';
-          document.getElementById('word-for-teammates').textContent = myTeam(userName, gameRoom) && (gameRoom.turn.describer !== userId) ? gameRoom.currentWord : '';
+          document.getElementById('describer-name').textContent = gameRoom.turn.describer === userName;
+          document.getElementById('word-for-teammates').textContent = myTeam(userName, gameRoom) && (gameRoom.turn.describer === userId) ? gameRoom.currentWord : '';
         });
 
         socket.on('game-started:message-received', (message) => {

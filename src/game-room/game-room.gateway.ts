@@ -67,6 +67,7 @@ export class GameRoomGateway
       this.gameStateService.getSerializedGameRoom(gameId),
     );
   }
+  
   /**
    * Connection handler, that will check if user can join the game,
    * add him to the game (that means setting his socketId),
