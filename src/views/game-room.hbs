@@ -15,6 +15,16 @@
 
     <h1 id="game-room-name" class="text-center mb-4"></h1>
 
+    <div id="game-info" class="card mb-4" style="display: none;">
+      <div class="card-body">
+        <p><strong>Turn team:</strong><span id="team-turn"></span></p>
+        <p><strong>Score team red: </strong><span id="score-team-red"></span></p>
+        <p><strong>Score team blue: </strong><span id="score-team-blue"></span></p>
+        <p><strong>Guesser:</strong><span id="guesser-name"></span></p>
+        <p><strong>Your word to describe:</strong> <span id="word-for-teammates"></span></p>
+      </div>
+    </div>
+
     <div class="card shadow-sm mb-4">
       <div class="card-body">
         <ul id="messages" class="list-group mb-4" style="height: 300px; overflow-y: auto;">
@@ -111,6 +121,17 @@
 
         socket.on('game-started:updated', (gameRoom) => {
           console.log('Actual state of the game: ', gameRoom);
+
+          // Display the game info div
+          const gameInfoDiv = document.getElementById('game-info');
+          gameInfoDiv.style.display = 'block';
+
+          // Update game state details
+          document.getElementById('team-turn').textContent = gameRoom.turn.team;
+          document.getElementById('score-team-red').textContent = gameRoom.score[0];
+          document.getElementById('score-team-blue').textContent = gameRoom.score[1];
+          document.getElementById('guesser-name').textContent = gameRoom.turn.describer === userId ? userName : '';
+          document.getElementById('word-for-teammates').textContent = gameRoom.currentWord;
         });
 
         socket.on('game-started:message-received', (message) => {
