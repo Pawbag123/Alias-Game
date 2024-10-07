@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Chat } from './schemas/chat.schema';
-import { Model } from 'mongoose';
+import mongoose, { Model } from 'mongoose';
 import { GameStateService } from 'src/shared/game-state.service';
 
 @Injectable()
@@ -13,13 +13,51 @@ export class ChatService {
   async handleChatMessage(userId: string, userName: string, gameId: string, message: string) {
     const timestamp = new Date();
 
+    //Create objec of new chat message
+    const newMessage = {
+      userId,
+      userName,
+      content: message,
+      timestamp
+    }
+
     // Save message to the database
     const chat = await this.chatModel.findOneAndUpdate(
       { gameId }, 
-      { $push: { messages: { userId, userName, content: message, timestamp } } }, 
+      { $push: { messages: newMessage } }, 
       { new: true, upsert: true }
     );
 
-    return { userId, userName, gameId, message, time: timestamp };
+    //Get the last message's Id
+    const addedMessage = chat.messages[chat.messages.length - 1]
+
+    return { userId, userName, gameId, message, time: timestamp, messageId: addedMessage._id};
   }
+
+  async getMessagesAfter(lastMessageId: mongoose.Schema.Types.ObjectId, gameId: string) {
+    const chatDocument = await this.chatModel.findOne({ gameId }).exec(); // Fetch the entire document
+
+    // Check if the chatDocument exists and has messages
+    if (chatDocument && chatDocument.messages && chatDocument.messages.length > 0) {
+        // Filter messages based on the lastMessageId
+        const recoveredMessages = chatDocument.messages.filter(message => {
+            return lastMessageId === null || message._id > lastMessageId; // Fetch messages with _id greater than lastMessageId
+        }).map(message => {
+            return {
+                userId: message.userId,
+                userName: message.userName,
+                gameId,
+                message: message.content,
+                time: message.timestamp,
+                messageId: message._id
+            };
+        });
+
+        // Return the filtered messages
+        return recoveredMessages;
+    } else {
+        return [];
+    }
+  }
+  
 }

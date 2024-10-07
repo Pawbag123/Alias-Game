@@ -84,8 +84,8 @@
     </div>
 
     <!-- RENDER IF GAME IS STARTED -->
-    <div id="timer" class="text-center mt-4" style="font-size: 24px;"></div>
-      Time Remaining: <span id="time-remaining">0</span> seconds
+    <div id="timer" class="text-center mt-4" style="display: none;">
+      <p>Time Remaining (seconds): </p>
     </div>
 
     <div class="d-flex justify-content-center">
@@ -106,9 +106,12 @@
       const { userId, userName } = getUserInfo();
       const gameRoomId = window.location.pathname.split('/').pop();
 
-      if (!socket) {
+      if(!socket) {
         socket = io('/game-room', {
           query: { userId, gameId: gameRoomId },
+          auth: {
+            serverOffset: 0
+          }
         });
       }
 
@@ -168,7 +171,7 @@
           document.getElementById('team-turn').textContent = gameRoom.turn.team;
           document.getElementById('score-team-red').textContent = gameRoom.score[0];
           document.getElementById('score-team-blue').textContent = gameRoom.score[1];
-          document.getElementById('describer-name').textContent = gameRoom.turn.describer === userName;
+          document.getElementById('describer-name').textContent = gameRoom.turn.describer === userId ? userName : '';
           document.getElementById('word-for-teammates').textContent = myTeam(userName, gameRoom) && (gameRoom.turn.describer === userId) ? gameRoom.currentWord : '';
         });
 
@@ -182,10 +185,19 @@
 
         //chat message events
         socket.on('chat:message', (msg) => {
-          console.log(`Message received: ${msg}`)
+          console.log(`Message received: ${msg}, 'serverOffset: `, msg.messageId)
+          const serverOffset = msg.messageId;
+          /*
+          const item = `<li>
+              <p>${msg.userName}:  ${msg.message}</p>
+              <small>[${new Date(msg.time).toLocaleTimeString()}]</small>
+            </li>`
+          messages.insertAdjacentHTML('beforeend', item)
+          */
           const li = document.createElement('li');
           li.textContent = `${msg.userName}: ${msg.message} [${new Date(msg.time).toLocaleTimeString()}]`;
           messageList.appendChild(li);
+          socket.auth.serverOffset = serverOffset
         });
       });
 

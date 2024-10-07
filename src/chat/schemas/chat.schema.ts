@@ -9,6 +9,7 @@ export class Chat extends Document {
   gameId: string;
 
   @Prop([{ 
+    _id: { type: mongoose.Schema.Types.ObjectId, auto: true },
     userIdMongo: { type: mongoose.Schema.Types.ObjectId, ref: 'User' }, //Use mongoose.Schema.Types.ObjectId
     userId: {type: String, required: true },
     userName: { type: String, required: true },
@@ -16,6 +17,7 @@ export class Chat extends Document {
     timestamp: { type: Date, default: Date.now }
   }])
   messages: {
+    _id: mongoose.Schema.Types.ObjectId
     userIdMongo: string;
     userId: string;
     userName: string;

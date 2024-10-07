@@ -86,6 +86,19 @@ export class GameRoomGateway
     client.data.userId = userId;
     client.data.gameId = gameId;
 
+    // Fetch and send missed messages
+    const lastMessageId = client.handshake.auth.serverOffset ?? 0; 
+    console.log('serverOffset: ', lastMessageId)
+    this.chatService.getMessagesAfter(lastMessageId, gameId)
+      .then((recoveredMessages) => {
+        recoveredMessages.forEach(message => {
+          client.emit('chat:message', message);
+        });
+      })
+      .catch(error => {
+        console.error('Error recovering chat messages:', error);
+      });
+
     if (
       this.gameStateService.gameExists(gameId) &&
       this.gameStateService.getGameById(gameId).isGameStarted
@@ -104,6 +117,9 @@ export class GameRoomGateway
             'game-started:updated',
             this.gameStateService.getSerializedGameStarted(gameId),
           );
+
+        
+
       } catch (error) {
         client.emit('game-started:join:error', error.message);
         console.log(error);
@@ -349,6 +365,26 @@ export class GameRoomGateway
         this.gameStateService.getSerializedGameStarted(gameId)
       );
     }
+
+    //Recovery logic: Check if the socket needs to recover lost messages
+    // if(!client.recovered) { 
+    //   try {
+    //     const lastMessageId = client.handshake.auth.serverOffset ?? 0; // Assuming this is passed during reconnection
+
+    //     //Fetch the document containing the chat messages
+    //     const recoveredMessages = await this.chatService.getMessagesAfter(lastMessageId, gameId);
+
+    //     //Send recovered messages back to the client
+    //     recoveredMessages.forEach(message => {
+    //       client.emit('chat:message', message);
+    //     });
+
+    //     // // Mark the socket as recovered to avoid refetching
+    //     // client.recovered = true;
+    //   } catch (error) {
+    //     console.error('Error recovering missed messages:', error);
+    //   }
+    // }
   
   }
 
