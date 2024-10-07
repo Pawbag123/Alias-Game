@@ -40,6 +40,11 @@
         const data = await response.json()
 
         if(response.ok) {
+          console.log('Logged in successfully: ', data)
+          localStorage.setItem('access-token', data.accessToken)
+          localStorage.setItem('refresh-token', data.refreshToken)
+          localStorage.setItem('username', data.user.username)
+          localStorage.setItem('userId', data.user.userId)
           //Success message
           document.getElementById('message').style.display = 'block';
 

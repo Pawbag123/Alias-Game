@@ -2,7 +2,8 @@ import { INestApplicationContext, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
 import { IoAdapter } from '@nestjs/platform-socket.io';
-import { Server, ServerOptions } from 'socket.io';
+import { WsException } from '@nestjs/websockets';
+import { Server, ServerOptions, Socket } from 'socket.io';
 
 const CLIENT_PORT = 3000;
 
@@ -35,19 +36,38 @@ export class SocketIOAdapter extends IoAdapter {
     // const jwtService = this.app.get(JwtService);
     const server: Server = super.createIOServer(port, optionsWithCORS);
 
-    // temporary middleware to check if socket is connected
-    server.of('lobby').use((socket, next) => {
-      this.logger.log('Socket connected to lobby namespace', socket.id);
+    const tokenMiddleware = createTokenMiddleware(
+      this.app.get(JwtService),
+      this.logger,
+    );
 
-      next();
-    });
+    ['lobby', 'game-room'].forEach((namespace) => {
+      server.of(namespace).use((socket, next) => {
+        this.logger.log(
+          `Socket trying to connect ${namespace} namespace`,
+          socket.id,
+        );
 
-    server.of('game-room').use((socket, next) => {
-      this.logger.log('Socket connected to game-room namespace', socket.id);
-
-      next();
+        next();
+      });
+      server.of(namespace).use(tokenMiddleware);
     });
 
     return server;
   }
 }
+
+const createTokenMiddleware =
+  (jwtService: JwtService, logger: Logger) => (socket: Socket, next) => {
+    const token =
+      socket.handshake.auth.token || socket.handshake.headers['token'];
+    try {
+      const decoded = jwtService.verify(token);
+      logger.log('Decoded token', decoded);
+      socket.data.user = decoded;
+      next();
+    } catch (error) {
+      logger.error('Error verifying token', error);
+      next(new WsException('Unauthorized'));
+    }
+  };

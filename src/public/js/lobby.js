@@ -51,6 +51,7 @@ async function loadTemplate(templateName) {
 const loadingTemplate = Handlebars.compile(loadingTemplateHbs);
 const userInfoTemplate = Handlebars.compile(userInfoTemplateHbs);
 const lobbyTemplate = Handlebars.compile(lobbyTemplateHbs);
+const errorTemplate = Handlebars.compile(errorTemplateHbs);
 
 const renderLoading = () => {
   const contentDiv = document.getElementById('content');
@@ -60,6 +61,11 @@ const renderLoading = () => {
 function renderUserInfoForm() {
   const contentDiv = document.getElementById('content');
   contentDiv.innerHTML = userInfoTemplate(); // Render the form using Handlebars
+}
+
+function renderError(message) {
+  const contentDiv = document.getElementById('content');
+  contentDiv.innerHTML = errorTemplate({ errorMessage: message });
 }
 
 function renderLobby(games = []) {
@@ -83,10 +89,16 @@ function renderLobby(games = []) {
 // Function to start the lobby and initialize the socket
 function startLobby(userId, userName) {
   renderLoading();
+  const accessToken = localStorage.getItem('access-token');
 
   // Initialize socket connection, passing user info
   socket = io('/lobby', {
     query: { userId, userName },
+    auth: { token: accessToken },
+  });
+
+  socket.on('connect_error', (error) => {
+    renderError(error.message);
   });
 
   // Socket events for game actions can be handled here

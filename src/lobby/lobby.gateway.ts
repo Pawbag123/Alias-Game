@@ -47,6 +47,7 @@ export class LobbyGateway implements OnGatewayConnection, OnGatewayDisconnect {
    * @param client - socket client
    */
   handleConnection(client: Socket): void {
+    this.logger.log('Client connected with data:', client.data.user);
     this.lobby.emit('lobby:check');
     this.logger.log(`Client connected in lobby: ${client.id}`);
     const { userId, userName } = client.handshake.query;
