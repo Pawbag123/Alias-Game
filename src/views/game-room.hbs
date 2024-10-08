@@ -133,7 +133,7 @@
 
       if(!socket) {
         socket = io('/game-room', {
-          query: { userId, gameId: gameRoomId },
+          query: { gameId: gameRoomId },
           auth: {
             serverOffset: 0,
             token: accessToken
@@ -159,37 +159,25 @@
           renderGameRoom(gameRoom);
         });
 
+          socket.on('exception', (error) => {
+          console.error('Server exception:', error.message);
+          renderErrorMessage(error.message);
+        });
+        
         socket.on('game-room:left', () => {
           console.log('Left game room');
           // Redirect to the lobby
-          window.location.href = '/';
-        });
-
-        socket.on('game-room:join:error', (error) => {
-          console.error('Error joining game room:', error);
-          renderError(error);
-        });
-
-        socket.on('game-room:leave:error', (error) => {
-          console.error('Error leaving game room:', error);
-        });
-
-        socket.on('game-room:start:error', (error) => {
-          console.error('Error starting game room:', error);
+          window.location.href = '/lobby';
         });
 
         socket.on('game:cant-start', () => {
           alert('Teams must have at least 2 player to start the game');
         });
 
-        // MODULARIZ THIS ONE
-        socket.on('game-started:updated', (gameRoom) => {
+          // MODULARIZ THIS ONE
+          socket.on('game-started:updated', (gameRoom) => {
           console.log('Actual state of the game: ', gameRoom);
 
-          socket.on('exception', (error) => {
-          console.error('Server exception:', error.message);
-          renderErrorMessage(error.message);
-        });
 
           //!
           document.getElementById('timer').style.display = 'block';

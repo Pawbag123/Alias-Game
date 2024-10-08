@@ -170,7 +170,7 @@ const startGameRoom = (userId, userName) => {
     socket.on('game-room:left', () => {
       console.log('Left game room');
       // Redirect to the lobby
-      window.location.href = '/';
+      window.location.href = '/lobby';
     });
 
     socket.on('game-room:join:error', (error) => {

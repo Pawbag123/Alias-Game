@@ -6,6 +6,7 @@ import {
   OnGatewayDisconnect,
   ConnectedSocket,
   MessageBody,
+  WsException,
 } from '@nestjs/websockets';
 import { Namespace, Server, Socket } from 'socket.io';
 
@@ -13,10 +14,11 @@ import { GameRoomService } from './game-room.service';
 import { GameStateService } from 'src/game-state/game-state.service';
 import { GameMechanicsService } from './game-mechanics.service';
 import { Team } from 'src/lobby/types';
-import { Logger, UseGuards } from '@nestjs/common';
+import { Logger, UseFilters, UseGuards } from '@nestjs/common';
 import { ChatService } from 'src/chat/chat.service';
 import { GameStartedDto } from './dto/game-started-dto';
 import { HostGuard } from './guards/host.guard';
+import { WsExceptionFilter } from 'src/exceptions/ws-exception-filter';
 
 //TODO: add error emitters, handlers, try catch blocks, extend logic after game is started
 //TODO: change server emit to namespace emit
@@ -24,6 +26,7 @@ import { HostGuard } from './guards/host.guard';
  * Gateway that handles connections in game room, using game-room namespace
  * Handles connecting and disconnecting from game room, joining teams, leaving game
  */
+// @UseFilters(new WsExceptionFilter())
 @WebSocketGateway({
   namespace: 'game-room',
   cors: {
@@ -88,7 +91,7 @@ export class GameRoomGateway
 
     // Fetch and send missed messages, partially working
     const lastMessageId = client.handshake.auth.serverOffset ?? 0;
-    console.log('serverOffset: ', lastMessageId);
+    this.logger.log('serverOffset: ', lastMessageId);
     this.chatService
       .getMessagesAfter(lastMessageId, gameId)
       .then((recoveredMessages) => {
@@ -97,7 +100,7 @@ export class GameRoomGateway
         });
       })
       .catch((error) => {
-        console.error('Error recovering chat messages:', error);
+        this.logger.error('Error recovering chat messages:', error);
       });
 
     if (
@@ -126,9 +129,8 @@ export class GameRoomGateway
       try {
         this.gameRoomService.addPlayerToGame(gameId, userId, client.id);
       } catch (error) {
-        client.emit('game-room:join:error', error.message);
         this.logger.error(error);
-        return;
+        throw new WsException(error.message);
       }
 
       client.join(gameId);
@@ -214,6 +216,7 @@ export class GameRoomGateway
       this.gameRoomService.joinRedTeam(gameId, userId);
     } catch (error) {
       this.logger.error(error);
+      throw new WsException(error.message);
     }
 
     this.gameRoom
@@ -238,6 +241,7 @@ export class GameRoomGateway
       this.gameRoomService.joinBlueTeam(gameId, userId);
     } catch (error) {
       this.logger.error(error);
+      throw new WsException(error.message);
     }
 
     if (this.gameStateService.gameExists(gameId)) {
@@ -264,8 +268,9 @@ export class GameRoomGateway
     try {
       const game = this.gameStateService.getSerializedGameStarted(gameId);
       if (game.blueTeam.length < 2 || game.redTeam.length < 2) {
-        client.emit('game:cant-start');
-        return;
+        this.logger.error('Not enough players to start the game');
+        throw new Error('Not enough players to start the game');
+        // client.emit('game:cant-start');
       }
 
       this.gameMechanicsService.startGame(gameId);
@@ -290,8 +295,8 @@ export class GameRoomGateway
       //* this.gameMechanicsService.turns(gameId); this didn't work
       this.handleTurns(gameId);
     } catch (error) {
-      console.log(error);
-      this.gameRoom.to(gameId).emit('game-room:start:error', error.message);
+      this.logger.error(error);
+      throw new WsException(error.message);
     }
   }
 
