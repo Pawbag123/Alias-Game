@@ -30,6 +30,18 @@ export interface Turn {
   describerName: string;
 }
 
+export interface Stats extends IngameStats {
+  gamesPlayed: number,
+  wins: number,
+  loses: number,
+  draw: number
+}
+
+export interface IngameStats {
+  wordsGuessed: number,
+  wellDescribed: number,
+}
+
 /**
  * Type representing an active user (already in a game, not in the lobby)
  * Holds the data about his connection and game he is in
@@ -68,6 +80,7 @@ export interface Player {
   userId: string;
   name: string;
   team: Team;
+  inGameStats: IngameStats;
 }
 
 // export const DUMMY_GAMES: Game[] = [

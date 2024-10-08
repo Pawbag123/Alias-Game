@@ -1,6 +1,7 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { Document } from 'mongoose';
-import * as mongoose from 'mongoose';  //Import Mongoose separately for ObjectId
+import * as mongoose from 'mongoose';
+import { IngameStats } from 'src/lobby/types';
 
 @Schema()
 export class Games extends Document {
@@ -13,15 +14,21 @@ export class Games extends Document {
   @Prop({ required: true })
   host: string;
 
+  // Add inGameStats here
   @Prop([{
     userId: { type: String, required: true },
     name: { type: String, required: true },
     team: { type: String, required: true },
+    inGameStats: {
+      wordsGuessed: { type: Number, required: true },
+      wellDescribed: { type: Number, required: true },
+    }
   }])
   players: {
     userId: string,
     name: string,
     team: string,
+    inGameStats: IngameStats
   }[];
 
   @Prop({
@@ -33,7 +40,9 @@ export class Games extends Document {
     red: number;
     blue: number;
   };
+
+  @Prop({ type: [String], required: true })
+  wordsUsed: string[];
 }
 
-// Create the schema using SchemaFactory
 export const DbGameSchema = SchemaFactory.createForClass(Games);

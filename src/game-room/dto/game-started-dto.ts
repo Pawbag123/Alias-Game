@@ -1,5 +1,5 @@
 import { Expose } from 'class-transformer';
-import { Turn } from 'src/lobby/types';
+import { IngameStats, Turn } from 'src/lobby/types';
 
 export class GameStartedDto {
   @Expose()

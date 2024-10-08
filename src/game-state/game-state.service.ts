@@ -147,6 +147,10 @@ export class GameStateService {
       userId,
       name: userName,
       team: Team.NO_TEAM,
+      inGameStats: {
+        wordsGuessed: 0,
+        wellDescribed: 0,
+      }
     };
 
     const newGame: Game = {
@@ -211,7 +215,7 @@ export class GameStateService {
       isGameStarted: game.isGameStarted,
       redTeam: game.players
         .filter((player) => player.team === Team.RED)
-        .map((player) => [player.name, this.hasUserSocketId(player.userId)]),
+        .map((player) => [player.name, this.hasUserSocketId(player.userId)], ),
       blueTeam: game.players
         .filter((player) => player.team === Team.BLUE)
         .map((player) => [player.name, this.hasUserSocketId(player.userId)]),
@@ -270,6 +274,10 @@ export class GameStateService {
       userId,
       name: userName,
       team: Team.NO_TEAM,
+      inGameStats: {
+        wordsGuessed: 0,
+        wellDescribed: 0,
+      }
     };
     game.players.push(newPlayer);
   }
@@ -355,25 +363,29 @@ export class GameStateService {
 
   endGame(gameId: string) {
     const game = this.getGameById(gameId);
-
+    console.log("ESTO ES LO QUE LLEGA DEL JUEGO CUANDO TERMINA: ", game);
+    this.updatePlayersStats(game.players);
     this.saveInDatabase(game);
     this.removeGameRoom(gameId);
   }
 
   async saveInDatabase(game: Game): Promise<Games> {
+    // Get Chat Id
+
+    
     try {
       const newGame = new this.GamesModel({
         gameId: game.id,
         host: game.host,
         players: game.players,
         score: game.score,
-        isGameStarted: game.isGameStarted,
         maxUsers: game.maxUsers,
         wordsUsed: game.wordsUsed,
-        chatIdMongo: null, //! get the chat id
+        chatIdMongo: null, //! get the chat id <-- get chat id
       });
 
-      console.log('GUARDANDO EN LA BASE DE DATOS PERRO');
+      console.log(" SCHEMAPOSE ",newGame);
+
       // Save the game document in the database
       return await newGame.save();
     } catch (error) {
@@ -387,5 +399,9 @@ export class GameStateService {
       gameId,
       socketId,
     }));
+  }
+
+  updatePlayersStats(players: Player[]){
+    console.log("ESTOS SON TODOS LOS JUGADORS DEL JUEGO CUANDO TERMINO: ", players)
   }
 }
