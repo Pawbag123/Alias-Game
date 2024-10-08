@@ -83,13 +83,20 @@ export class GameRoomGateway
 
     this.gameRoom.emit('game-room:check');
 
-    const { gameId, userId } = client.handshake.query as {
+    const { gameId } = client.handshake.query as {
       gameId: string;
-      userId: string;
     };
+    const userId = client.data.user.userId;
 
-    client.data.userId = userId;
     client.data.gameId = gameId;
+
+    // const { gameId, userId } = client.handshake.query as {
+    //   gameId: string;
+    //   userId: string;
+    // };
+
+    // client.data.userId = userId;
+    // client.data.gameId = gameId;
 
     if (
       this.gameStateService.gameExists(gameId) &&
@@ -143,7 +150,8 @@ export class GameRoomGateway
    */
   handleDisconnect(client: Socket): void {
     this.logger.log(`Client disconnected from game room: ${client.id}`);
-    const { gameId, userId } = client.data;
+    const gameId = client.data.gameId;
+    const userId = client.data.user.userId;
     // if game is started, only remove socketId
     if (
       this.gameStateService.gameExists(gameId) &&
@@ -198,7 +206,8 @@ export class GameRoomGateway
    */
   @SubscribeMessage('game-room:join:red')
   handleJoinRedTeam(@ConnectedSocket() client: Socket) {
-    const { gameId, userId } = client.data;
+    const gameId = client.data.gameId;
+    const userId = client.data.user.userId;
     try {
       this.gameRoomService.joinRedTeam(gameId, userId);
     } catch (error) {
@@ -220,7 +229,9 @@ export class GameRoomGateway
    */
   @SubscribeMessage('game-room:join:blue')
   handleJoinBlueTeam(@ConnectedSocket() client: Socket) {
-    const { gameId, userId } = client.data;
+    const gameId = client.data.gameId;
+    const userId = client.data.user.userId;
+
     try {
       this.gameRoomService.joinBlueTeam(gameId, userId);
     } catch (error) {
@@ -318,7 +329,8 @@ export class GameRoomGateway
    */
   @SubscribeMessage('game-started:send-message')
   handleMessage(@ConnectedSocket() client: Socket): void {
-    const { gameId, userId, team } = client.data;
+    const { gameId, team } = client.data;
+    const userId = client.data.user.userId;
     const playerName = this.gameStateService.getPlayerById(userId, gameId).name;
     this.gameRoom
       .to(`${gameId}/${team}`)

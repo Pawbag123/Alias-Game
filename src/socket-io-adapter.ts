@@ -37,21 +37,6 @@ export class SocketIOAdapter extends IoAdapter {
 
     const server: Server = super.createIOServer(port, optionsWithCORS);
 
-    const tokenMiddleware = createTokenMiddleware(
-      this.app.get(JwtService),
-      this.logger,
-    );
-
-    const singleUserMiddleware = createSingleUserMiddleware(
-      this.app.get(GameStateService),
-      this.logger,
-    );
-
-    const allowedToGameMiddleware = createAllowedToGameMiddleware(
-      this.app.get(GameStateService),
-      this.logger,
-    );
-
     ['lobby', 'game-room'].forEach((namespace) => {
       server.of(namespace).use((socket, next) => {
         this.logger.log(
@@ -61,11 +46,27 @@ export class SocketIOAdapter extends IoAdapter {
 
         next();
       });
-      server.of(namespace).use(tokenMiddleware);
-      server.of(namespace).use(singleUserMiddleware);
+      server
+        .of(namespace)
+        .use(createTokenMiddleware(this.app.get(JwtService), this.logger));
+      server
+        .of(namespace)
+        .use(
+          createSingleUserMiddleware(
+            this.app.get(GameStateService),
+            this.logger,
+          ),
+        );
     });
 
-    server.of('game-room').use(allowedToGameMiddleware);
+    server
+      .of('game-room')
+      .use(
+        createAllowedToGameMiddleware(
+          this.app.get(GameStateService),
+          this.logger,
+        ),
+      );
 
     return server;
   }
@@ -107,7 +108,6 @@ const createSingleUserMiddleware =
     logger.debug('Games', gameStateService.getAllGames());
     logger.debug('Active users', gameStateService.getAllActiveUsers());
     const activeUser = gameStateService.getActiveUserById(user.userId);
-    // logger.debug('Active user', activeUser);
     if (activeUser && activeUser.socketId) {
       logger.error('User already connected');
       return next(new WsException('User already connected'));

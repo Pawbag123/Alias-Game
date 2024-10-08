@@ -54,7 +54,6 @@
 
       if(!socket) {
         socket = io('/lobby', {
-          query: { userId, userName },
           auth: { token: accessToken }
         });
       }

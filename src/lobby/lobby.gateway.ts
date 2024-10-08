@@ -16,7 +16,6 @@ import { JoinGameDto } from './dto/join-game-dto';
 import { GameStateService } from 'src/game-state/game-state.service';
 import { Logger } from '@nestjs/common';
 
-//TODO: add error emitters, handlers
 /**
  * Gateway that handles connections in lobby, using lobby namespace
  * Handles game creation and joining
@@ -38,20 +37,12 @@ export class LobbyGateway implements OnGatewayConnection, OnGatewayDisconnect {
     private readonly gameStateService: GameStateService,
   ) {}
 
-  afterInit() {
-    // this.lobby = this.lobby.server.of('lobby');
-    this.logger.log('Lobby gateway initialized');
-  }
-
   /**
    * On connection, emit games to client
    * @param client - socket client
    */
   handleConnection(client: Socket): void {
-    this.logger.log(`Client connected in lobby: ${client.id}`);
-    const { userId, userName } = client.handshake.query;
-    client.data.userId = userId;
-    client.data.userName = userName;
+    const { userId, userName } = client.data.user;
 
     const games = this.gameStateService.getSerializedGames();
     client.emit('games:updated', games);
@@ -62,7 +53,6 @@ export class LobbyGateway implements OnGatewayConnection, OnGatewayDisconnect {
     this.logger.log(`Client disconnected from lobby: ${client.id}`);
   }
 
-  //TODO: change games:updated to be emitted only after user joins game (not before redirecting)
   /**
    * Create game by calling lobby service,
    * then emit game:updated to redirect client and emit updated games to all clients
@@ -75,8 +65,8 @@ export class LobbyGateway implements OnGatewayConnection, OnGatewayDisconnect {
     @MessageBody() { gameName }: { gameName: string },
   ): void {
     const createGameDto: CreateGameDto = {
-      userId: client.data.userId,
-      userName: client.data.userName,
+      userId: client.data.user.userId,
+      userName: client.data.user.userName,
       gameName,
     };
     this.logger.log('Creating game:', createGameDto);
@@ -110,8 +100,8 @@ export class LobbyGateway implements OnGatewayConnection, OnGatewayDisconnect {
     @MessageBody() { gameId }: { gameId: string },
   ): void {
     const joinGameDto: JoinGameDto = {
-      userId: client.data.userId,
-      userName: client.data.userName,
+      userId: client.data.user.userId,
+      userName: client.data.user.userName,
       gameId,
     };
     this.logger.log(
