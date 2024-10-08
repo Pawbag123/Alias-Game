@@ -28,6 +28,7 @@
 </head>
 
 <body class="bg-light">
+  <div id="error-message" style="display: none; color: red;"></div>
   <div class="container mt-5">
 
     <h1 id="game-room-name" class="text-center mb-4"></h1>
@@ -109,13 +110,15 @@
 
     window.onload = function () {
       const { userId, userName } = getUserInfo();
+      const accessToken = localStorage.getItem('accessToken');
       const gameRoomId = window.location.pathname.split('/').pop();
 
       if(!socket) {
         socket = io('/game-room', {
           query: { userId, gameId: gameRoomId },
           auth: {
-            serverOffset: 0
+            serverOffset: 0,
+            token: accessToken
           }
         });
       }
@@ -124,6 +127,11 @@
       const form = document.getElementById('chat-form');
       const messageInput = document.getElementById('message');
       const messageList = document.getElementById('messages');
+
+      socket.on('connect_error', (error) => {
+        console.error('Connection error:', error);
+        renderError(error.message);
+      });
 
       socket.on('connect', () => {
         console.log(`Connected as ${userName} (ID: ${userId})`);
@@ -136,20 +144,7 @@
         socket.on('game-room:left', () => {
           console.log('Left game room');
           // Redirect to the lobby
-          window.location.href = '/';
-        });
-
-        socket.on('game-room:join:error', (error) => {
-          console.error('Error joining game room:', error);
-          renderError(error);
-        });
-
-        socket.on('game-room:leave:error', (error) => {
-          console.error('Error leaving game room:', error);
-        });
-
-        socket.on('game-room:start:error', (error) => {
-          console.error('Error starting game room:', error);
+          window.location.href = '/lobby';
         });
 
         socket.on('game-started:updated', (gameRoom) => {
@@ -255,6 +250,14 @@
       const userId = localStorage.getItem('userId');
       const userName = localStorage.getItem('userName');
       return { userId, userName };
+    }
+
+    const renderError = (error) => {
+      const errorDiv = document.getElementById('error-message');
+      const container = document.getElementsByClassName('container mt-5')[0];
+      container.style.display = 'none';
+      errorDiv.innerHTML = `Error: ${error}`;
+      errorDiv.style.display = 'block';
     }
 
     const renderGameRoom = (gameRoom) => {

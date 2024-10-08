@@ -13,7 +13,7 @@ export class AppController {
   @Get()
   @Render('home')
   home() {
-    return {}
+    return {};
   }
 
   @Get('lobby')
