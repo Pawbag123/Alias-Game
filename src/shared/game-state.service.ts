@@ -55,14 +55,14 @@ export class GameStateService {
     userId: string,
     gameId: string,
     timeout: number,
-    timeoutCb: () => void,
+    timeoutCb: (gameId: string) => void,
   ): void {
     this.activeUsers.push({
       id: userId,
       gameId: gameId,
-      //   initialJoinTimeout: setTimeout(() => {
-      //     timeoutCb();
-      //   }, timeout),
+      initialJoinTimeout: setTimeout(() => {
+        this.handleUserCreateGameTimeout(userId, gameId, timeoutCb);
+      }, timeout),
     });
   }
 
@@ -132,7 +132,7 @@ export class GameStateService {
     userName: string,
     maxUsers: number,
     timeout: number,
-    timeoutCb: () => void,
+    timeoutCb: (gameId?: string) => void,
   ): string {
     const newPlayer: Player = {
       userId,
@@ -289,15 +289,17 @@ export class GameStateService {
   handleUserCreateGameTimeout(
     userId: string,
     gameId: string,
-    emitGamesUpdated: () => void,
+    emitGamesUpdated: (gameId?: string) => void,
   ): void {
-    // this.activeUsers = this.activeUsers.filter(
-    //   (user) => user.id !== userId && user.gameId !== gameId,
-    // );
-    // const game = this.games.find((game) => game.id === gameId);
-    // game.noTeam = game.noTeam.filter((id) => id !== userId);
-
-    emitGamesUpdated();
+    this.removePlayerFromGame(userId, gameId);
+    this.removeActiveUser(userId);
+    if (this.isGameEmpty(gameId)) {
+      this.removeGameRoom(gameId);
+      emitGamesUpdated();
+    } else {
+      this.moveHostToNextUser(gameId);
+      emitGamesUpdated(gameId);
+    }
   }
 
   //TODO: implement handlers for edge cases

@@ -6,6 +6,7 @@ import {
   OnGatewayConnection,
   OnGatewayDisconnect,
   ConnectedSocket,
+  WsException,
 } from '@nestjs/websockets';
 import { Namespace, Server, Socket } from 'socket.io';
 
@@ -47,17 +48,14 @@ export class LobbyGateway implements OnGatewayConnection, OnGatewayDisconnect {
    * @param client - socket client
    */
   handleConnection(client: Socket): void {
-    this.logger.log('Client connected with data:', client.data.user);
-    this.lobby.emit('lobby:check');
     this.logger.log(`Client connected in lobby: ${client.id}`);
     const { userId, userName } = client.handshake.query;
     client.data.userId = userId;
     client.data.userName = userName;
 
-    // const games = this.lobbyService.getSerializedGames();
     const games = this.gameStateService.getSerializedGames();
     client.emit('games:updated', games);
-    this.logger.log('Emitting games:', games);
+    this.logger.log(`Emitting games: to client: ${userName}`, games);
   }
 
   handleDisconnect(client: Socket): void {
@@ -84,7 +82,10 @@ export class LobbyGateway implements OnGatewayConnection, OnGatewayDisconnect {
     this.logger.log('Creating game:', createGameDto);
 
     try {
-      const gameId = this.lobbyService.createGame(createGameDto);
+      const gameId = this.lobbyService.createGame(
+        createGameDto,
+        this.gameCreationHandler,
+      );
 
       const games = this.gameStateService.getSerializedGames();
 
@@ -92,8 +93,8 @@ export class LobbyGateway implements OnGatewayConnection, OnGatewayDisconnect {
 
       client.broadcast.emit('games:updated', games);
     } catch (error) {
-      this.logger.log('Error creating game:', error);
-      client.emit('game:create:error', error.message);
+      this.logger.error('Error creating game:', error);
+      throw new WsException(error.message);
     }
   }
 
@@ -113,13 +114,13 @@ export class LobbyGateway implements OnGatewayConnection, OnGatewayDisconnect {
       userName: client.data.userName,
       gameId,
     };
-    this.logger.log('Joining game:', joinGameDto.gameId);
+    this.logger.log(
+      `User ${joinGameDto.userName} Joining game:`,
+      joinGameDto.gameId,
+    );
 
     try {
-      this.lobbyService.joinGame(joinGameDto, () => {
-        const games = this.gameStateService.getSerializedGames();
-        this.lobby.emit('games:updated', games);
-      });
+      this.lobbyService.joinGame(joinGameDto, this.gameJoinHandler);
 
       const games = this.gameStateService.getSerializedGames();
 
@@ -128,7 +129,26 @@ export class LobbyGateway implements OnGatewayConnection, OnGatewayDisconnect {
       client.broadcast.emit('games:updated', games);
     } catch (error) {
       this.logger.error('Error joining game:', error);
-      client.emit('game:join:error', error.message);
+      throw new WsException(error.message);
     }
   }
+
+  gameCreationHandler = (gameId?: string) => {
+    const games = this.gameStateService.getSerializedGames();
+    this.lobby.emit('games:updated', games);
+    if (gameId) {
+      this.lobby.server
+        .of('game-room')
+        .to(gameId)
+        .emit(
+          'game-room:updated',
+          this.gameStateService.getSerializedGameRoom(gameId),
+        );
+    }
+  };
+
+  gameJoinHandler = () => {
+    const games = this.gameStateService.getSerializedGames();
+    this.lobby.emit('games:updated', games);
+  };
 }

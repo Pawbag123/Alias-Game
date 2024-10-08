@@ -19,7 +19,10 @@ export class LobbyService {
    * - Set a timeout to remove the user from the game if they don't join from the lobby in a certain amount of time
    * @returns id of created games
    */
-  createGame({ gameName, userId, userName }: CreateGameDto): string {
+  createGame(
+    { gameName, userId, userName }: CreateGameDto,
+    emitGamesUpdated: (gameId?: string) => void,
+  ): string {
     if (this.gameStateService.isUserActive(userId)) {
       throw new Error('User already in game');
     }
@@ -31,7 +34,7 @@ export class LobbyService {
       userName,
       MAX_USERS,
       JOIN_TIMEOUT,
-      () => {},
+      emitGamesUpdated,
     );
     //TODO: implement for creation
     //* Set a timeout to remove the user from the game if they don't join from the lobby in a certain amount of time
