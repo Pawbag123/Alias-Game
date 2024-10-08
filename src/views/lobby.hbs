@@ -1,68 +1,145 @@
-<html lang='en'>
-  <head>
-    <meta charset='UTF-8' />
-    <meta name='viewport' content='width=device-width, initial-scale=1.0' />
-    <script src='/socket.io/socket.io.js'></script>
-    <title>Lobby</title>
-    <!-- Bootstrap CSS CDN -->
-    <link
-      href='https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css'
-      rel='stylesheet'
-    />
-  </head>
-  <body class='bg-light'>
-    <div class='container'>
-      <h1>Game Lobby</h1>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <script src='/socket.io/socket.io.js'></script>
+  <title>Lobby</title>
+  <!-- Bootstrap CSS CDN -->
+  <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body class="bg-light">
+  <div id="error-message" style="display: none; color: red;"></div>
+  <div class="container">
+    <h1>Game Lobby</h1>
 
-      <button id='createGameBtn'>Create new room</button>
+    <button id="createGameBtn">Create new room</button>
 
-      <div id='available-games'>
-        <h2>Available games</h2>
-        <ul id='game-list'>
-          <!-- The list of games will be rendered here -->
-        </ul>
-      </div>
 
+    <div id="available-games">
+      <h2>Available games</h2>
+      <ul id="game-list">
+       <!-- The list of games will be rendered here -->
+      </ul> 
     </div>
 
-    <!-- Bootstrap and JavaScript dependencies -->
-    <script src='https://code.jquery.com/jquery-3.5.1.slim.min.js'></script>
-    <script
-      src='https://cdn.jsdelivr.net/npm/bootstrap@4.5.2/dist/js/bootstrap.bundle.min.js'
-    ></script>
 
-    <script>
-      let socket; window.onload = function() { const { userId, userName } =
-      getUserInfo(); if(!socket) { socket = io('/lobby', { query: { userId,
-      userName }, }); } const createGameBtn =
-      document.getElementById('createGameBtn');
-      createGameBtn.addEventListener('click', (e) => { e.preventDefault();
-      socket.emit('game:create', { gameName: `${userName}'s Game`, }); }); //
-      Socket events for game actions can be handled here socket.on('connect', ()
-      => { console.log(`Connected as ${userName} (ID: ${userId})`);
-      socket.on('games:updated', (games) => { console.log('Games updated:',
-      games); renderLobby(games); }); socket.on('game:joined', (gameId) => {
-      console.log('Joined game:', gameId); // Redirect to the game page
-      redirectToGame(gameId); }); socket.on('game:created', (gameId) => {
-      console.log('Created game:', gameId); // Redirect to the game page
-      redirectToGame(gameId); }); /* socket.on('game:join:error', (error) => {
-      console.error('Error joining game:', error); });
-      socket.on('game:create:error', (error) => { console.error('Error creating
-      game:', error); });*/ }); } function getUserInfo() { const userId =
-      localStorage.getItem('userId'); const userName =
-      localStorage.getItem('userName'); return { userId, userName }; } // Render
-      the list of available games function renderLobby(games) { const gameList =
-      document.getElementById('game-list'); gameList.innerHTML = ''; // Clear
-      the list if(games.length > 0) { games.forEach(game => { const li =
-      document.createElement('li'); li.innerHTML = ` <span>${game.name},
-      Players: ${game.players}/${game.maxPlayers}</span> <button ${game.started
-      ? 'disabled' : ''} ${game.isFull ? 'disabled' : ''}
-      onclick="joinGame('${game.id}')"> Join </button> `;
-      gameList.appendChild(li); }); } else { gameList.innerHTML = '<li>No rooms
-      created</li>'; } } function joinGame(gameId) { console.log('Joining game
-      with id:', gameId); socket.emit('game:join', { gameId }); } function
-      redirectToGame(gameId) { window.location.href = `/game/${gameId}`; }
+    
+  </div>
 
-    </script>
-  </body>
+  <!-- Bootstrap and JavaScript dependencies -->
+  <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.5.2/dist/js/bootstrap.bundle.min.js"></script>
+
+  <script>
+    let socket;
+
+    window.onload = function() {
+      const { userId, userName } = getUserInfo();
+      const accessToken = localStorage.getItem('accessToken');
+
+      if(!socket) {
+        socket = io('/lobby', {
+          query: { userId, userName },
+          auth: { token: accessToken }
+        });
+      }
+      
+      const createGameBtn = document.getElementById('createGameBtn');
+
+      createGameBtn.addEventListener('click', (e) => {
+        e.preventDefault();
+        socket.emit('game:create', {
+          gameName: `${userName}'s Game`,
+        });
+      });
+
+      socket.on('connect_error', (error) => {
+        console.error('Connection error:', error);
+        renderError(error.message);
+      });
+
+      // Socket events for game actions can be handled here
+      socket.on('connect', () => {
+        console.log(`Connected as ${userName} (ID: ${userId})`);
+
+        socket.on('games:updated', (games) => {
+          console.log('Games updated:', games);
+          renderLobby(games);
+        });
+
+        socket.on('game:joined', (gameId) => {
+          console.log('Joined game:', gameId);
+          // Redirect to the game page
+          redirectToGame(gameId);
+        });
+
+        socket.on('game:created', (gameId) => {
+          console.log('Created game:', gameId);
+          // Redirect to the game page
+          redirectToGame(gameId);
+        });
+
+        /*
+        socket.on('game:join:error', (error) => {
+          console.error('Error joining game:', error);
+        });
+
+        socket.on('game:create:error', (error) => {
+          console.error('Error creating game:', error);
+        });*/
+      });
+    }
+
+    function getUserInfo() {
+      const userId = localStorage.getItem('userId');
+      const userName = localStorage.getItem('userName');
+      return { userId, userName };
+    }
+
+    function renderError(message) {
+      const errorDiv = document.getElementById('error-message');
+      const container = document.getElementsByClassName('container')[0];
+      container.style.display = 'none';
+      errorDiv.innerHTML = `Error: ${message}`;
+      errorDiv.style.display = 'block';
+    }
+
+    // Render the list of available games
+    function renderLobby(games) {
+      const gameList = document.getElementById('game-list');
+      gameList.innerHTML = ''; // Clear the list
+
+      if(games.length > 0) {
+        games.forEach(game => {
+          const li = document.createElement('li');
+          li.innerHTML = `
+            <span>${game.name}, Players: ${game.players}/${game.maxPlayers}</span>
+            <button 
+              ${game.started ? 'disabled' : ''} 
+              ${game.isFull ? 'disabled' : ''} 
+              onclick="joinGame('${game.id}')">
+              Join
+            </button>
+          `;
+          gameList.appendChild(li);
+        });
+      } else {
+        gameList.innerHTML = '<li>No rooms created</li>';
+      }
+    }
+
+    function joinGame(gameId) {
+      console.log('Joining game with id:', gameId);
+      socket.emit('game:join', { gameId });
+    }
+
+    function redirectToGame(gameId) {
+      window.location.href = `/game/${gameId}`;
+    }
+
+
+
+  </script>
+</body>
 </html>

@@ -35,7 +35,10 @@ export class AuthService {
       tokens.refreshToken,
     );
 
-    return tokens;
+    return {
+      ...tokens,
+      user: { id: savedUser._id, username: savedUser.username },
+    };
   }
 
   async login(username: string, password: string) {
@@ -120,8 +123,8 @@ export class AuthService {
 
   async verifyValidToken(token: string) {
     const result = this.jwtService.verify(token, {
-      secret: process.env.JWT_SECRET
-    })
+      secret: process.env.JWT_SECRET,
+    });
 
     return result;
   }

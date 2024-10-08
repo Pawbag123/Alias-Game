@@ -50,7 +50,7 @@
       }
 
       try {
-        const response = await fetch('/auth/signin', {
+        const response = await fetch('/auth/signup', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ username, password })
@@ -59,9 +59,10 @@
 
         if (response.ok) {
           document.getElementById('message').style.display = 'block';
-          localStorage.setItem('accessToken', data.tokens.accessToken);
-          localStorage.setItem('refreshToken', data.tokens.refreshToken);
-          localStorage.setItem('userName', username);
+          localStorage.setItem('accessToken', data.result.accessToken);
+          localStorage.setItem('refreshToken', data.result.refreshToken);
+          localStorage.setItem('userName', data.result.user.username);
+          localStorage.setItem('userId', data.result.user.id);
 
           setTimeout(() => {
             window.location.href = 'lobby';

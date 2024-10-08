@@ -20,13 +20,13 @@ export class AuthController {
   @Post('signup')
   @HttpCode(HttpStatus.CREATED)
   async signup(@Body() createUserDto: CreateUserDto) {
-    const tokens = await this.authService.signup(
+    const result = await this.authService.signup(
       createUserDto.username,
       createUserDto.password,
     );
     return {
       message: 'User created successfully',
-      tokens,
+      result,
     };
   }
 
