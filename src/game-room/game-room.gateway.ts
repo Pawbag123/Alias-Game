@@ -86,7 +86,7 @@ export class GameRoomGateway
     client.data.userId = userId;
     client.data.gameId = gameId;
 
-    // Fetch and send missed messages
+    // Fetch and send missed messages, partially working
     const lastMessageId = client.handshake.auth.serverOffset ?? 0; 
     console.log('serverOffset: ', lastMessageId)
     this.chatService.getMessagesAfter(lastMessageId, gameId)
@@ -304,10 +304,6 @@ export class GameRoomGateway
       rounds++;
     }
 
-    // Guardar en la base de datos
-    // Borrar el estado del juego
-    // Borrar active users que sean del juego
-    
     this.server.to(gameId).emit(
       'game:end',
       this.gameStateService.getSerializedGameStarted(gameId)
@@ -323,6 +319,17 @@ export class GameRoomGateway
   delay(ms: number): Promise<void> {
     return new Promise(resolve => setTimeout(resolve, ms));
   }
+
+
+  //!
+/*   @SubscribeMessage('game:word-guessed')
+  async wordGuessed(gameId: string) {
+    this.gameMechanicsService.playerGuessed(gameId)
+    this.server.to(gameId).emit(
+      'game-started:updated', //? 'game-started:new-turn'
+      this.gameStateService.getSerializedGameStarted(gameId)
+    );
+  } */
 
   /**
    * Handler to send message
@@ -358,25 +365,7 @@ export class GameRoomGateway
         this.gameStateService.getSerializedGameStarted(gameId)
       );
     }
-
-    //Recovery logic: Check if the socket needs to recover lost messages
-    // if(!client.recovered) { 
-    //   try {
-    //     const lastMessageId = client.handshake.auth.serverOffset ?? 0; // Assuming this is passed during reconnection
-
-    //     //Fetch the document containing the chat messages
-    //     const recoveredMessages = await this.chatService.getMessagesAfter(lastMessageId, gameId);
-
-    //     //Send recovered messages back to the client
-    //     recoveredMessages.forEach(message => {
-    //       client.emit('chat:message', message);
-    //     });
-
-    //     // // Mark the socket as recovered to avoid refetching
-    //     // client.recovered = true;
-    //   } catch (error) {
-    //     console.error('Error recovering missed messages:', error);
-    //   }
-    // }
+  
   }
+
 }

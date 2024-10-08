@@ -34,29 +34,28 @@ export class ChatService {
     return { userId, userName, gameId, message, time: timestamp, messageId: addedMessage._id};
   }
 
+  //Don't work refreshing the game room, freezes the view, the rest of the players can see the messages typed tough
   async getMessagesAfter(lastMessageId: mongoose.Schema.Types.ObjectId, gameId: string) {
     const chatDocument = await this.chatModel.findOne({ gameId }).exec(); // Fetch the entire document
 
     // Check if the chatDocument exists and has messages
-    if (chatDocument && chatDocument.messages && chatDocument.messages.length > 0) {
-        // Filter messages based on the lastMessageId
-        const recoveredMessages = chatDocument.messages.filter(message => {
-            return lastMessageId === null || message._id > lastMessageId; // Fetch messages with _id greater than lastMessageId
-        }).map(message => {
-            return {
-                userId: message.userId,
-                userName: message.userName,
-                gameId,
-                message: message.content,
-                time: message.timestamp,
-                messageId: message._id
-            };
-        });
+    if(chatDocument && chatDocument.messages && chatDocument.messages.length > 0) {
+      // Filter messages based on the lastMessageId
+      const recoveredMessages = chatDocument.messages.map(message => {
+        return {
+          userId: message.userId,
+          userName: message.userName,
+          gameId,
+          message: message.content,
+          time: message.timestamp,
+          messageId: message._id
+        };
+      });
 
-        // Return the filtered messages
-        return recoveredMessages;
+      // Return the filtered messages
+      return recoveredMessages;
     } else {
-        return [];
+      return [];
     }
   }
   

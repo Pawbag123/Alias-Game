@@ -19,6 +19,11 @@
       border: 4px solid blue;
       box-shadow: 0px 4px 10px blue;
     }
+
+    #messages {
+      overflow-y: scroll;
+      scroll-behavior: smooth;
+    }
   </style>
 </head>
 
@@ -190,18 +195,47 @@
         socket.on('chat:message', (msg) => {
           console.log(`Message received: ${msg}, 'serverOffset: `, msg.messageId)
           const serverOffset = msg.messageId;
-          /*
           const item = `<li>
-              <p>${msg.userName}:  ${msg.message}</p>
-              <small>[${new Date(msg.time).toLocaleTimeString()}]</small>
+              <p>${msg.userName}:  ${msg.message} <small class="text-muted ms-auto">[${new Date(msg.time).toLocaleTimeString()}]</small></p>
             </li>`
-          messages.insertAdjacentHTML('beforeend', item)
-          */
+          messageList.insertAdjacentHTML('beforeend', item)
+          /*
           const li = document.createElement('li');
-          li.textContent = `${msg.userName}: ${msg.message} [${new Date(msg.time).toLocaleTimeString()}]`;
-          messageList.appendChild(li);
+          li.textContent = `${msg.userName}: ${msg.message} <small>[${new Date(msg.time).toLocaleTimeString()}]</small>`;
+          messageList.appendChild(li);*/
           socket.auth.serverOffset = serverOffset
+
+          messageList.scrollTop = messages.scrollHeight
         });
+
+        //End of the game
+        socket.on('game:end', (gameRoom) => {
+          const { score } = gameRoom;
+          const redTeamScore = score[0];
+          const blueTeamScore = score[1];
+          let message = '';
+
+          // Determine the result
+          if(redTeamScore > blueTeamScore) {
+            message = `Red Team Wins! Score: ${redTeamScore} - ${blueTeamScore}`;
+          } else if(blueTeamScore > redTeamScore) {
+            message = `Blue Team Wins! Score: ${blueTeamScore} - ${redTeamScore}`;
+          } else {
+            message = `It's a Tie! Score: ${redTeamScore} - ${blueTeamScore}`;
+          }
+
+          // Display the result in the modal
+          document.getElementById('gameEndMessage').innerHTML = message;
+          
+          // Show the modal
+          const gameEndModal = new bootstrap.Modal(document.getElementById('gameEndModal'));
+          gameEndModal.show();
+
+          // Handle the lobby redirection
+          document.getElementById('redirectLobby').addEventListener('click', () => {
+            window.location.href = '/lobby';
+          });
+        })
       });
 
       form.addEventListener('submit', (e) => {
@@ -289,6 +323,25 @@
     }
 
   </script>
+
+
+  <!-- Modal End Game -->
+  <div class="modal fade" id="gameEndModal" tabindex="-1" aria-labelledby="gameEndModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="gameEndModalLabel">Game Over</h5>
+        </div>
+        <div class="modal-body" id="gameEndMessage">
+          <!-- Winner or tie message will be displayed here -->
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-primary" id="redirectLobby">Go to Lobby</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
 </body>
 
 </html>
