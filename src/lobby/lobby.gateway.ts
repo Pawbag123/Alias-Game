@@ -44,6 +44,14 @@ export class LobbyGateway implements OnGatewayConnection, OnGatewayDisconnect {
   handleConnection(client: Socket): void {
     const { userId, userName } = client.data.user;
 
+    this.logger.log(`Client connected to lobby: ${userName}`);
+
+    const gameId = this.gameStateService.checkIfUserIsInGame(userId);
+    if (gameId) {
+      client.emit('game:joined', gameId);
+      return;
+    }
+
     const games = this.gameStateService.getSerializedGames();
     client.emit('games:updated', games);
     this.logger.log(`Emitting games: to client: ${userName}`, games);

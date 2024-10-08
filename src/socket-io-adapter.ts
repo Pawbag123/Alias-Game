@@ -121,6 +121,11 @@ const createAllowedToGameMiddleware =
     logger.log('Allowed to game middleware');
     const { gameId } = socket.handshake.query as { gameId: string };
     const userId = socket.data.user.userId;
+
+    if (!gameStateService.gameExists(gameId)) {
+      logger.error('Game not found');
+      return next(new WsException('Game not found'));
+    }
     // if (!user) {
     //   logger.error('No user in socket data');
     //   next(new WsException('Unauthorized'));

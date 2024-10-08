@@ -110,6 +110,17 @@ export class GameStateService {
     return this.games.find((game) => game.id === gameId);
   }
 
+  checkIfGameHasTooFewPlayers(gameId: string): boolean {
+    const game = this.getGameById(gameId);
+    const redTeamPlayers = game.players.filter(
+      (player) => player.team === Team.RED,
+    );
+    const blueTeamPlayers = game.players.filter(
+      (player) => player.team === Team.BLUE,
+    );
+    return redTeamPlayers.length < 2 || blueTeamPlayers.length < 2;
+  }
+
   isGameEmpty(gameId: string): boolean {
     const game = this.getGameById(gameId);
     return game.players.length === 0;
@@ -133,6 +144,14 @@ export class GameStateService {
 
   gameExists(gameId: string): boolean {
     return this.games.some((game) => game.id === gameId);
+  }
+
+  checkIfUserIsInGame(userId: string): string | undefined {
+    const user = this.activeUsers.find((user) => user.id === userId);
+    if (user && user.gameId && !user.socketId) {
+      return user.gameId;
+    }
+    return undefined;
   }
 
   createGame(
@@ -379,6 +398,16 @@ export class GameStateService {
     } catch (error) {
       throw new Error('Error saving in database');
     }
+  }
+
+  isAllowedToGuess(userId: string, gameId: string): boolean {
+    const game = this.getGameById(gameId);
+    const player = this.getPlayerById(userId, gameId);
+    if (player && game.turn && player.team === game.turn.team) {
+      return true;
+    }
+
+    return false;
   }
 
   getAllActiveUsers(): Omit<ActiveUser, 'initialJoinTimeout'>[] {

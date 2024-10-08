@@ -19,6 +19,8 @@ import { ChatService } from 'src/chat/chat.service';
 import { GameStartedDto } from './dto/game-started-dto';
 import { HostGuard } from './guards/host.guard';
 import { WsExceptionFilter } from 'src/exceptions/ws-exception-filter';
+import { TooFewPlayersGuard } from './guards/too-few-players.guard';
+import { GuessingTeamGuard } from './guards/guessing-team.guard';
 
 //TODO: add error emitters, handlers, try catch blocks, extend logic after game is started
 //TODO: change server emit to namespace emit
@@ -96,11 +98,12 @@ export class GameRoomGateway
       .getMessagesAfter(lastMessageId, gameId)
       .then((recoveredMessages) => {
         recoveredMessages.forEach((message) => {
-          client.emit('chat:message', message);
+          client.emit('chat:update', message);
         });
       })
       .catch((error) => {
         this.logger.error('Error recovering chat messages:', error);
+        throw new WsException(error.message);
       });
 
     if (
@@ -108,13 +111,9 @@ export class GameRoomGateway
       this.gameStateService.getGameById(gameId).isGameStarted
     ) {
       try {
-        //TODO: ADD validation if user is allowed to join the game
         this.gameMechanicsService.reconnectPlayer(userId, gameId, client.id);
         client.join(gameId);
-        //TODO: connect to game/team room
-        const team = this.gameStateService.getTeamOfPlayer(userId, gameId);
-        client.data.team = team;
-        client.join(`${gameId}/${team}`);
+        // const team = this.gameStateService.getTeamOfPlayer(userId, gameId);
         this.gameRoom
           .to(gameId)
           .emit(
@@ -122,8 +121,8 @@ export class GameRoomGateway
             this.gameStateService.getSerializedGameStarted(gameId),
           );
       } catch (error) {
-        client.emit('game-started:join:error', error.message);
         this.logger.error(error);
+        throw new WsException(error.message);
       }
     } else {
       try {
@@ -174,6 +173,7 @@ export class GameRoomGateway
         this.gameRoomService.removePlayerFromGame(gameId, userId);
       } catch (error) {
         this.logger.error(error);
+        throw new WsException(error.message);
       }
       if (this.gameStateService.gameExists(gameId)) {
         this.gameRoom
@@ -208,12 +208,21 @@ export class GameRoomGateway
    * Calls game room service to join red team,
    * emits updated game room to all clients in the room
    */
-  @SubscribeMessage('game-room:join:red')
-  handleJoinRedTeam(@ConnectedSocket() client: Socket) {
+  @SubscribeMessage('game-room:join')
+  handleJoinTeam(
+    @ConnectedSocket() client: Socket,
+    @MessageBody() { team }: { team: Team },
+  ) {
     const gameId = client.data.gameId;
     const userId = client.data.user.userId;
     try {
-      this.gameRoomService.joinRedTeam(gameId, userId);
+      if (team === Team.RED) {
+        this.gameRoomService.joinRedTeam(gameId, userId);
+      } else if (team === Team.BLUE) {
+        this.gameRoomService.joinBlueTeam(gameId, userId);
+      } else {
+        throw new Error('Invalid team');
+      }
     } catch (error) {
       this.logger.error(error);
       throw new WsException(error.message);
@@ -228,66 +237,16 @@ export class GameRoomGateway
   }
 
   /**
-   * Handler to join blue team
-   * Calls game room service to join blue team,
-   * emits updated game room to all clients in the room
-   */
-  @SubscribeMessage('game-room:join:blue')
-  handleJoinBlueTeam(@ConnectedSocket() client: Socket) {
-    const gameId = client.data.gameId;
-    const userId = client.data.user.userId;
-
-    try {
-      this.gameRoomService.joinBlueTeam(gameId, userId);
-    } catch (error) {
-      this.logger.error(error);
-      throw new WsException(error.message);
-    }
-
-    if (this.gameStateService.gameExists(gameId)) {
-      this.gameRoom
-        .to(gameId)
-        .emit(
-          'game-room:updated',
-          this.gameStateService.getSerializedGameRoom(gameId),
-        );
-    }
-  }
-
-  //TODO emit exception as guard doesn't do that
-  /**
    * Handler to start game
    * Calls game mechanics service to start the game
    * @param gameId - id of the game to start
    */
-  //@TeamsGuard()
   @SubscribeMessage('game-room:start')
-  @UseGuards(HostGuard)
+  @UseGuards(HostGuard, TooFewPlayersGuard)
   handleStartGame(@ConnectedSocket() client: Socket) {
     const { gameId } = client.data;
     try {
-      const game = this.gameStateService.getSerializedGameStarted(gameId);
-      if (game.blueTeam.length < 2 || game.redTeam.length < 2) {
-        this.logger.error('Not enough players to start the game');
-        throw new Error('Not enough players to start the game');
-        // client.emit('game:cant-start');
-      }
-
       this.gameMechanicsService.startGame(gameId);
-      const sockets = this.gameStateService.getPlayersWithSocketsInGame(gameId);
-      console.log(sockets);
-      // join separate rooms for each team
-      sockets.forEach(
-        ({ socketId, team }: { socketId: string; team: Team }) => {
-          console.log('socket');
-          console.log(socketId, team);
-          const socket: Socket = this.gameRoom.sockets.get(socketId);
-          if (socket) {
-            socket.join(`${gameId}/${team}`);
-            socket.data.team = team;
-          }
-        },
-      );
       this.lobby.emit(
         'games:updated',
         this.gameStateService.getSerializedGames(),
@@ -359,41 +318,30 @@ export class GameRoomGateway
     );
   } */
 
-  /**
-   * Handler to send message
-   * Emits message to all clients in the team
-   * @param message - message to send
-   */
-  @SubscribeMessage('game-started:send-message')
-  handleMessage(@ConnectedSocket() client: Socket): void {
-    const { gameId, team } = client.data;
-    const userId = client.data.user.userId;
-    const playerName = this.gameStateService.getPlayerById(userId, gameId).name;
-    this.gameRoom
-      .to(`${gameId}/${team}`)
-      .emit('game-started:message-received', {
-        sender: playerName,
-        text: 'hello world',
-      });
-  }
-
   @SubscribeMessage('chat:message')
+  @UseGuards(GuessingTeamGuard)
   async handleChatMessage(
     @ConnectedSocket() client: Socket,
-    @MessageBody() payload: any, // Temporarily 'any'
+    @MessageBody() { message }: { message: string }, // Temporarily 'any'
   ): Promise<void> {
-    const { userId, userName, gameId } = payload;
-    let { message } = payload;
+    // const { userId, userName, gameId } = payload;
+    const { userName, userId } = client.data.user;
+    const { gameId } = client.data;
+    this.logger.log(`Chat message received: ${message}`);
 
-    message = this.gameMechanicsService.validateWord(userId, gameId, message);
+    let validatedMessage = this.gameMechanicsService.validateWord(
+      userId,
+      gameId,
+      message,
+    );
     const chatResponse = await this.chatService.handleChatMessage(
       userId,
       userName,
       gameId,
-      message,
+      validatedMessage,
     );
 
-    this.gameRoom.to(gameId).emit('chat:message', chatResponse);
+    this.gameRoom.to(gameId).emit('chat:update', chatResponse);
 
     if (message.includes('✅')) {
       this.gameRoom.to(gameId).emit(

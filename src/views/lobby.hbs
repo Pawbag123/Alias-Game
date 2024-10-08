@@ -30,7 +30,7 @@
   <div id="error-message" style="display: none; color: red;"></div>
   <div class="container">
     <h1>Game Lobby</h1>
-
+    <button id="logoutBtn">Logout</button>
     <button id="createGameBtn">Create new room</button>
     <div id="available-games">
       <h2>Available games</h2>
@@ -57,6 +57,13 @@
           auth: { token: accessToken }
         });
       }
+
+      const logoutBtn = document.getElementById('logoutBtn');
+      logoutBtn.addEventListener('click', (e) => {
+        e.preventDefault();
+        localStorage.clear();
+        window.location.href = '/login';
+      });
       
       const createGameBtn = document.getElementById('createGameBtn');
 

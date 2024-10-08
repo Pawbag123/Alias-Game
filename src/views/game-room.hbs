@@ -170,9 +170,6 @@
           window.location.href = '/lobby';
         });
 
-        socket.on('game:cant-start', () => {
-          alert('Teams must have at least 2 player to start the game');
-        });
 
           // MODULARIZ THIS ONE
           socket.on('game-started:updated', (gameRoom) => {
@@ -207,16 +204,12 @@
           document.getElementById('word-for-teammates').textContent = myTeam(userName, gameRoom) && (gameRoom.turn.describerId === userId) ? gameRoom.currentWord : '*'.repeat(gameRoom.currentWord.length);
         });
 
-        socket.on('game-started:message-received', (message) => {
-          console.log(`Message from ${message.sender}: ${message.text}`);
-        });
-
         socket.on('timer:update', (data) => {
           document.getElementById('time-remaining').textContent = data.remaining;
         });
 
         //chat message events 
-        socket.on('chat:message', (msg) => {
+        socket.on('chat:update', (msg) => {
           console.log(`Message received: ${msg}, 'serverOffset: `, msg.messageId)
           const serverOffset = msg.messageId;
           const item = `<li>
@@ -268,8 +261,8 @@
         const { userId, userName } = getUserInfo();
 
         if (message && userName) {
-          const data = { userId, userName, gameId: gameRoomId, message }
-          socket.emit('chat:message', data);
+          {{!-- const data = { userId, userName, gameId: gameRoomId, message } --}}
+          socket.emit('chat:message', {message});
           messageInput.value = '';
         }
       });
@@ -322,10 +315,9 @@
       });
 
       // Check if the current user is the host and display Start Game button
-      {{!-- const isHost = gameRoom.host === localStorage.getItem('userId'); --}}
+      const isHost = gameRoom.host === localStorage.getItem('userId');
       const startGameBtn = document.getElementById('start-game-button');
-      {{!-- startGameBtn.style.display = isHost ? 'block' : 'none'; --}}
-      startGameBtn.style.display = 'block';
+      startGameBtn.style.display = isHost ? 'block' : 'none';
     };
 
     function leaveRoom() {
@@ -334,12 +326,12 @@
     }
 
     function joinRedTeam() {
-      socket.emit('game-room:join:red');
+      socket.emit('game-room:join', { team: 'redTeam' });
       console.log('joining red team');
     }
 
     function joinBlueTeam() {
-      socket.emit('game-room:join:blue');
+      socket.emit('game-room:join', { team: 'blueTeam' });
       console.log('joining blue team');
     }
 
