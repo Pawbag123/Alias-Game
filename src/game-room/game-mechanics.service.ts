@@ -155,6 +155,8 @@ export class GameMechanicsService {
   }
 
   validateWord(userId: string, gameId: string, message: string) {
+    message = message.replace(/✅/g, '');
+
     const game = this.gameStateService.getGameById(gameId);
     const { turn, currentWord } = game;
     if (game.isGameStarted && turn) {
@@ -195,12 +197,12 @@ export class GameMechanicsService {
       return message;
     }
   }
-  
+
 
   wordDerivates(message: string, currentWord: string): boolean {
     const normalizedMessage = message.toLowerCase().replace(/[.,!?:;]/g, ''); // Remove punctuation
     const words = normalizedMessage.split(/\s+/); // Split message into words
-    const baseWord = currentWord.toLowerCase(); // Ensure comparison is case-insensitive
+    const baseWord = currentWord.toLowerCase();
     // Check if any word in the message is the base word or a derivative
     for (let word of words) {
       if (word === baseWord) {

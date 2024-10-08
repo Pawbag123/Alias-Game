@@ -339,9 +339,16 @@ export class GameStateService {
   }
   
   endGame(gameId: string){
-   // getGameById
-   // lo guarda en la base de datos
-   // Elimina a los active players del juego
-   // Lo elimina del array 
+   const game = this.getGameById(gameId)
+    console.log("SAVED IN DATABASE: ", game);
+   // this.deleteActiveUsers()
+    console.log(this.activeUsers)
+   // this.saveInDatabase(game)
+   // this.deleteActivePlayes(gameId)
+   // this.deleteGameFromState(gameId)
+  }
+
+  deleteActiveUsers(players: object[]){
+
   }
 }

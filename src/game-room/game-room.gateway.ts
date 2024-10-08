@@ -59,15 +59,15 @@ export class GameRoomGateway
   }
 
 
-  updateGameState(gameId: string){
+  updateGameState(gameId: string) {
     this.server
-    .to(gameId)
-    .emit(
-      'game-room:updated',
-      this.gameStateService.getSerializedGameRoom(gameId),
-    );
+      .to(gameId)
+      .emit(
+        'game-room:updated',
+        this.gameStateService.getSerializedGameRoom(gameId),
+      );
   }
-  
+
   /**
    * Connection handler, that will check if user can join the game,
    * add him to the game (that means setting his socketId),
@@ -237,10 +237,17 @@ export class GameRoomGateway
    * Calls game mechanics service to start the game
    * @param gameId - id of the game to start
    */
+  //@TeamsGuard()
   @SubscribeMessage('game-room:start')
   handleStartGame(@ConnectedSocket() client: Socket) {
     const { gameId } = client.data;
     try {
+
+      const game = this.gameStateService.getSerializedGameStarted(gameId)
+      if (game.blueTeam.length < 2 || game.redTeam.length < 2) {
+        client.emit('game:cant-start');
+        return;
+      }
 
       this.gameMechanicsService.startGame(gameId);
       const sockets = this.gameStateService.getPlayersWithSocketsInGame(gameId);
@@ -259,7 +266,8 @@ export class GameRoomGateway
       );
       //* this.gameMechanicsService.turns(gameId); this didn't work
       this.handleTurns(gameId)
-
+     
+      
     } catch (error) {
       console.log(error);
       this.server.to(gameId).emit('game-room:start:error', error.message);
@@ -269,7 +277,7 @@ export class GameRoomGateway
   //! Heres where turns are managed
   async handleTurns(gameId: string) {
     let rounds = 0;
-    const totalRounds = 4;
+    const totalRounds = 1;
 
     while (rounds < totalRounds) {
       this.gameMechanicsService.nextTurn(gameId); // Handles both game initialization and next turn
@@ -288,14 +296,13 @@ export class GameRoomGateway
       rounds++;
     }
 
-    // Guardar en la base de datos
-    // Borrar el estado del juego
-    // Borrar active users que sean del juego
-    
     this.server.to(gameId).emit(
       'game:end',
       this.gameStateService.getSerializedGameStarted(gameId)
     );
+
+    this.gameStateService.endGame(gameId);
+
   }
 
   async startTimer(gameId: string, duration: number) {
@@ -330,12 +337,12 @@ export class GameRoomGateway
   ): Promise<void> {
     const { userId, userName, gameId } = payload;
     let { message } = payload;
-  
+
     message = this.gameMechanicsService.validateWord(userId, gameId, message);
     const chatResponse = await this.chatService.handleChatMessage(userId, userName, gameId, message);
-  
+
     this.server.to(gameId).emit('chat:message', chatResponse);
-    
+
     if (message.includes('✅')) {
       this.server.to(gameId).emit(
         'game-started:updated', // or 'game-started:new-turn' if you want to indicate a new turn

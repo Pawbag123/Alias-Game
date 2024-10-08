@@ -145,6 +145,11 @@
           console.error('Error starting game room:', error);
         });
 
+        socket.on('game:cant-start', () => {
+          alert('Teams must have at least 2 player to start the game');
+        });
+
+        // MODULARIZ THIS ONE
         socket.on('game-started:updated', (gameRoom) => {
           console.log('Actual state of the game: ', gameRoom);
 
@@ -191,6 +196,10 @@
           li.textContent = `${msg.userName}: ${msg.message} [${new Date(msg.time).toLocaleTimeString()}]`;
           messageList.appendChild(li);
         });
+
+        socket.on('game:end',()=>{
+          document.getElementById('timer').style.display = 'none';
+        })
       });
 
       form.addEventListener('submit', (e) => {
@@ -266,10 +275,8 @@
     }
 
     function startGame() {
-      // TODO Add validation (teams etc)
       socket.emit('game-room:start');
       console.log('starting game');
-
     }
 
     //extra functions
