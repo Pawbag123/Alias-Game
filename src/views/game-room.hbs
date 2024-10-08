@@ -200,7 +200,7 @@
           }
 
           // Update game state details
-          document.getElementById('team-turn').textContent = gameRoom.turn.team;
+          document.getElementById('team-turn').textContent = gameRoom.turn.team === 'redTeam' ? 'Red' : 'Blue';
           document.getElementById('score-team-red').textContent = gameRoom.score[ 0 ];
           document.getElementById('score-team-blue').textContent = gameRoom.score[ 1 ];
           document.getElementById('describer-name').textContent = gameRoom.turn.describerName;
@@ -252,7 +252,10 @@
           document.getElementById('gameEndMessage').innerHTML = message;
           
           // Show the modal
-          const gameEndModal = new bootstrap.Modal(document.getElementById('gameEndModal'));
+          const gameEndModal = new bootstrap.Modal(document.getElementById('gameEndModal'), {
+            backdrop: 'static', //Prevent closing when clicking outside
+            keyboard: false //Prevent closing with ESC key
+          });
           gameEndModal.show();
 
           // Handle the lobby redirection
