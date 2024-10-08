@@ -201,8 +201,8 @@
 
           // Update game state details
           document.getElementById('team-turn').textContent = gameRoom.turn.team === 'redTeam' ? 'Red' : 'Blue';
-          document.getElementById('score-team-red').textContent = gameRoom.score[ 0 ];
-          document.getElementById('score-team-blue').textContent = gameRoom.score[ 1 ];
+          document.getElementById('score-team-red').textContent = gameRoom.score.red;
+          document.getElementById('score-team-blue').textContent = gameRoom.score.blue;
           document.getElementById('describer-name').textContent = gameRoom.turn.describerName;
           document.getElementById('word-for-teammates').textContent = myTeam(userName, gameRoom) && (gameRoom.turn.describerId === userId) ? gameRoom.currentWord : '*'.repeat(gameRoom.currentWord.length);
         });
@@ -235,8 +235,8 @@
         //End of the game
         socket.on('game:end', (gameRoom) => {
           const { score } = gameRoom;
-          const redTeamScore = score[0];
-          const blueTeamScore = score[1];
+          const redTeamScore = score.red;
+          const blueTeamScore = score.blue;
           let message = '';
 
           // Determine the result

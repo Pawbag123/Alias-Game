@@ -77,13 +77,12 @@ export class GameMechanicsService {
   nextTurn(gameId: string) {
     const game = this.gameStateService.getGameById(gameId);
 
+    console.log('ENRTO A NEXT TURN: ', game.players)
+
     // Initialize game and set the first turn if it's not already set
     if (!game.turn) {
       const teamPlayers = game.players.filter(player => player.team === Team.RED || player.team === Team.BLUE);
 
-      if (teamPlayers.length === 0) {
-        throw new Error('No players available in teams');
-      }
 
       // Randomly pick a player from the teamPlayers array
       const randomIndex = Math.floor(Math.random() * teamPlayers.length);
@@ -138,18 +137,27 @@ export class GameMechanicsService {
     this.gameStateService.saveCurrentState(game);
   }
 
-  playerGuessed(gameId: string) {
+  playerGuessed(gameId: string, userId: string) {
     const game = this.gameStateService.getGameById(gameId);
-    const { turn, score } = game;
+    const { turn, score, players } = game;
+
+    const guessingPlayer = players.find(player => player.userId === userId);
+    if (guessingPlayer) {
+      guessingPlayer.inGameStats.wordsGuessed += 1;
+    }
+
+    const describer = players.find(player => player.userId === turn.describerId);
+    if (describer) {
+      describer.inGameStats.wellDescribed += 1;
+    }
 
     if (turn.team === 'redTeam') {
-      score[ 0 ] += 1;
+      score.red++;
     } else if (turn.team === 'blueTeam') {
-      score[ 1 ] += 1;
+      score.blue++;
     }
 
     this.newWord(gameId);
-
     this.gameStateService.saveCurrentState(game);
     return game;
   }
@@ -181,7 +189,7 @@ export class GameMechanicsService {
           // The player is guessing
           // Compare the guess with the current word
           if (message.toLowerCase() === currentWord.toLowerCase()) {
-            this.playerGuessed(gameId);
+            this.playerGuessed(gameId, userId);
             return `${message} ✅`;
           } else {
             // Return the message normally if it's a wrong guess
@@ -197,7 +205,7 @@ export class GameMechanicsService {
       return message;
     }
   }
-  
+
 
 
   wordDerivates(message: string, currentWord: string): boolean {
