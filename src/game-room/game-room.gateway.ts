@@ -13,9 +13,10 @@ import { GameRoomService } from './game-room.service';
 import { GameStateService } from 'src/game-state/game-state.service';
 import { GameMechanicsService } from './game-mechanics.service';
 import { Team } from 'src/lobby/types';
-import { Logger } from '@nestjs/common';
+import { Logger, UseGuards } from '@nestjs/common';
 import { ChatService } from 'src/chat/chat.service';
 import { GameStartedDto } from './dto/game-started-dto';
+import { HostGuard } from './guards/host.guard';
 
 //TODO: add error emitters, handlers, try catch blocks, extend logic after game is started
 //TODO: change server emit to namespace emit
@@ -40,11 +41,7 @@ export class GameRoomGateway
   /**
    * Lobby namespace
    */
-  // @WebSocketServer()
   lobby: Namespace;
-
-  // @WebSocketServer()
-  // gameRoom: Namespace;
 
   constructor(
     private readonly gameRoomService: GameRoomService,
@@ -59,7 +56,6 @@ export class GameRoomGateway
    */
   afterInit() {
     this.lobby = this.gameRoom.server.of('lobby');
-    // this.gameRoom = this.server.server.of('game-room');
   }
 
   updateGameState(gameId: string) {
@@ -89,14 +85,6 @@ export class GameRoomGateway
     const userId = client.data.user.userId;
 
     client.data.gameId = gameId;
-
-    // const { gameId, userId } = client.handshake.query as {
-    //   gameId: string;
-    //   userId: string;
-    // };
-
-    // client.data.userId = userId;
-    // client.data.gameId = gameId;
 
     if (
       this.gameStateService.gameExists(gameId) &&
@@ -248,7 +236,9 @@ export class GameRoomGateway
     }
   }
 
+  //TODO emit exception as guard doesn't do that
   @SubscribeMessage('game-room:start')
+  @UseGuards(HostGuard)
   handleStartGame(@ConnectedSocket() client: Socket) {
     const { gameId } = client.data;
     try {

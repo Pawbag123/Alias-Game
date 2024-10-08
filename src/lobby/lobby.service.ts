@@ -11,7 +11,6 @@ export class LobbyService {
     console.log('LobbyService created');
   }
 
-  //TODO: add validation/error throwing
   /**
    * Handles logic for game creation:
    * - Create a new game
@@ -27,6 +26,10 @@ export class LobbyService {
       throw new Error('User already in game');
     }
 
+    if (this.gameStateService.gameNameExists(gameName)) {
+      throw new Error('Game of specified name already exists');
+    }
+
     //* Create a new game
     return this.gameStateService.createGame(
       gameName,
@@ -36,8 +39,6 @@ export class LobbyService {
       JOIN_TIMEOUT,
       emitGamesUpdated,
     );
-    //TODO: implement for creation
-    //* Set a timeout to remove the user from the game if they don't join from the lobby in a certain amount of time
   }
 
   /**
@@ -67,6 +68,10 @@ export class LobbyService {
 
     if (this.gameStateService.isGameFull(gameId)) {
       throw new Error('Game is full');
+    }
+
+    if (this.gameStateService.isGameStarted(gameId)) {
+      throw new Error('Game already started');
     }
 
     //* Add the user to the game

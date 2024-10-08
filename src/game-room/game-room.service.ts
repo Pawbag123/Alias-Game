@@ -1,18 +1,20 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 
 import { Team } from 'src/lobby/types';
 import { GameStateService } from 'src/game-state/game-state.service';
 
 @Injectable()
 export class GameRoomService {
+  private readonly logger = new Logger(GameRoomService.name);
+
   constructor(private readonly gameStateService: GameStateService) {
     console.log('GameRoomService created');
   }
 
   //* Logic for transitioning a game from the lobby to the game room
   addPlayerToGame(gameId: string, userId: string, socketId: string): void {
-    const game = this.gameStateService.getGameById(gameId);
-    if (!game) {
+    this.logger.log(`Adding user ${userId} to game ${gameId}`);
+    if (!this.gameStateService.gameExists(gameId)) {
       throw new Error('Game not found');
     }
 
@@ -43,9 +45,7 @@ export class GameRoomService {
   }
 
   removePlayerFromGame(gameId: string, userId: string): void {
-    console.log('in remove');
-    this.gameStateService.displayGames();
-    this.gameStateService.displayActiveUsers();
+    this.logger.log(`Removing user ${userId} from game ${gameId}`);
     const game = this.gameStateService.getGameById(gameId);
     if (!game) {
       throw new Error('Game not found');
@@ -78,6 +78,7 @@ export class GameRoomService {
   }
 
   joinRedTeam(gameId: string, userId: string): void {
+    this.logger.log(`User ${userId} joining red team in game ${gameId}`);
     const game = this.gameStateService.getGameById(gameId);
     if (!game) {
       throw new Error('Game not found');
@@ -91,6 +92,7 @@ export class GameRoomService {
   }
 
   joinBlueTeam(gameId: string, userId: string): void {
+    this.logger.log(`User ${userId} joining blue team in game ${gameId}`);
     const game = this.gameStateService.getGameById(gameId);
     if (!game) {
       throw new Error('Game not found');

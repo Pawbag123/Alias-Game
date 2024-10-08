@@ -7,14 +7,8 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
 
 import { AuthModule } from './auth/auth.module';
 import { LobbyModule } from './lobby/lobby.module';
-import { LobbyService } from './lobby/lobby.service';
-import { LobbyGateway } from './lobby/lobby.gateway';
 import { GameRoomModule } from './game-room/game-room.module';
-import { GameRoomGateway } from './game-room/game-room.gateway';
-import { GameRoomService } from './game-room/game-room.service';
 import { GameStateModule } from './game-state/game-state.module';
-import { GameStateService } from './game-state/game-state.service';
-import { GameMechanicsService } from './game-room/game-mechanics.service';
 import { ChatModule } from './chat/chat.module';
 
 @Module({
@@ -34,14 +28,6 @@ import { ChatModule } from './chat/chat.module';
     ChatModule,
   ],
   controllers: [AppController],
-  providers: [
-    AppService,
-    // LobbyService,
-    // GameRoomService,
-    // LobbyGateway,
-    // GameRoomGateway,
-    // GameStateService,
-    // GameMechanicsService,
-  ],
+  providers: [AppService],
 })
 export class AppModule {}

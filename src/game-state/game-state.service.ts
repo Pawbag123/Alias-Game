@@ -342,6 +342,10 @@ export class GameStateService {
     }
   }
 
+  gameNameExists(gameName: string): boolean {
+    return this.games.some((game) => game.name === gameName);
+  }
+
   endGame(gameId: string) {
     // getGameById
     // lo guarda en la base de datos
