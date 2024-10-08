@@ -1,8 +1,11 @@
 import { Injectable, Logger } from '@nestjs/common';
+import { InjectModel } from '@nestjs/mongoose';
 import { plainToClass } from 'class-transformer';
+import { Model } from 'mongoose';
 
 import { GameRoomDto } from 'src/game-room/dto/game-room-dto';
 import { GameStartedDto } from 'src/game-room/dto/game-started-dto';
+import { Games } from 'src/game-room/schema/game.schema';
 import { InLobbyGameDto } from 'src/lobby/dto/in-lobby-game-dto';
 import { ActiveUser, Game, Player, Team } from 'src/lobby/types';
 
@@ -16,6 +19,10 @@ export class GameStateService {
 
   private games: Game[] = [];
   private activeUsers: ActiveUser[] = [];
+
+  constructor(
+    @InjectModel(Games.name) private readonly GamesModel: Model<Games>, // Inject DbGame model
+  ) {}
 
   getActiveUserById(userId: string): ActiveUser {
     return this.activeUsers.find((user) => user.id === userId);
@@ -347,10 +354,31 @@ export class GameStateService {
   }
 
   endGame(gameId: string) {
-    // getGameById
-    // lo guarda en la base de datos
-    // Elimina a los active players del juego
-    // Lo elimina del array
+    const game = this.getGameById(gameId);
+
+    this.saveInDatabase(game);
+    this.removeGameRoom(gameId);
+  }
+
+  async saveInDatabase(game: Game): Promise<Games> {
+    try {
+      const newGame = new this.GamesModel({
+        gameId: game.id,
+        host: game.host,
+        players: game.players,
+        score: game.score,
+        isGameStarted: game.isGameStarted,
+        maxUsers: game.maxUsers,
+        wordsUsed: game.wordsUsed,
+        chatIdMongo: null, //! get the chat id
+      });
+
+      console.log('GUARDANDO EN LA BASE DE DATOS PERRO');
+      // Save the game document in the database
+      return await newGame.save();
+    } catch (error) {
+      throw new Error('Error saving in database');
+    }
   }
 
   getAllActiveUsers(): Omit<ActiveUser, 'initialJoinTimeout'>[] {

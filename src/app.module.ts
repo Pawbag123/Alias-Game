@@ -22,7 +22,7 @@ import { ChatModule } from './chat/chat.module';
       imports: [ConfigModule],
       inject: [ConfigService],
       useFactory: (configService: ConfigService) => ({
-        uri: 'mongodb+srv://solvd-team-3:2prHVO2HGozJkXOh@solvd-project.e9zpm.mongodb.net/aliasGame?retryWrites=true&w=majority&appName=solvd-project',
+        uri: configService.get<string>('MONGO_URI'),
       }),
     }),
     ChatModule,

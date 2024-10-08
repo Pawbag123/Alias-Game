@@ -86,6 +86,20 @@ export class GameRoomGateway
 
     client.data.gameId = gameId;
 
+    // Fetch and send missed messages, partially working
+    const lastMessageId = client.handshake.auth.serverOffset ?? 0;
+    console.log('serverOffset: ', lastMessageId);
+    this.chatService
+      .getMessagesAfter(lastMessageId, gameId)
+      .then((recoveredMessages) => {
+        recoveredMessages.forEach((message) => {
+          client.emit('chat:message', message);
+        });
+      })
+      .catch((error) => {
+        console.error('Error recovering chat messages:', error);
+      });
+
     if (
       this.gameStateService.gameExists(gameId) &&
       this.gameStateService.getGameById(gameId).isGameStarted
@@ -237,11 +251,23 @@ export class GameRoomGateway
   }
 
   //TODO emit exception as guard doesn't do that
+  /**
+   * Handler to start game
+   * Calls game mechanics service to start the game
+   * @param gameId - id of the game to start
+   */
+  //@TeamsGuard()
   @SubscribeMessage('game-room:start')
   @UseGuards(HostGuard)
   handleStartGame(@ConnectedSocket() client: Socket) {
     const { gameId } = client.data;
     try {
+      const game = this.gameStateService.getSerializedGameStarted(gameId);
+      if (game.blueTeam.length < 2 || game.redTeam.length < 2) {
+        client.emit('game:cant-start');
+        return;
+      }
+
       this.gameMechanicsService.startGame(gameId);
       const sockets = this.gameStateService.getPlayersWithSocketsInGame(gameId);
       console.log(sockets);
@@ -268,7 +294,7 @@ export class GameRoomGateway
   //! Heres where turns are managed
   async handleTurns(gameId: string) {
     let rounds = 0;
-    const totalRounds = 4;
+    const totalRounds = 1;
 
     while (rounds < totalRounds) {
       this.gameMechanicsService.nextTurn(gameId); // Handles both game initialization and next turn
@@ -293,13 +319,11 @@ export class GameRoomGateway
       rounds++;
     }
 
-    // Guardar en la base de datos
-    // Borrar el estado del juego
-    // Borrar active users que sean del juego
-
     this.gameRoom
       .to(gameId)
       .emit('game:end', this.gameStateService.getSerializedGameStarted(gameId));
+
+    this.gameStateService.endGame(gameId);
   }
 
   async startTimer(gameId: string, duration: number) {
@@ -311,6 +335,16 @@ export class GameRoomGateway
   delay(ms: number): Promise<void> {
     return new Promise((resolve) => setTimeout(resolve, ms));
   }
+
+  //!
+  /*   @SubscribeMessage('game:word-guessed')
+  async wordGuessed(gameId: string) {
+    this.gameMechanicsService.playerGuessed(gameId)
+    this.server.to(gameId).emit(
+      'game-started:updated', //? 'game-started:new-turn'
+      this.gameStateService.getSerializedGameStarted(gameId)
+    );
+  } */
 
   /**
    * Handler to send message
