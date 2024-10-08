@@ -283,6 +283,10 @@ export class GameRoomGateway
           }
         },
       );
+      this.lobby.emit(
+        'games:updated',
+        this.gameStateService.getSerializedGames(),
+      );
       //* this.gameMechanicsService.turns(gameId); this didn't work
       this.handleTurns(gameId);
     } catch (error) {
@@ -324,6 +328,10 @@ export class GameRoomGateway
       .emit('game:end', this.gameStateService.getSerializedGameStarted(gameId));
 
     this.gameStateService.endGame(gameId);
+    this.lobby.emit(
+      'games:updated',
+      this.gameStateService.getSerializedGames(),
+    );
   }
 
   async startTimer(gameId: string, duration: number) {
