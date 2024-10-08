@@ -28,7 +28,7 @@ import { ChatModule } from './chat/chat.module';
       imports: [ConfigModule],
       inject: [ConfigService],
       useFactory: (configService: ConfigService) => ({
-        uri: configService.get<string>('MONGO_URL'),
+        uri: configService.get<string>('MONGO_URI'),
       }),
     }),
     ChatModule,

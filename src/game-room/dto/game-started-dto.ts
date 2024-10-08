@@ -27,5 +27,5 @@ export class GameStartedDto {
   currentWord: string;
 
   @Expose()
-  score: [number, number]
+  score: [number, number];
 }

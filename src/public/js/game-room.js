@@ -17,7 +17,7 @@ const gameRoomTemplateHbs = `<body>
         {{/each}}
       </ul> 
     </div> 
-    <div> 
+    <div>
       <h2>Blue Team</h2> 
       <button id='join-blue-team-button' onclick='joinBlueTeam()'>Join Blue Team</button> 
       <ul id='blue-team'>
@@ -140,15 +140,31 @@ function sendMessageToTeam() {
 
 // Socket.io connection and event handling
 const startGameRoom = (userId, userName) => {
+  const accessToken = localStorage.getItem('access-token');
+
   socket = io('/game-room', {
     query: { userId, gameId: gameRoomId },
+    auth: { token: accessToken },
   });
+
+  socket.on('connect_error', (error) => {
+    renderError(error.message);
+  });
+
   socket.on('connect', () => {
     console.log(`Connected as ${userName} (ID: ${userId})`);
 
     socket.on('game-room:updated', (gameRoom) => {
       console.log('Game Room updated:', gameRoom);
       renderGameRoom(gameRoom);
+    });
+
+    socket.on('lobby:check', () => {
+      console.log('Checking lobby');
+    });
+
+    socket.on('game-room:check', () => {
+      console.log('Checking game room');
     });
 
     socket.on('game-room:left', () => {
@@ -174,8 +190,6 @@ const startGameRoom = (userId, userName) => {
       console.log('Game started:', gameRoom);
       renderStartedGameRoom(gameRoom);
     });
-    
-    
 
     socket.on('game-started:message-received', (message) => {
       console.log(`Message from ${message.sender}: ${message.text}`);

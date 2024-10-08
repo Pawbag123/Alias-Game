@@ -1,0 +1,22 @@
+<body> 
+    <h2>Available Games</h2> 
+    <button id="create-game-button" onclick="createGame()">Create Game</button> 
+    <ul id="game-list">
+        {{#if hasGames}}
+        {{#each games}}
+        <li>
+            <span>{{this.name}}, Players: {{this.players}}/{{this.maxPlayers}}</span>
+            <button 
+            {{#if this.started}}disabled{{/if}} 
+            {{#if this.isFull}}disabled{{/if}} 
+            onclick="joinGame('{{this.id}}')"
+            >
+            Join
+            </button>
+        </li>
+        {{/each}}
+        {{else}}
+        <li>No rooms created</li>
+        {{/if}}
+    </ul> 
+</body>

@@ -4,9 +4,7 @@ import { Team } from 'src/lobby/types';
 
 @Injectable()
 export class GameMechanicsService {
-  constructor(
-    private readonly gameStateService: GameStateService,
-  ) {
+  constructor(private readonly gameStateService: GameStateService) {
     console.log('GameMechanicsService created');
   }
 
@@ -35,36 +33,253 @@ export class GameMechanicsService {
   generateWord(wordsUsed: string[]): string {
     const words = [
       // Fruits
-      "apple", "banana", "grape", "orange", "peach", "lemon", "cherry", "mango", "plum", "melon", "kiwi", "strawberry", "blueberry", "pineapple", "watermelon", "pear", "papaya", "coconut",
+      'apple',
+      'banana',
+      'grape',
+      'orange',
+      'peach',
+      'lemon',
+      'cherry',
+      'mango',
+      'plum',
+      'melon',
+      'kiwi',
+      'strawberry',
+      'blueberry',
+      'pineapple',
+      'watermelon',
+      'pear',
+      'papaya',
+      'coconut',
       // Animals
-      "elephant", "giraffe", "zebra", "tiger", "lion", "panda", "whale", "eagle", "falcon", "rabbit", "dog", "cat", "mouse", "horse", "cow", "sheep", "chicken", "duck", "frog", "snake", "owl",
+      'elephant',
+      'giraffe',
+      'zebra',
+      'tiger',
+      'lion',
+      'panda',
+      'whale',
+      'eagle',
+      'falcon',
+      'rabbit',
+      'dog',
+      'cat',
+      'mouse',
+      'horse',
+      'cow',
+      'sheep',
+      'chicken',
+      'duck',
+      'frog',
+      'snake',
+      'owl',
       // Household Items
-      "house", "garden", "window", "door", "kitchen", "bedroom", "roof", "fence", "garage", "chimney", "table", "chair", "couch", "lamp", "cup", "plate", "fork", "knife", "spoon", "mirror", "clock",
+      'house',
+      'garden',
+      'window',
+      'door',
+      'kitchen',
+      'bedroom',
+      'roof',
+      'fence',
+      'garage',
+      'chimney',
+      'table',
+      'chair',
+      'couch',
+      'lamp',
+      'cup',
+      'plate',
+      'fork',
+      'knife',
+      'spoon',
+      'mirror',
+      'clock',
       // Technology
-      "laptop", "keyboard", "mouse", "screen", "printer", "tablet", "phone", "camera", "speaker", "headphones", "charger", "router", "television", "remote", "monitor", "smartphone", "battery", "USB", "bluetooth",
+      'laptop',
+      'keyboard',
+      'mouse',
+      'screen',
+      'printer',
+      'tablet',
+      'phone',
+      'camera',
+      'speaker',
+      'headphones',
+      'charger',
+      'router',
+      'television',
+      'remote',
+      'monitor',
+      'smartphone',
+      'battery',
+      'USB',
+      'bluetooth',
       // Vehicles
-      "car", "bicycle", "bus", "train", "airplane", "helicopter", "submarine", "motorcycle", "skateboard", "truck", "boat", "scooter", "van", "trailer", "ship", "taxi", "hoverboard",
+      'car',
+      'bicycle',
+      'bus',
+      'train',
+      'airplane',
+      'helicopter',
+      'submarine',
+      'motorcycle',
+      'skateboard',
+      'truck',
+      'boat',
+      'scooter',
+      'van',
+      'trailer',
+      'ship',
+      'taxi',
+      'hoverboard',
       // Music Instruments
-      "guitar", "piano", "drums", "trumpet", "flute", "violin", "saxophone", "tambourine", "cello", "harp", "clarinet", "accordion", "trombone", "banjo", "xylophone", "harmonica", "keyboard",
+      'guitar',
+      'piano',
+      'drums',
+      'trumpet',
+      'flute',
+      'violin',
+      'saxophone',
+      'tambourine',
+      'cello',
+      'harp',
+      'clarinet',
+      'accordion',
+      'trombone',
+      'banjo',
+      'xylophone',
+      'harmonica',
+      'keyboard',
       // Nature
-      "mountain", "river", "forest", "beach", "desert", "valley", "volcano", "lake", "island", "cave", "hill", "waterfall", "field", "ocean", "jungle", "prairie", "meadow", "reef", "savannah",
+      'mountain',
+      'river',
+      'forest',
+      'beach',
+      'desert',
+      'valley',
+      'volcano',
+      'lake',
+      'island',
+      'cave',
+      'hill',
+      'waterfall',
+      'field',
+      'ocean',
+      'jungle',
+      'prairie',
+      'meadow',
+      'reef',
+      'savannah',
       // Literature
-      "book", "magazine", "newspaper", "novel", "dictionary", "encyclopedia", "poem", "journal", "biography", "atlas", "comic", "manual", "guide", "story", "fiction", "nonfiction", "essay",
+      'book',
+      'magazine',
+      'newspaper',
+      'novel',
+      'dictionary',
+      'encyclopedia',
+      'poem',
+      'journal',
+      'biography',
+      'atlas',
+      'comic',
+      'manual',
+      'guide',
+      'story',
+      'fiction',
+      'nonfiction',
+      'essay',
       // Clothing
-      "shirt", "pants", "dress", "jacket", "hat", "scarf", "shoes", "socks", "gloves", "belt", "skirt", "tie", "sweater", "blouse", "coat", "jeans", "shorts", "sandals", "boots",
+      'shirt',
+      'pants',
+      'dress',
+      'jacket',
+      'hat',
+      'scarf',
+      'shoes',
+      'socks',
+      'gloves',
+      'belt',
+      'skirt',
+      'tie',
+      'sweater',
+      'blouse',
+      'coat',
+      'jeans',
+      'shorts',
+      'sandals',
+      'boots',
       // Sports
-      "soccer", "tennis", "basketball", "baseball", "golf", "swimming", "cycling", "running", "skiing", "surfing", "hockey", "volleyball", "boxing", "skating", "archery", "climbing", "diving",
+      'soccer',
+      'tennis',
+      'basketball',
+      'baseball',
+      'golf',
+      'swimming',
+      'cycling',
+      'running',
+      'skiing',
+      'surfing',
+      'hockey',
+      'volleyball',
+      'boxing',
+      'skating',
+      'archery',
+      'climbing',
+      'diving',
       // Food
-      "bread", "butter", "cheese", "milk", "egg", "yogurt", "chocolate", "honey", "sugar", "salt", "pepper", "pizza", "burger", "sandwich", "pasta", "rice", "salad", "soup", "cake", "cookie", "pie", "icecream", "coffee", "tea",
+      'bread',
+      'butter',
+      'cheese',
+      'milk',
+      'egg',
+      'yogurt',
+      'chocolate',
+      'honey',
+      'sugar',
+      'salt',
+      'pepper',
+      'pizza',
+      'burger',
+      'sandwich',
+      'pasta',
+      'rice',
+      'salad',
+      'soup',
+      'cake',
+      'cookie',
+      'pie',
+      'icecream',
+      'coffee',
+      'tea',
       // Colors
-      "red", "blue", "green", "yellow", "orange", "purple", "pink", "brown", "black", "white", "gray", "cyan", "magenta", "gold", "silver", "turquoise", "beige", "maroon", "navy", "teal"
+      'red',
+      'blue',
+      'green',
+      'yellow',
+      'orange',
+      'purple',
+      'pink',
+      'brown',
+      'black',
+      'white',
+      'gray',
+      'cyan',
+      'magenta',
+      'gold',
+      'silver',
+      'turquoise',
+      'beige',
+      'maroon',
+      'navy',
+      'teal',
     ];
 
     let selectedWord: string;
 
     do {
       const wordIndex = this.getRandomNumber(0, words.length - 1);
-      selectedWord = words[ wordIndex ];
+      selectedWord = words[wordIndex];
     } while (wordsUsed.includes(selectedWord));
 
     return selectedWord;
@@ -79,7 +294,9 @@ export class GameMechanicsService {
 
     // Initialize game and set the first turn if it's not already set
     if (!game.turn) {
-      const teamPlayers = game.players.filter(player => player.team === Team.RED || player.team === Team.BLUE);
+      const teamPlayers = game.players.filter(
+        (player) => player.team === Team.RED || player.team === Team.BLUE,
+      );
 
       if (teamPlayers.length === 0) {
         throw new Error('No players available in teams');
@@ -87,13 +304,13 @@ export class GameMechanicsService {
 
       // Randomly pick a player from the teamPlayers array
       const randomIndex = Math.floor(Math.random() * teamPlayers.length);
-      const randomPlayer = teamPlayers[ randomIndex ];
+      const randomPlayer = teamPlayers[randomIndex];
 
       game.turn = {
         alreadyDiscribe: [],
         team: randomPlayer.team,
         describerId: randomPlayer.userId,
-        describerName: randomPlayer.name
+        describerName: randomPlayer.name,
       };
 
       // Optionally set the first word
@@ -106,19 +323,27 @@ export class GameMechanicsService {
       const oppositeTeam = game.turn.team === Team.RED ? Team.BLUE : Team.RED;
       game.turn.team = oppositeTeam;
 
-      const nextDescriber = game.players.find(player =>
-        player.team === oppositeTeam && !game.turn.alreadyDiscribe.includes(player.userId)
+      const nextDescriber = game.players.find(
+        (player) =>
+          player.team === oppositeTeam &&
+          !game.turn.alreadyDiscribe.includes(player.userId),
       );
 
       if (nextDescriber) {
         game.turn.describerId = nextDescriber.userId;
         game.turn.describerName = nextDescriber.name;
       } else {
-        game.turn.alreadyDiscribe = game.turn.alreadyDiscribe.filter(playerId =>
-          game.players.some(player => player.userId === playerId && player.team !== oppositeTeam)
+        game.turn.alreadyDiscribe = game.turn.alreadyDiscribe.filter(
+          (playerId) =>
+            game.players.some(
+              (player) =>
+                player.userId === playerId && player.team !== oppositeTeam,
+            ),
         );
 
-        const fallbackDescriber = game.players.find(player => player.team === oppositeTeam);
+        const fallbackDescriber = game.players.find(
+          (player) => player.team === oppositeTeam,
+        );
         game.turn.describerId = fallbackDescriber?.userId || '';
         game.turn.describerName = fallbackDescriber?.name || '';
       }
@@ -143,9 +368,9 @@ export class GameMechanicsService {
     const { turn, score } = game;
 
     if (turn.team === 'redTeam') {
-      score[ 0 ] += 1;
+      score[0] += 1;
     } else if (turn.team === 'blueTeam') {
-      score[ 1 ] += 1;
+      score[1] += 1;
     }
 
     this.newWord(gameId);
@@ -161,16 +386,19 @@ export class GameMechanicsService {
     const { turn, currentWord } = game;
     if (game.isGameStarted && turn) {
       // Find the player's team
-      const player = game.players.find(p => p.userId === userId);
+      const player = game.players.find((p) => p.userId === userId);
       if (!player) {
-        console.log("Player not found!");
+        console.log('Player not found!');
         return message; // Early return if player not found
       }
       if (player.team === turn.team) {
         // Check if the current player is the describer
         if (turn.describerId === userId) {
           // Check if the message is the current word or a derivative
-          if (message.toLowerCase() === currentWord.toLowerCase() || this.wordDerivates(message, currentWord)) {
+          if (
+            message.toLowerCase() === currentWord.toLowerCase() ||
+            this.wordDerivates(message, currentWord)
+          ) {
             // Return the word censored with *
             const censoredWord = currentWord.replace(/./g, '*');
             return censoredWord;
@@ -217,8 +445,8 @@ export class GameMechanicsService {
 
   // Helper function to check for simple derivatives
   isDerivative(word: string, baseWord: string): boolean {
-    const suffixes = [ 's', 'es', 'ed', 'ing', 'er', 'est', 'ly' ]; // Common suffixes
-    const prefixes = [ 'un', 're', 'in', 'im', 'dis', 'non' ]; // Common prefixes
+    const suffixes = ['s', 'es', 'ed', 'ing', 'er', 'est', 'ly']; // Common suffixes
+    const prefixes = ['un', 're', 'in', 'im', 'dis', 'non']; // Common prefixes
 
     // Check if the word contains baseWord with a prefix or suffix
     if (word.startsWith(baseWord) || word.endsWith(baseWord)) {

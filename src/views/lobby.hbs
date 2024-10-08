@@ -9,11 +9,29 @@
   <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
 </head>
 <body class="bg-light">
+  <div class="modal fade" id="errorModal" tabindex="-1" role="dialog" aria-labelledby="errorModalLabel" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="errorModalLabel">Error</h5>
+          <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+            <span aria-hidden="true">&times;</span>
+          </button>
+        </div>
+        <div class="modal-body" id="errorModalBody" style="color: red;">
+          <!-- Error message will be rendered here -->
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div id="error-message" style="display: none; color: red;"></div>
   <div class="container">
     <h1>Game Lobby</h1>
 
     <button id="createGameBtn">Create new room</button>
-
     <div id="available-games">
       <h2>Available games</h2>
       <ul id="game-list">
@@ -21,8 +39,6 @@
       </ul> 
     </div>
 
-
-    
   </div>
 
   <!-- Bootstrap and JavaScript dependencies -->
@@ -34,10 +50,12 @@
 
     window.onload = function() {
       const { userId, userName } = getUserInfo();
+      const accessToken = localStorage.getItem('accessToken');
 
       if(!socket) {
         socket = io('/lobby', {
           query: { userId, userName },
+          auth: { token: accessToken }
         });
       }
       
@@ -50,6 +68,10 @@
         });
       });
 
+      socket.on('connect_error', (error) => {
+        console.error('Connection error:', error);
+        renderError(error.message);
+      });
 
       // Socket events for game actions can be handled here
       socket.on('connect', () => {
@@ -72,14 +94,10 @@
           redirectToGame(gameId);
         });
 
-        /*
-        socket.on('game:join:error', (error) => {
-          console.error('Error joining game:', error);
+        socket.on('exception', (error) => {
+          console.error('Server exception:', error.message);
+          renderErrorMessage(error.message);
         });
-
-        socket.on('game:create:error', (error) => {
-          console.error('Error creating game:', error);
-        });*/
       });
     }
 
@@ -88,6 +106,26 @@
       const userName = localStorage.getItem('userName');
       return { userId, userName };
     }
+
+    function renderError(message) {
+      const errorDiv = document.getElementById('error-message');
+      const container = document.getElementsByClassName('container')[0];
+      container.style.display = 'none';
+      errorDiv.innerHTML = `Error: ${message}`;
+      errorDiv.style.display = 'block';
+    }
+
+    function renderErrorMessage(message) {
+      const errorModalBody = document.getElementById('errorModalBody');
+      errorModalBody.innerHTML = `Error: ${message}`;
+
+      $('#errorModal').modal('show');
+
+      {{!-- setTimeout(() => {
+        $('#errorModal').modal('hide');
+      }, 3000);  --}}
+    }
+
 
     // Render the list of available games
     function renderLobby(games) {
