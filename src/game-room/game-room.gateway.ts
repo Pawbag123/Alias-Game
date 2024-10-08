@@ -5,11 +5,12 @@ import {
   OnGatewayConnection,
   OnGatewayDisconnect,
   ConnectedSocket,
+  MessageBody,
 } from '@nestjs/websockets';
 import { Namespace, Server, Socket } from 'socket.io';
 
 import { GameRoomService } from './game-room.service';
-import { GameStateService } from 'src/shared/game-state.service';
+import { GameStateService } from 'src/game-state/game-state.service';
 import { GameMechanicsService } from './game-mechanics.service';
 import { Team } from 'src/lobby/types';
 import { Logger } from '@nestjs/common';
@@ -272,6 +273,10 @@ export class GameRoomGateway
       this.gameMechanicsService.nextTurn(gameId); // Handles both game initialization and next turn
       this.gameMechanicsService.newWord(gameId); // Generate a new word
 
+      // find socket that is describing
+      // emit game-started:updated:desc to him
+      // emit game-started:updated to all the others
+
       this.gameRoom
         .to(gameId)
         .emit(
@@ -321,5 +326,31 @@ export class GameRoomGateway
         sender: playerName,
         text: 'hello world',
       });
+  }
+
+  @SubscribeMessage('chat:message')
+  async handleChatMessage(
+    @ConnectedSocket() client: Socket,
+    @MessageBody() payload: any, // Temporarily 'any'
+  ): Promise<void> {
+    const { userId, userName, gameId } = payload;
+    let { message } = payload;
+
+    message = this.gameMechanicsService.validateWord(userId, gameId, message);
+    const chatResponse = await this.chatService.handleChatMessage(
+      userId,
+      userName,
+      gameId,
+      message,
+    );
+
+    this.gameRoom.to(gameId).emit('chat:message', chatResponse);
+
+    if (message.includes('✅')) {
+      this.gameRoom.to(gameId).emit(
+        'game-started:updated', // or 'game-started:new-turn' if you want to indicate a new turn
+        this.gameStateService.getSerializedGameStarted(gameId),
+      );
+    }
   }
 }

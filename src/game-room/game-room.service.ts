@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 
 import { Team } from 'src/lobby/types';
-import { GameStateService } from 'src/shared/game-state.service';
+import { GameStateService } from 'src/game-state/game-state.service';
 
 @Injectable()
 export class GameRoomService {

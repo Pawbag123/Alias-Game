@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import { plainToClass } from 'class-transformer';
 
 import { GameRoomDto } from 'src/game-room/dto/game-room-dto';
@@ -12,6 +12,8 @@ import { ActiveUser, Game, Player, Team } from 'src/lobby/types';
  */
 @Injectable()
 export class GameStateService {
+  private readonly logger = new Logger(GameStateService.name);
+
   private games: Game[] = [];
   private activeUsers: ActiveUser[] = [];
 
@@ -156,6 +158,7 @@ export class GameStateService {
 
     this.createUser(userId, newGame.id, timeout, timeoutCb);
 
+    this.logger.debug('all games:', this.games);
     return newGame.id;
   }
 
@@ -344,5 +347,13 @@ export class GameStateService {
     // lo guarda en la base de datos
     // Elimina a los active players del juego
     // Lo elimina del array
+  }
+
+  getAllActiveUsers(): Omit<ActiveUser, 'initialJoinTimeout'>[] {
+    return this.activeUsers.map(({ id, gameId, socketId }) => ({
+      id,
+      gameId,
+      socketId,
+    }));
   }
 }

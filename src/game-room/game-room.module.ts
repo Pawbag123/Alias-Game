@@ -1,11 +1,14 @@
 import { Module } from '@nestjs/common';
 
-import { GameStateModule } from 'src/shared/game-state.module';
+import { GameStateModule } from 'src/game-state/game-state.module';
 import { GameRoomService } from './game-room.service';
 import { GameMechanicsService } from './game-mechanics.service';
+import { GameRoomGateway } from './game-room.gateway';
+import { ChatModule } from 'src/chat/chat.module';
 
 @Module({
-  imports: [GameStateModule],
-  providers: [GameRoomService, GameMechanicsService],
+  imports: [GameStateModule, ChatModule],
+  providers: [GameRoomService, GameMechanicsService, GameRoomGateway],
+  exports: [GameRoomService],
 })
 export class GameRoomModule {}

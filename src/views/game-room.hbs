@@ -179,7 +179,7 @@
           document.getElementById('time-remaining').textContent = data.remaining;
         });
 
-        //chat message events
+        //chat message events 
         socket.on('chat:message', (msg) => {
           console.log(`Message received: ${msg}`)
           const li = document.createElement('li');
