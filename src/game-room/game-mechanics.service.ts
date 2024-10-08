@@ -152,9 +152,9 @@ export class GameMechanicsService {
     }
 
     if (turn.team === 'redTeam') {
-      score[0] += 1;
+      score.red++;
     } else if (turn.team === 'blueTeam') {
-      score[1] += 1;
+      score.blue++;
     }
 
     this.newWord(gameId);

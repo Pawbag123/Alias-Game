@@ -1,15 +1,11 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { Document } from 'mongoose';
-import * as mongoose from 'mongoose';
 import { IngameStats } from 'src/lobby/types';
 
 @Schema()
 export class Games extends Document {
   @Prop({ required: true })
   gameId: string;
-
-  @Prop({ type: mongoose.Schema.Types.ObjectId, ref: 'Chat' })
-  chatIdMongo: mongoose.Schema.Types.ObjectId;
 
   @Prop({ required: true })
   host: string;

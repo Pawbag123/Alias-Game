@@ -162,7 +162,10 @@ export class GameStateService {
       maxUsers: maxUsers,
       wordsUsed: [],
       currentWord: '',
-      score: [0, 0],
+      score: {
+        red: 0,
+        blue: 0
+      },
       turn: null,
     };
     this.games.push(newGame);
@@ -381,7 +384,6 @@ export class GameStateService {
         score: game.score,
         maxUsers: game.maxUsers,
         wordsUsed: game.wordsUsed,
-        chatIdMongo: null, //! get the chat id <-- get chat id
       });
 
       console.log(" SCHEMAPOSE ",newGame);
@@ -402,6 +404,7 @@ export class GameStateService {
   }
 
   updatePlayersStats(players: Player[]){
+    
     console.log("ESTOS SON TODOS LOS JUGADORS DEL JUEGO CUANDO TERMINO: ", players)
   }
 }

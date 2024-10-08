@@ -19,7 +19,10 @@ export interface Game {
   maxUsers: number;
   wordsUsed: string[];
   currentWord: string;
-  score: [number, number];
+  score: {
+    red: number,
+    blue: number
+  };
   turn: Turn | null;
 }
 
