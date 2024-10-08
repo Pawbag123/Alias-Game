@@ -11,7 +11,10 @@ export class GuessingTeamGuard implements CanActivate {
     const gameId = client.data.gameId;
     const userId = client.data.user.userId;
 
-    if (!this.gameStateService.isAllowedToGuess(userId, gameId)) {
+    if (
+      this.gameStateService.isGameStarted(gameId) &&
+      !this.gameStateService.isAllowedToGuess(userId, gameId)
+    ) {
       throw new WsException('You are not allowed to guess in this turn');
     }
 

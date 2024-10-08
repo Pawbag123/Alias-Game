@@ -21,6 +21,7 @@ import { HostGuard } from './guards/host.guard';
 import { WsExceptionFilter } from 'src/exceptions/ws-exception-filter';
 import { TooFewPlayersGuard } from './guards/too-few-players.guard';
 import { GuessingTeamGuard } from './guards/guessing-team.guard';
+import { time } from 'console';
 
 //TODO: add error emitters, handlers, try catch blocks, extend logic after game is started
 //TODO: change server emit to namespace emit
@@ -82,12 +83,10 @@ export class GameRoomGateway
   handleConnection(client: Socket): void {
     this.logger.log(`Client connected in game room: ${client.id}`);
 
-    this.gameRoom.emit('game-room:check');
-
     const { gameId } = client.handshake.query as {
       gameId: string;
     };
-    const userId = client.data.user.userId;
+    const { userId, userName } = client.data.user;
 
     client.data.gameId = gameId;
 
@@ -120,6 +119,11 @@ export class GameRoomGateway
             'game-started:updated',
             this.gameStateService.getSerializedGameStarted(gameId),
           );
+        this.gameRoom.to(gameId).emit('chat:update', {
+          userName: 'Server',
+          message: `${userName} has reconnected`,
+          time: new Date(),
+        });
       } catch (error) {
         this.logger.error(error);
         throw new WsException(error.message);
@@ -139,6 +143,11 @@ export class GameRoomGateway
           'game-room:updated',
           this.gameStateService.getSerializedGameRoom(gameId),
         );
+      this.gameRoom.to(gameId).emit('chat:update', {
+        userName: 'Server',
+        message: `${userName} has joined the room`,
+        time: new Date(),
+      });
     }
   }
 
@@ -167,13 +176,18 @@ export class GameRoomGateway
           'game-started:updated',
           this.gameStateService.getSerializedGameStarted(gameId),
         );
+      this.gameRoom.to(gameId).emit('chat:update', {
+        userName: 'Server',
+        message: `${client.data.user.userName} has disconnected`,
+        time: new Date(),
+      });
     } else {
       // else remove player from game, and delete his ActiveUser data
       try {
         this.gameRoomService.removePlayerFromGame(gameId, userId);
       } catch (error) {
         this.logger.error(error);
-        throw new WsException(error.message);
+        // throw new WsException(error.message);
       }
       if (this.gameStateService.gameExists(gameId)) {
         this.gameRoom
@@ -182,6 +196,11 @@ export class GameRoomGateway
             'game-room:updated',
             this.gameStateService.getSerializedGameRoom(gameId),
           );
+        this.gameRoom.to(gameId).emit('chat:update', {
+          userName: 'Server',
+          message: `${client.data.user.userName} has left the room`,
+          time: new Date(),
+        });
       }
 
       this.lobby.emit(
@@ -292,6 +311,9 @@ export class GameRoomGateway
       .emit('game:end', this.gameStateService.getSerializedGameStarted(gameId));
 
     this.gameStateService.endGame(gameId);
+    // Disconnect all sockets connected to room gameId
+    const sockets = await this.gameRoom.in(gameId).fetchSockets();
+    sockets.forEach((socket) => socket.disconnect());
     this.lobby.emit(
       'games:updated',
       this.gameStateService.getSerializedGames(),

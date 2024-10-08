@@ -245,7 +245,10 @@
           document.getElementById('gameEndMessage').innerHTML = message;
           
           // Show the modal
-          const gameEndModal = new bootstrap.Modal(document.getElementById('gameEndModal'));
+          const gameEndModal = new bootstrap.Modal(document.getElementById('gameEndModal'), {
+            backdrop: 'static',
+            keyboard: false
+          });
           gameEndModal.show();
 
           // Handle the lobby redirection
