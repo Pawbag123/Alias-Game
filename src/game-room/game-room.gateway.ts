@@ -319,7 +319,7 @@ export class GameRoomGateway
       rounds++;
     }
 
-    this.server.to(gameId).emit(
+    this.gameRoom.to(gameId).emit(
       'game:end',
       this.gameStateService.getSerializedGameStarted(gameId)
     );

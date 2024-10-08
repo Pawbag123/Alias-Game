@@ -1,8 +1,11 @@
 import { Injectable } from '@nestjs/common';
+import { InjectModel } from '@nestjs/mongoose';
 import { plainToClass } from 'class-transformer';
+import { Model } from 'mongoose';
 
 import { GameRoomDto } from 'src/game-room/dto/game-room-dto';
 import { GameStartedDto } from 'src/game-room/dto/game-started-dto';
+import { Games } from 'src/game-room/schema/game.schema';
 import { InLobbyGameDto } from 'src/lobby/dto/in-lobby-game-dto';
 import { ActiveUser, Game, Player, Team } from 'src/lobby/types';
 
@@ -14,6 +17,10 @@ import { ActiveUser, Game, Player, Team } from 'src/lobby/types';
 export class GameStateService {
   private games: Game[] = [];
   private activeUsers: ActiveUser[] = [];
+
+  constructor(
+    @InjectModel(Games.name) private readonly GamesModel: Model<Games>, // Inject DbGame model
+  ) {}
 
   getActiveUserById(userId: string): ActiveUser {
     return this.activeUsers.find((user) => user.id === userId);
@@ -94,7 +101,7 @@ export class GameStateService {
   }
 
   getAllGames(): Game[] {
-    return [...this.games];
+    return [ ...this.games ];
   }
 
   getGameById(gameId: string): Game {
@@ -145,11 +152,11 @@ export class GameStateService {
       name: gameName,
       host: userId,
       isGameStarted: false,
-      players: [newPlayer],
+      players: [ newPlayer ],
       maxUsers: maxUsers,
       wordsUsed: [],
       currentWord: '',
-      score: [0, 0],
+      score: [ 0, 0 ],
       turn: null,
     };
     this.games.push(newGame);
@@ -201,17 +208,17 @@ export class GameStateService {
       isGameStarted: game.isGameStarted,
       redTeam: game.players
         .filter((player) => player.team === Team.RED)
-        .map((player) => [player.name, this.hasUserSocketId(player.userId)]),
+        .map((player) => [ player.name, this.hasUserSocketId(player.userId) ]),
       blueTeam: game.players
         .filter((player) => player.team === Team.BLUE)
-        .map((player) => [player.name, this.hasUserSocketId(player.userId)]),
+        .map((player) => [ player.name, this.hasUserSocketId(player.userId) ]),
       turn: game.turn
         ? {
-            alreadyDiscribe: game.turn.alreadyDiscribe,
-            team: game.turn.team,
-            describerId: game.turn.describerId,
-            describerName: game.turn.describerName,
-          }
+          alreadyDiscribe: game.turn.alreadyDiscribe,
+          team: game.turn.team,
+          describerId: game.turn.describerId,
+          describerName: game.turn.describerName,
+        }
         : null,
       currentWord: game.currentWord,
       score: game.score,
@@ -246,7 +253,7 @@ export class GameStateService {
 
   moveHostToNextUser(gameId: string): void {
     const game = this.getGameById(gameId);
-    game.host = game.players[0].userId;
+    game.host = game.players[ 0 ].userId;
   }
 
   removePlayerFromGame(userId: string, gameId: string): void {
@@ -329,7 +336,7 @@ export class GameStateService {
       // Save or update logic
       const existingGameIndex = this.games.findIndex((g) => g.id === game.id);
       if (existingGameIndex !== -1) {
-        this.games[existingGameIndex] = game; // Update existing game state
+        this.games[ existingGameIndex ] = game; // Update existing game state
       } else {
         this.games.push(game); // Save new game state
       }
@@ -338,18 +345,33 @@ export class GameStateService {
       throw new Error('Error saving the current game state');
     }
   }
-  
-  endGame(gameId: string){
-   const game = this.getGameById(gameId)
-    console.log("SAVED IN DATABASE: ", game);
-   // this.deleteActiveUsers()
-    console.log(this.activeUsers)
-   // this.saveInDatabase(game)
-   // this.deleteActivePlayes(gameId)
-   // this.deleteGameFromState(gameId)
+
+  endGame(gameId: string) {
+
+    const game = this.getGameById(gameId)
+
+    this.saveInDatabase(game);
+    this.removeGameRoom(gameId);
   }
 
-  deleteActiveUsers(players: object[]){
+  async saveInDatabase(game: Game): Promise<Games> {
+    try {
+      const newGame = new this.GamesModel({
+        gameId: game.id,
+        host: game.host,
+        players: game.players,
+        score: game.score,
+        isGameStarted: game.isGameStarted,
+        maxUsers: game.maxUsers,
+        wordsUsed: game.wordsUsed,
+        chatIdMongo: null  //! get the chat id
+      });
 
+      console.log("GUARDANDO EN LA BASE DE DATOS PERRO");
+      // Save the game document in the database
+      return await newGame.save();
+    } catch (error) {
+      throw new Error('Error saving in database');
+    }
   }
 }

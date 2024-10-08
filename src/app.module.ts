@@ -40,7 +40,6 @@ import { ChatModule } from './chat/chat.module';
     GameRoomService,
     LobbyGateway,
     GameRoomGateway,
-    GameStateService,
     GameMechanicsService,
   ],
 })
