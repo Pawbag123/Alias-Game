@@ -1,283 +1,219 @@
-<!DOCTYPE html>
-<html lang="en">
+<html lang='en'>
 
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <script src='/socket.io/socket.io.js'></script>
-  <title>Game Room</title>
-  <!-- Bootstrap CSS CDN -->
-  <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
+  <head>
+    <meta charset='UTF-8' />
+    <meta name='viewport' content='width=device-width, initial-scale=1.0' />
+    <script src='/socket.io/socket.io.js'></script>
+    <title>Game Room</title>
+    <!-- Bootstrap CSS CDN -->
+    <link
+      href='https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css'
+      rel='stylesheet'
+    />
 
-  <style>
-    .red-team-border {
-      border: 4px solid red;
-      box-shadow: 0px 4px 10px red;
-    }
+    <style>
+      .red-team-border { border: 4px solid red; box-shadow: 0px 4px 10px red; }
+      .blue-team-border { border: 4px solid blue; box-shadow: 0px 4px 10px blue;
+      }
+    </style>
+  </head>
 
-    .blue-team-border {
-      border: 4px solid blue;
-      box-shadow: 0px 4px 10px blue;
-    }
-  </style>
-</head>
+  <body class='bg-light'>
+    <div class='container mt-5'>
 
-<body class="bg-light">
-  <div class="container mt-5">
+      <h1 id='game-room-name' class='text-center mb-4'></h1>
 
-    <h1 id="game-room-name" class="text-center mb-4"></h1>
+      <div id='game-info' class='card mb-4' style='display: none;'>
+        <div class='card-body'>
+          <div class='row'>
+            <div class='col-md-6'>
+              <p><strong>Turn team:</strong> <span id='team-turn'></span></p>
+              <p><strong>Score team red:</strong>
+                <span id='score-team-red'></span></p>
+              <p><strong>Score team blue:</strong>
+                <span id='score-team-blue'></span></p>
+            </div>
 
-    <div id="game-info" class="card mb-4" style="display: none;">
-      <div class="card-body">
-        <div class="row">
-          <div class="col-md-6">
-            <p><strong>Turn team:</strong> <span id="team-turn"></span></p>
-            <p><strong>Score team red:</strong> <span id="score-team-red"></span></p>
-            <p><strong>Score team blue:</strong> <span id="score-team-blue"></span></p>
-          </div>
-
-          <div class="col-md-6">
-            <p><strong>Describer:</strong> <span id="describer-name"></span></p>
-            <p><strong>Your word to describe:</strong> <span id="word-for-teammates"></span></p>
+            <div class='col-md-6'>
+              <p><strong>Describer:</strong>
+                <span id='describer-name'></span></p>
+              <p><strong>Your word to describe:</strong>
+                <span id='word-for-teammates'></span></p>
+            </div>
           </div>
         </div>
       </div>
-    </div>
-    <!-- Timer -->
-    <div id="timer" class="text-center mt-4" style="font-size: 24px; display: none;">
-      Time Remaining: <span id="time-remaining">0</span> seconds
-    </div>
-
-    <div class="card shadow-sm mb-4">
-      <div class="card-body">
-        <ul id="messages" class="list-group mb-4" style="height: 300px; overflow-y: auto;">
-          <!-- Messages will appear here -->
-        </ul>
-
-        <form id="chat-form" class="input-group mb-3">
-          <input type="text" class="form-control" id="message" placeholder="Type a message..." required>
-          <button type="submit" class="btn btn-primary">Send</button>
-        </form>
-      </div>
-    </div>
-
-
-    <div class="d-flex justify-content-around mb-4">
-      <div class="text-center">
-        <h2>Red Team</h2>
-        <button id="join-red-team-button" class="btn btn-danger mb-3" onclick="joinRedTeam()">Join Red Team</button>
-        <ul id="red-team" class="list-group">
-          <!-- Red team members will be updated here dynamically -->
-        </ul>
+      <!-- Timer -->
+      <div
+        id='timer'
+        class='text-center mt-4'
+        style='font-size: 24px; display: none;'
+      >
+        Time Remaining:
+        <span id='time-remaining'>0</span>
+        seconds
       </div>
 
-      <div class="text-center">
-        <h2>Blue Team</h2>
-        <button id="join-blue-team-button" class="btn btn-primary mb-3" onclick="joinBlueTeam()">Join Blue Team</button>
-        <ul id="blue-team" class="list-group">
-          <!-- Blue team members will be updated here dynamically -->
-        </ul>
+      <div class='card shadow-sm mb-4'>
+        <div class='card-body'>
+          <ul
+            id='messages'
+            class='list-group mb-4'
+            style='height: 300px; overflow-y: auto;'
+          >
+            <!-- Messages will appear here -->
+          </ul>
+
+          <form id='chat-form' class='input-group mb-3'>
+            <input
+              type='text'
+              class='form-control'
+              id='message'
+              placeholder='Type a message...'
+              required
+            />
+            <button type='submit' class='btn btn-primary'>Send</button>
+          </form>
+        </div>
       </div>
 
-      <div class="text-center">
-        <h2>No Team</h2>
-        <ul id="no-team" class="list-group">
-          <!-- No team members will be updated here dynamically -->
-        </ul>
+      <div class='d-flex justify-content-around mb-4'>
+        <div class='text-center'>
+          <h2>Red Team</h2>
+          <button
+            id='join-red-team-button'
+            class='btn btn-danger mb-3'
+            onclick='joinRedTeam()'
+          >Join Red Team</button>
+          <ul id='red-team' class='list-group'>
+            <!-- Red team members will be updated here dynamically -->
+          </ul>
+        </div>
+
+        <div class='text-center'>
+          <h2>Blue Team</h2>
+          <button
+            id='join-blue-team-button'
+            class='btn btn-primary mb-3'
+            onclick='joinBlueTeam()'
+          >Join Blue Team</button>
+          <ul id='blue-team' class='list-group'>
+            <!-- Blue team members will be updated here dynamically -->
+          </ul>
+        </div>
+
+        <div class='text-center'>
+          <h2>No Team</h2>
+          <ul id='no-team' class='list-group'>
+            <!-- No team members will be updated here dynamically -->
+          </ul>
+        </div>
       </div>
+
+      <div class='d-flex justify-content-center'>
+        <button
+          id='leave-game-button'
+          class='btn btn-secondary me-3'
+          onclick='leaveRoom()'
+        >Leave Game</button>
+        <button
+          id='start-game-button'
+          class='btn btn-success'
+          onclick='startGame()'
+        >Start Game</button>
+      </div>
+
     </div>
 
+    <!-- Bootstrap and JavaScript dependencies -->
+    <script src='https://code.jquery.com/jquery-3.5.1.slim.min.js'></script>
+    <script
+      src='https://cdn.jsdelivr.net/npm/bootstrap@4.5.2/dist/js/bootstrap.bundle.min.js'
+    ></script>
 
+    <script>
+      let socket; window.onload = function () { const { userId, userName } =
+      getUserInfo(); const gameRoomId =
+      window.location.pathname.split('/').pop(); if (!socket) { socket =
+      io('/game-room', { query: { userId, gameId: gameRoomId }, }); } //chat
+      messages elements const form = document.getElementById('chat-form'); const
+      messageInput = document.getElementById('message'); const messageList =
+      document.getElementById('messages'); socket.on('connect', () => {
+      console.log(`Connected as ${userName} (ID: ${userId})`);
+      socket.on('game-room:updated', (gameRoom) => { console.log('Game Room
+      updated:', gameRoom); renderGameRoom(gameRoom); });
+      socket.on('game-room:left', () => { console.log('Left game room'); //
+      Redirect to the lobby window.location.href = '/'; });
+      socket.on('game-room:join:error', (error) => { console.error('Error
+      joining game room:', error); renderError(error); });
+      socket.on('game-room:leave:error', (error) => { console.error('Error
+      leaving game room:', error); }); socket.on('game-room:start:error',
+      (error) => { console.error('Error starting game room:', error); });
+      socket.on('game-started:updated', (gameRoom) => { console.log('Actual
+      state of the game: ', gameRoom); //!
+      document.getElementById('timer').style.display = 'block'; // Display the
+      game info div const gameInfoDiv = document.getElementById('game-info');
+      gameInfoDiv.style.display = 'block'; console.log('myTeam: ',
+      myTeam(userName, gameRoom)) console.log('describer: ',
+      gameRoom.turn.describer !== userId) // Remove existing border class first
+      gameInfoDiv.classList.remove('red-team-border', 'blue-team-border'); //
+      Add a border based on the current team's turn if (gameRoom.turn.team ===
+      'redTeam') { gameInfoDiv.classList.add('red-team-border'); } else if
+      (gameRoom.turn.team === 'blueTeam') {
+      gameInfoDiv.classList.add('blue-team-border'); } // Update game state
+      details document.getElementById('team-turn').textContent =
+      gameRoom.turn.team; document.getElementById('score-team-red').textContent
+      = gameRoom.score[ 0 ];
+      document.getElementById('score-team-blue').textContent = gameRoom.score[ 1
+      ]; document.getElementById('describer-name').textContent =
+      gameRoom.turn.describerName;
+      document.getElementById('word-for-teammates').textContent =
+      myTeam(userName, gameRoom) && (gameRoom.turn.describerId === userId) ?
+      gameRoom.currentWord : '*'.repeat(gameRoom.currentWord.length); });
+      socket.on('game-started:message-received', (message) => {
+      console.log(`Message from ${message.sender}: ${message.text}`); });
+      socket.on('timer:update', (data) => {
+      document.getElementById('time-remaining').textContent = data.remaining;
+      }); //chat message events socket.on('chat:message', (msg) => {
+      console.log(`Message received: ${msg}`) const li =
+      document.createElement('li'); li.textContent = `${msg.userName}:
+      ${msg.message} [${new Date(msg.time).toLocaleTimeString()}]`;
+      messageList.appendChild(li); }); }); form.addEventListener('submit', (e)
+      => { e.preventDefault(); const message = messageInput.value; const {
+      userId, userName } = getUserInfo(); if (message && userName) { const data
+      = { userId, userName, gameId: gameRoomId, message }
+      socket.emit('chat:message', data); messageInput.value = ''; } }); }
+      function getUserInfo() { const userId = localStorage.getItem('userId');
+      const userName = localStorage.getItem('userName'); return { userId,
+      userName }; } const renderGameRoom = (gameRoom) => { const h1Name =
+      document.getElementById('game-room-name'); h1Name.textContent = `Game
+      Room: ${gameRoom.name}`; // Update Red Team const redTeamList =
+      document.getElementById('red-team'); redTeamList.innerHTML = ''; // Clear
+      the list gameRoom.redTeam.forEach(player => { const li =
+      document.createElement('li'); li.textContent = player;
+      redTeamList.appendChild(li); }); // Update Blue Team const blueTeamList =
+      document.getElementById('blue-team'); blueTeamList.innerHTML = '';
+      gameRoom.blueTeam.forEach(player => { const li =
+      document.createElement('li'); li.textContent = player;
+      blueTeamList.appendChild(li); }); // Update No Team const noTeamList =
+      document.getElementById('no-team'); noTeamList.innerHTML = '';
+      gameRoom.noTeam.forEach(player => { const li =
+      document.createElement('li'); li.textContent = player;
+      noTeamList.appendChild(li); }); // Check if the current user is the host
+      and display Start Game button const isHost = gameRoom.host ===
+      localStorage.getItem('userId'); const startGameBtn =
+      document.getElementById('start-game-button'); startGameBtn.style.display =
+      isHost ? 'block' : 'none'; }; function leaveRoom() {
+      socket.emit('game-room:leave'); console.log('leaving room'); } function
+      joinRedTeam() { socket.emit('game-room:join:red'); console.log('joining
+      red team'); } function joinBlueTeam() {
+      socket.emit('game-room:join:blue'); console.log('joining blue team'); }
+      function startGame() { // TODO Add validation (teams etc)
+      socket.emit('game-room:start'); console.log('starting game'); } //extra
+      functions function myTeam(userName, gameData) { return gameData[
+      gameData.turn.team ].find(player => player[ 0 ] === userName); }
 
-    <div class="d-flex justify-content-center">
-      <button id="leave-game-button" class="btn btn-secondary me-3" onclick="leaveRoom()">Leave Game</button>
-      <button id="start-game-button" class="btn btn-success" onclick="startGame()">Start Game</button>
-    </div>
-
-  </div>
-
-  <!-- Bootstrap and JavaScript dependencies -->
-  <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.5.2/dist/js/bootstrap.bundle.min.js"></script>
-
-  <script>
-    let socket;
-
-    window.onload = function () {
-      const { userId, userName } = getUserInfo();
-      const gameRoomId = window.location.pathname.split('/').pop();
-
-      if (!socket) {
-        socket = io('/game-room', {
-          query: { userId, gameId: gameRoomId },
-        });
-      }
-
-      //chat messages elements
-      const form = document.getElementById('chat-form');
-      const messageInput = document.getElementById('message');
-      const messageList = document.getElementById('messages');
-
-      socket.on('connect', () => {
-        console.log(`Connected as ${userName} (ID: ${userId})`);
-
-        socket.on('game-room:updated', (gameRoom) => {
-          console.log('Game Room updated:', gameRoom);
-          renderGameRoom(gameRoom);
-        });
-
-        socket.on('game-room:left', () => {
-          console.log('Left game room');
-          // Redirect to the lobby
-          window.location.href = '/';
-        });
-
-        socket.on('game-room:join:error', (error) => {
-          console.error('Error joining game room:', error);
-          renderError(error);
-        });
-
-        socket.on('game-room:leave:error', (error) => {
-          console.error('Error leaving game room:', error);
-        });
-
-        socket.on('game-room:start:error', (error) => {
-          console.error('Error starting game room:', error);
-        });
-
-        socket.on('game-started:updated', (gameRoom) => {
-          console.log('Actual state of the game: ', gameRoom);
-
-          //!
-          document.getElementById('timer').style.display = 'block';
-
-          // Display the game info div
-          const gameInfoDiv = document.getElementById('game-info');
-          gameInfoDiv.style.display = 'block';
-
-          console.log('myTeam: ', myTeam(userName, gameRoom))
-          console.log('describer: ', gameRoom.turn.describer !== userId)
-
-          // Remove existing border class first
-          gameInfoDiv.classList.remove('red-team-border', 'blue-team-border');
-
-          // Add a border based on the current team's turn
-          if (gameRoom.turn.team === 'redTeam') {
-            gameInfoDiv.classList.add('red-team-border');
-          } else if (gameRoom.turn.team === 'blueTeam') {
-            gameInfoDiv.classList.add('blue-team-border');
-          }
-
-          // Update game state details
-          document.getElementById('team-turn').textContent = gameRoom.turn.team;
-          document.getElementById('score-team-red').textContent = gameRoom.score[ 0 ];
-          document.getElementById('score-team-blue').textContent = gameRoom.score[ 1 ];
-          document.getElementById('describer-name').textContent = gameRoom.turn.describerName;
-          document.getElementById('word-for-teammates').textContent = myTeam(userName, gameRoom) && (gameRoom.turn.describerId === userId) ? gameRoom.currentWord : '*'.repeat(gameRoom.currentWord.length);
-        });
-
-        socket.on('game-started:message-received', (message) => {
-          console.log(`Message from ${message.sender}: ${message.text}`);
-        });
-
-        socket.on('timer:update', (data) => {
-          document.getElementById('time-remaining').textContent = data.remaining;
-        });
-
-        //chat message events
-        socket.on('chat:message', (msg) => {
-          console.log(`Message received: ${msg}`)
-          const li = document.createElement('li');
-          li.textContent = `${msg.userName}: ${msg.message} [${new Date(msg.time).toLocaleTimeString()}]`;
-          messageList.appendChild(li);
-        });
-      });
-
-      form.addEventListener('submit', (e) => {
-        e.preventDefault();
-        const message = messageInput.value;
-        const { userId, userName } = getUserInfo();
-
-        if (message && userName) {
-          const data = { userId, userName, gameId: gameRoomId, message }
-          socket.emit('chat:message', data);
-          messageInput.value = '';
-        }
-      });
-    }
-
-    function getUserInfo() {
-      const userId = localStorage.getItem('userId');
-      const userName = localStorage.getItem('userName');
-      return { userId, userName };
-    }
-
-    const renderGameRoom = (gameRoom) => {
-
-      const h1Name = document.getElementById('game-room-name');
-      h1Name.textContent = `Game Room: ${gameRoom.name}`;
-
-      // Update Red Team
-      const redTeamList = document.getElementById('red-team');
-      redTeamList.innerHTML = '';  // Clear the list
-      gameRoom.redTeam.forEach(player => {
-        const li = document.createElement('li');
-        li.textContent = player;
-        redTeamList.appendChild(li);
-      });
-
-      // Update Blue Team
-      const blueTeamList = document.getElementById('blue-team');
-      blueTeamList.innerHTML = '';
-      gameRoom.blueTeam.forEach(player => {
-        const li = document.createElement('li');
-        li.textContent = player;
-        blueTeamList.appendChild(li);
-      });
-
-      // Update No Team
-      const noTeamList = document.getElementById('no-team');
-      noTeamList.innerHTML = '';
-      gameRoom.noTeam.forEach(player => {
-        const li = document.createElement('li');
-        li.textContent = player;
-        noTeamList.appendChild(li);
-      });
-
-      // Check if the current user is the host and display Start Game button
-      const isHost = gameRoom.host === localStorage.getItem('userId');
-      const startGameBtn = document.getElementById('start-game-button');
-      startGameBtn.style.display = isHost ? 'block' : 'none';
-    };
-
-    function leaveRoom() {
-      socket.emit('game-room:leave');
-      console.log('leaving room');
-    }
-
-    function joinRedTeam() {
-      socket.emit('game-room:join:red');
-      console.log('joining red team');
-    }
-
-    function joinBlueTeam() {
-      socket.emit('game-room:join:blue');
-      console.log('joining blue team');
-    }
-
-    function startGame() {
-      // TODO Add validation (teams etc)
-      socket.emit('game-room:start');
-      console.log('starting game');
-
-    }
-
-    //extra functions
-    function myTeam(userName, gameData) {
-      return gameData[ gameData.turn.team ].find(player => player[ 0 ] === userName);
-    }
-
-  </script>
-</body>
+    </script>
+  </body>
 
 </html>

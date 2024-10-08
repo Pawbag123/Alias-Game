@@ -1,4 +1,8 @@
-import { Injectable, ConflictException, UnauthorizedException } from '@nestjs/common';
+import {
+  Injectable,
+  ConflictException,
+  UnauthorizedException,
+} from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model, Types } from 'mongoose';
@@ -12,7 +16,7 @@ export class AuthService {
     @InjectModel(User.name) private readonly userModel: Model<User>,
   ) {}
 
-  async signin(username: string, password: string) {
+  async signup(username: string, password: string) {
     const existingUser = await this.userModel.findOne({ username });
     if (existingUser) {
       throw new ConflictException('This user already exists');
@@ -22,8 +26,14 @@ export class AuthService {
     const newUser = new this.userModel({ username, password: hashedPassword });
     const savedUser = await newUser.save();
 
-    const tokens = await this.generateTokens(savedUser._id.toString(), savedUser.username);
-    await this.updateRefreshToken(savedUser._id.toString(), tokens.refreshToken);
+    const tokens = await this.generateTokens(
+      savedUser._id.toString(),
+      savedUser.username,
+    );
+    await this.updateRefreshToken(
+      savedUser._id.toString(),
+      tokens.refreshToken,
+    );
 
     return tokens;
   }
@@ -39,7 +49,10 @@ export class AuthService {
       throw new UnauthorizedException('Incorrect password');
     }
 
-    const tokens = await this.generateTokens(user._id.toString(), user.username);
+    const tokens = await this.generateTokens(
+      user._id.toString(),
+      user.username,
+    );
     await this.updateRefreshToken(user._id.toString(), tokens.refreshToken);
 
     return {
@@ -48,8 +61,8 @@ export class AuthService {
     };
   }
 
-  async generateTokens(userId: string, username: string) {
-    const payload = { sub: userId, username };
+  async generateTokens(userId: string, userName: string) {
+    const payload = { userId, userName };
 
     const accessToken = this.jwtService.sign(payload, {
       secret: process.env.JWT_SECRET,
@@ -85,12 +98,18 @@ export class AuthService {
         throw new UnauthorizedException('Invalid refresh token');
       }
 
-      const refreshTokenMatches = await bcrypt.compare(refreshToken, user.refreshToken);
+      const refreshTokenMatches = await bcrypt.compare(
+        refreshToken,
+        user.refreshToken,
+      );
       if (!refreshTokenMatches) {
         throw new UnauthorizedException('Invalid refresh token');
       }
 
-      const tokens = await this.generateTokens(user._id.toString(), user.username);
+      const tokens = await this.generateTokens(
+        user._id.toString(),
+        user.username,
+      );
       await this.updateRefreshToken(user._id.toString(), tokens.refreshToken);
 
       return tokens;

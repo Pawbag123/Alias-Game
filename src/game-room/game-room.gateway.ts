@@ -5,7 +5,6 @@ import {
   OnGatewayConnection,
   OnGatewayDisconnect,
   ConnectedSocket,
-  MessageBody,
 } from '@nestjs/websockets';
 import { Namespace, Server, Socket } from 'socket.io';
 
@@ -13,6 +12,7 @@ import { GameRoomService } from './game-room.service';
 import { GameStateService } from 'src/shared/game-state.service';
 import { GameMechanicsService } from './game-mechanics.service';
 import { Team } from 'src/lobby/types';
+import { Logger } from '@nestjs/common';
 import { ChatService } from 'src/chat/chat.service';
 import { GameStartedDto } from './dto/game-started-dto';
 
@@ -23,51 +23,53 @@ import { GameStartedDto } from './dto/game-started-dto';
  * Handles connecting and disconnecting from game room, joining teams, leaving game
  */
 @WebSocketGateway({
-  namespace: '/game-room',
+  namespace: 'game-room',
   cors: {
     origin: '*',
   },
 })
 export class GameRoomGateway
-  implements OnGatewayConnection, OnGatewayDisconnect {
+  implements OnGatewayConnection, OnGatewayDisconnect
+{
+  private readonly logger = new Logger(GameRoomGateway.name);
+
   @WebSocketServer()
-  server: Server;
+  gameRoom: Namespace;
 
   /**
    * Lobby namespace
    */
-  @WebSocketServer()
+  // @WebSocketServer()
   lobby: Namespace;
 
-  @WebSocketServer()
-  gameRoom: Namespace;
+  // @WebSocketServer()
+  // gameRoom: Namespace;
 
   constructor(
     private readonly gameRoomService: GameRoomService,
     private readonly gameStateService: GameStateService,
     private readonly gameMechanicsService: GameMechanicsService,
-    private readonly chatService: ChatService
-  ) { }
+    private readonly chatService: ChatService,
+  ) {}
 
   /**
    * After init, set lobby namespace,
    * has to be done in order to emit events to lobby namespace, like updating games
    */
   afterInit() {
-    this.lobby = this.lobby.server.of('/lobby');
-    this.gameRoom = this.gameRoom.server.of('/game-room');
+    this.lobby = this.gameRoom.server.of('lobby');
+    // this.gameRoom = this.server.server.of('game-room');
   }
 
-
-  updateGameState(gameId: string){
-    this.server
-    .to(gameId)
-    .emit(
-      'game-room:updated',
-      this.gameStateService.getSerializedGameRoom(gameId),
-    );
+  updateGameState(gameId: string) {
+    this.gameRoom
+      .to(gameId)
+      .emit(
+        'game-room:updated',
+        this.gameStateService.getSerializedGameRoom(gameId),
+      );
   }
-  
+
   /**
    * Connection handler, that will check if user can join the game,
    * add him to the game (that means setting his socketId),
@@ -76,7 +78,9 @@ export class GameRoomGateway
    * @returns
    */
   handleConnection(client: Socket): void {
-    console.log(`Client connected in game room: ${client.id}`);
+    this.logger.log(`Client connected in game room: ${client.id}`);
+
+    this.gameRoom.emit('game-room:check');
 
     const { gameId, userId } = client.handshake.query as {
       gameId: string;
@@ -98,7 +102,7 @@ export class GameRoomGateway
         const team = this.gameStateService.getTeamOfPlayer(userId, gameId);
         client.data.team = team;
         client.join(`${gameId}/${team}`);
-        this.server
+        this.gameRoom
           .to(gameId)
           .emit(
             'game-started:updated',
@@ -106,19 +110,19 @@ export class GameRoomGateway
           );
       } catch (error) {
         client.emit('game-started:join:error', error.message);
-        console.log(error);
+        this.logger.error(error);
       }
     } else {
       try {
         this.gameRoomService.addPlayerToGame(gameId, userId, client.id);
       } catch (error) {
         client.emit('game-room:join:error', error.message);
-        console.log(error);
+        this.logger.error(error);
         return;
       }
 
       client.join(gameId);
-      this.server
+      this.gameRoom
         .to(gameId)
         .emit(
           'game-room:updated',
@@ -137,7 +141,7 @@ export class GameRoomGateway
    * @returns
    */
   handleDisconnect(client: Socket): void {
-    console.log(`Client disconnected from game room: ${client.id}`);
+    this.logger.log(`Client disconnected from game room: ${client.id}`);
     const { gameId, userId } = client.data;
     // if game is started, only remove socketId
     if (
@@ -145,7 +149,7 @@ export class GameRoomGateway
       this.gameStateService.getGameById(gameId).isGameStarted
     ) {
       this.gameStateService.removePlayerSocketId(userId);
-      this.server
+      this.gameRoom
         .to(gameId)
         .emit(
           'game-started:updated',
@@ -156,10 +160,10 @@ export class GameRoomGateway
       try {
         this.gameRoomService.removePlayerFromGame(gameId, userId);
       } catch (error) {
-        console.log(error);
+        this.logger.error(error);
       }
       if (this.gameStateService.gameExists(gameId)) {
-        this.server
+        this.gameRoom
           .to(gameId)
           .emit(
             'game-room:updated',
@@ -197,10 +201,10 @@ export class GameRoomGateway
     try {
       this.gameRoomService.joinRedTeam(gameId, userId);
     } catch (error) {
-      console.log(error);
+      this.logger.error(error);
     }
 
-    this.server
+    this.gameRoom
       .to(gameId)
       .emit(
         'game-room:updated',
@@ -219,11 +223,11 @@ export class GameRoomGateway
     try {
       this.gameRoomService.joinBlueTeam(gameId, userId);
     } catch (error) {
-      console.log(error);
+      this.logger.error(error);
     }
 
     if (this.gameStateService.gameExists(gameId)) {
-      this.server
+      this.gameRoom
         .to(gameId)
         .emit(
           'game-room:updated',
@@ -232,16 +236,10 @@ export class GameRoomGateway
     }
   }
 
-  /**
-   * Handler to start game
-   * Calls game mechanics service to start the game
-   * @param gameId - id of the game to start
-   */
   @SubscribeMessage('game-room:start')
   handleStartGame(@ConnectedSocket() client: Socket) {
     const { gameId } = client.data;
     try {
-
       this.gameMechanicsService.startGame(gameId);
       const sockets = this.gameStateService.getPlayersWithSocketsInGame(gameId);
       console.log(sockets);
@@ -258,11 +256,10 @@ export class GameRoomGateway
         },
       );
       //* this.gameMechanicsService.turns(gameId); this didn't work
-      this.handleTurns(gameId)
-
+      this.handleTurns(gameId);
     } catch (error) {
       console.log(error);
-      this.server.to(gameId).emit('game-room:start:error', error.message);
+      this.gameRoom.to(gameId).emit('game-room:start:error', error.message);
     }
   }
 
@@ -275,11 +272,13 @@ export class GameRoomGateway
       this.gameMechanicsService.nextTurn(gameId); // Handles both game initialization and next turn
       this.gameMechanicsService.newWord(gameId); // Generate a new word
 
-      this.server.to(gameId).emit(
-        'game-started:updated',
-        this.gameStateService.getSerializedGameStarted(gameId)
-      );
-      const { turn, currentWord } = this.gameStateService.getGameById(gameId)
+      this.gameRoom
+        .to(gameId)
+        .emit(
+          'game-started:updated',
+          this.gameStateService.getSerializedGameStarted(gameId),
+        );
+      const { turn, currentWord } = this.gameStateService.getGameById(gameId);
       console.log(`STATE NUMBER ${rounds}`, turn);
       console.log(currentWord);
 
@@ -291,21 +290,20 @@ export class GameRoomGateway
     // Guardar en la base de datos
     // Borrar el estado del juego
     // Borrar active users que sean del juego
-    
-    this.server.to(gameId).emit(
-      'game:end',
-      this.gameStateService.getSerializedGameStarted(gameId)
-    );
+
+    this.gameRoom
+      .to(gameId)
+      .emit('game:end', this.gameStateService.getSerializedGameStarted(gameId));
   }
 
   async startTimer(gameId: string, duration: number) {
     for (let remaining = duration; remaining > 0; remaining--) {
-      this.server.to(gameId).emit('timer:update', { remaining });
+      this.gameRoom.to(gameId).emit('timer:update', { remaining });
       await this.delay(1000); // Wait for 1 second before next update
     }
   }
   delay(ms: number): Promise<void> {
-    return new Promise(resolve => setTimeout(resolve, ms));
+    return new Promise((resolve) => setTimeout(resolve, ms));
   }
 
   /**
@@ -317,30 +315,11 @@ export class GameRoomGateway
   handleMessage(@ConnectedSocket() client: Socket): void {
     const { gameId, userId, team } = client.data;
     const playerName = this.gameStateService.getPlayerById(userId, gameId).name;
-    this.server.to(`${gameId}/${team}`).emit('game-started:message-received', {
-      sender: playerName,
-      text: 'hello world',
-    });
-  }
-
-  @SubscribeMessage('chat:message')
-  async handleChatMessage(
-    @ConnectedSocket() client: Socket,
-    @MessageBody() payload: any  // Temporarily 'any'
-  ): Promise<void> {
-    const { userId, userName, gameId } = payload;
-    let { message } = payload;
-  
-    message = this.gameMechanicsService.validateWord(userId, gameId, message);
-    const chatResponse = await this.chatService.handleChatMessage(userId, userName, gameId, message);
-  
-    this.server.to(gameId).emit('chat:message', chatResponse);
-    
-    if (message.includes('✅')) {
-      this.server.to(gameId).emit(
-        'game-started:updated', // or 'game-started:new-turn' if you want to indicate a new turn
-        this.gameStateService.getSerializedGameStarted(gameId)
-      );
-    }
+    this.gameRoom
+      .to(`${gameId}/${team}`)
+      .emit('game-started:message-received', {
+        sender: playerName,
+        text: 'hello world',
+      });
   }
 }

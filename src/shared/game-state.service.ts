@@ -94,7 +94,7 @@ export class GameStateService {
   }
 
   getAllGames(): Game[] {
-    return [ ...this.games ];
+    return [...this.games];
   }
 
   getGameById(gameId: string): Game {
@@ -145,12 +145,12 @@ export class GameStateService {
       name: gameName,
       host: userId,
       isGameStarted: false,
-      players: [ newPlayer ],
+      players: [newPlayer],
       maxUsers: maxUsers,
       wordsUsed: [],
       currentWord: '',
-      score: [0,0],
-      turn: null
+      score: [0, 0],
+      turn: null,
     };
     this.games.push(newGame);
 
@@ -193,7 +193,7 @@ export class GameStateService {
 
   getSerializedGameStarted(gameId: string): GameStartedDto {
     const game = this.getGameById(gameId);
-  
+
     return plainToClass(GameStartedDto, {
       id: game.id,
       name: game.name,
@@ -210,7 +210,7 @@ export class GameStateService {
             alreadyDiscribe: game.turn.alreadyDiscribe,
             team: game.turn.team,
             describerId: game.turn.describerId,
-            describerName: game.turn.describerName
+            describerName: game.turn.describerName,
           }
         : null,
       currentWord: game.currentWord,
@@ -246,7 +246,7 @@ export class GameStateService {
 
   moveHostToNextUser(gameId: string): void {
     const game = this.getGameById(gameId);
-    game.host = game.players[ 0 ].userId;
+    game.host = game.players[0].userId;
   }
 
   removePlayerFromGame(userId: string, gameId: string): void {
@@ -323,25 +323,24 @@ export class GameStateService {
   }
 
   saveCurrentState(game: Game) {
-    try {  
+    try {
       // Save or update logic
-      const existingGameIndex = this.games.findIndex(g => g.id === game.id);
+      const existingGameIndex = this.games.findIndex((g) => g.id === game.id);
       if (existingGameIndex !== -1) {
-        this.games[existingGameIndex] = game;  // Update existing game state
+        this.games[existingGameIndex] = game; // Update existing game state
       } else {
-        this.games.push(game);  // Save new game state
+        this.games.push(game); // Save new game state
       }
-  
     } catch (error) {
       console.error('Error details:', error);
       throw new Error('Error saving the current game state');
     }
   }
-  
-  endGame(gameId: string){
-   // getGameById
-   // lo guarda en la base de datos
-   // Elimina a los active players del juego
-   // Lo elimina del array 
+
+  endGame(gameId: string) {
+    // getGameById
+    // lo guarda en la base de datos
+    // Elimina a los active players del juego
+    // Lo elimina del array
   }
 }
