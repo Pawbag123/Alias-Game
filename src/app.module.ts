@@ -28,7 +28,7 @@ import { ChatModule } from './chat/chat.module';
       imports: [ConfigModule],
       inject: [ConfigService],
       useFactory: (configService: ConfigService) => ({
-        uri: configService.get<string>('MONGO_URL'),
+        uri: 'mongodb+srv://solvd-team-3:2prHVO2HGozJkXOh@solvd-project.e9zpm.mongodb.net/aliasGame?retryWrites=true&w=majority&appName=solvd-project',
       }),
     }),
     ChatModule,
