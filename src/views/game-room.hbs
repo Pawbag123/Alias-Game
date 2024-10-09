@@ -27,6 +27,31 @@
   </style>
 </head>
 
+<div class="modal fade" id="profileModal" tabindex="-1" role="dialog" aria-labelledby="profileModalLabel" aria-hidden="true">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="profileModalLabel">Profile</h5>
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body">
+        <p><strong>User Name:</strong> <span id="userName"></span></p>
+        <p><strong>Games Played:</strong> <span id="gamesPlayed"></span></p>
+        <p><strong>Won:</strong> <span id="wins"></span></p>
+        <p><strong>Lose:</strong> <span id="loses"></span></p>
+        <p><strong>Draws:</strong> <span id="draw"></span></p>
+        <p><strong>Words Guessed:</strong> <span id="wordsGuessed"></span></p>
+        <p><strong>Words Well Described:</strong> <span id="wellDescribed"></span></p>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+      </div>
+    </div>
+  </div>
+</div>
+
 <body class="bg-light">
   <div class="modal fade" id="errorModal" tabindex="-1" role="dialog" aria-labelledby="errorModalLabel" aria-hidden="true">
     <div class="modal-dialog" role="document">
@@ -46,7 +71,9 @@
       </div>
     </div>
   </div>
-  <div id="error-message" style="display: none; color: red;"></div>
+  <div id="error-message" style="display: none; color: red;">
+  </div>
+    <button id="logoutBtn" class="btn btn-light" style="display: none; border: 2px solid #ccc;">Log out</button>
   <div class="container mt-5">
 
     <h1 id="game-room-name" class="text-center mb-4"></h1>
@@ -62,7 +89,7 @@
 
           <div class="col-md-6">
             <p><strong>Describer:</strong> <span id="describer-name"></span></p>
-            <p><strong>Your word to describe:</strong> <span id="word-for-teammates"></span></p>
+            <p id="described-word"><strong>Your word to describe:</strong> <span id="word-for-teammates"></span></p>
           </div>
         </div>
       </div>
@@ -103,13 +130,13 @@
         </ul>
       </div>
 
-      <div class="text-center">
+      {{!-- <div class="text-center">
         <h2>No Team</h2>
         <ul id="no-team" class="list-group">
           <!-- No team members will be updated here dynamically -->
         </ul>
       </div>
-    </div>
+    </div> --}}
 
 
     <div class="d-flex justify-content-center">
@@ -159,6 +186,11 @@
           renderGameRoom(gameRoom);
         });
 
+        socket.on('user-stats', (userInfo) => {
+          console.log('User stats:', userInfo);
+          showUserStats(userInfo);
+        });
+
           socket.on('exception', (error) => {
           console.error('Server exception:', error.message);
           renderErrorMessage(error.message);
@@ -170,17 +202,46 @@
           window.location.href = '/lobby';
         });
 
-        socket.on('game:cant-start', () => {
-          alert('Teams must have at least 2 player to start the game');
-        });
 
           // MODULARIZ THIS ONE
           socket.on('game-started:updated', (gameRoom) => {
           console.log('Actual state of the game: ', gameRoom);
 
+          console.log('user:', userName)
 
+          let userState;
+          if (gameRoom.currentWord)
+          {
+            userState = 'describer'
+          } else if (gameRoom.turn.team === 'redTeam' && gameRoom.redTeam.some(player => player[0] === userName) || gameRoom.turn.team === 'blueTeam' && gameRoom.blueTeam.some(player => player[0] === userName)) {
+            userState = 'guesser'
+          } else {
+            userState = 'enemy'
+          }
+
+          const h1Name = document.getElementById('game-room-name');
+          let text;
+          if (userState === 'describer') {
+            text = `Your turn to describe!`;
+          } else if (userState === 'guesser') {
+            text = `Your turn to guess!`;
+          } else if (userState === 'enemy') {
+            text = `Enemy turn!`;
+          }
+          if (userState === 'enemy') {
+            document.getElementById('message').disabled = true;
+            document.querySelector('#chat-form button').disabled = true;
+          } else {
+            document.getElementById('message').disabled = false;
+            document.querySelector('#chat-form button').disabled = false;
+          }
+          h1Name.textContent = text;
           //!
           document.getElementById('timer').style.display = 'block';
+          document.getElementById('join-red-team-button').style.display = 'none';
+          document.getElementById('join-blue-team-button').style.display = 'none';
+          document.getElementById('start-game-button').style.display = 'none';
+          document.getElementById('leave-game-button').style.display = 'none';
 
           // Display the game info div
           const gameInfoDiv = document.getElementById('game-info');
@@ -188,6 +249,29 @@
 
           console.log('myTeam: ', myTeam(userName, gameRoom))
           console.log('describer: ', gameRoom.turn.describer !== userId)
+
+          const redTeamList = document.getElementById('red-team');
+          redTeamList.innerHTML = '';  // Clear the list
+          gameRoom.redTeam.forEach(player => {
+            const li = document.createElement('li');
+            li.textContent = player[0];
+            if (!player[1]) {
+              li.style.color = 'red';
+            }
+            redTeamList.appendChild(li);
+          });
+
+          // Update Blue Team
+          const blueTeamList = document.getElementById('blue-team');
+          blueTeamList.innerHTML = '';
+          gameRoom.blueTeam.forEach(player => {
+            const li = document.createElement('li');
+            li.textContent = player[0];
+            if (!player[1]) {
+              li.style.color = 'red';
+            }
+            blueTeamList.appendChild(li);
+          });
 
           // Remove existing border class first
           gameInfoDiv.classList.remove('red-team-border', 'blue-team-border');
@@ -204,11 +288,9 @@
           document.getElementById('score-team-red').textContent = gameRoom.score.red;
           document.getElementById('score-team-blue').textContent = gameRoom.score.blue;
           document.getElementById('describer-name').textContent = gameRoom.turn.describerName;
-          document.getElementById('word-for-teammates').textContent = myTeam(userName, gameRoom) && (gameRoom.turn.describerId === userId) ? gameRoom.currentWord : '*'.repeat(gameRoom.currentWord.length);
-        });
-
-        socket.on('game-started:message-received', (message) => {
-          console.log(`Message from ${message.sender}: ${message.text}`);
+          document.getElementById('word-for-teammates').textContent = gameRoom.currentWord ? gameRoom.currentWord : '';
+          document.getElementById('described-word').style.display = gameRoom.currentWord ? 'block' : 'none';
+          
         });
 
         socket.on('timer:update', (data) => {
@@ -216,12 +298,15 @@
         });
 
         //chat message events 
-        socket.on('chat:message', (msg) => {
+        socket.on('chat:update', (msg) => {
           console.log(`Message received: ${msg}, 'serverOffset: `, msg.messageId)
           const serverOffset = msg.messageId;
-          const item = `<li>
+          const item = msg.userName === "Server" ? `<li style="color: red;">
+                <p>${msg.userName}:  ${msg.message} <small class="text-muted ms-auto">[${new Date(msg.time).toLocaleTimeString()}]</small></p>
+              </li>`: `<li>
               <p>${msg.userName}:  ${msg.message} <small class="text-muted ms-auto">[${new Date(msg.time).toLocaleTimeString()}]</small></p>
             </li>`
+
           messageList.insertAdjacentHTML('beforeend', item)
           /*
           const li = document.createElement('li');
@@ -253,8 +338,8 @@
           
           // Show the modal
           const gameEndModal = new bootstrap.Modal(document.getElementById('gameEndModal'), {
-            backdrop: 'static', //Prevent closing when clicking outside
-            keyboard: false //Prevent closing with ESC key
+            backdrop: 'static',
+            keyboard: false
           });
           gameEndModal.show();
 
@@ -271,8 +356,8 @@
         const { userId, userName } = getUserInfo();
 
         if (message && userName) {
-          const data = { userId, userName, gameId: gameRoomId, message }
-          socket.emit('chat:message', data);
+          {{!-- const data = { userId, userName, gameId: gameRoomId, message } --}}
+          socket.emit('chat:message', {message});
           messageInput.value = '';
         }
       });
@@ -285,11 +370,22 @@
     }
 
     const renderError = (error) => {
+      const logoutBtn = document.getElementById('logoutBtn');
+      logoutBtn.addEventListener('click', (e) => {
+        e.preventDefault();
+        localStorage.clear();
+        window.location.href = '/login';
+      });
       const errorDiv = document.getElementById('error-message');
       const container = document.getElementsByClassName('container mt-5')[0];
       container.style.display = 'none';
       errorDiv.innerHTML = `Error: ${error}`;
       errorDiv.style.display = 'block';
+      logoutBtn.style.display = 'block';
+    }
+
+    const renderGameStarted = (gameStarted) => {
+      
     }
 
     const renderGameRoom = (gameRoom) => {
@@ -297,12 +393,19 @@
       const h1Name = document.getElementById('game-room-name');
       h1Name.textContent = `Game Room: ${gameRoom.name}`;
 
+
       // Update Red Team
       const redTeamList = document.getElementById('red-team');
       redTeamList.innerHTML = '';  // Clear the list
       gameRoom.redTeam.forEach(player => {
         const li = document.createElement('li');
         li.textContent = player;
+        li.style.cursor = 'pointer';
+        li.style.color = 'blue';
+        li.style.textDecoration = 'underline';
+        li.addEventListener('click', () => {
+          fetchUserStats(player);
+        });
         redTeamList.appendChild(li);
       });
 
@@ -312,24 +415,40 @@
       gameRoom.blueTeam.forEach(player => {
         const li = document.createElement('li');
         li.textContent = player;
+        li.style.cursor = 'pointer';
+        li.style.color = 'blue';
+        li.style.textDecoration = 'underline';
+        li.addEventListener('click', () => {
+          fetchUserStats(player);
+        });
         blueTeamList.appendChild(li);
       });
 
-      // Update No Team
-      const noTeamList = document.getElementById('no-team');
-      noTeamList.innerHTML = '';
-      gameRoom.noTeam.forEach(player => {
-        const li = document.createElement('li');
-        li.textContent = player;
-        noTeamList.appendChild(li);
-      });
 
       // Check if the current user is the host and display Start Game button
-      {{!-- const isHost = gameRoom.host === localStorage.getItem('userId'); --}}
+      const isHost = gameRoom.host === localStorage.getItem('userId');
       const startGameBtn = document.getElementById('start-game-button');
-      {{!-- startGameBtn.style.display = isHost ? 'block' : 'none'; --}}
-      startGameBtn.style.display = 'block';
+      startGameBtn.style.display = isHost ? 'block' : 'none';
     };
+
+    function fetchUserStats(userName) {
+      console.log('Fetching user stats for:', userName);
+      socket.emit('user-stats:get', { userName });
+    }
+
+    function showUserStats(userInfo) {
+      console.log('User stats:', userInfo);
+      $('#userName').text(userInfo.userName);
+      $('#gamesPlayed').text(userInfo.gamesPlayed);
+      $('#wins').text(userInfo.wins);
+      $('#loses').text(userInfo.loses);
+      $('#draw').text(userInfo.draw); 
+      $('#wordsGuessed').text(userInfo.wordsGuessed);
+      $('#wellDescribed').text(userInfo.wellDescribed);
+      
+      // Show the modal
+      $('#profileModal').modal('show');
+    }
 
     function leaveRoom() {
       socket.emit('game-room:leave');
@@ -337,12 +456,12 @@
     }
 
     function joinRedTeam() {
-      socket.emit('game-room:join:red');
+      socket.emit('game-room:join', { team: 'redTeam' });
       console.log('joining red team');
     }
 
     function joinBlueTeam() {
-      socket.emit('game-room:join:blue');
+      socket.emit('game-room:join', { team: 'blueTeam' });
       console.log('joining blue team');
     }
 

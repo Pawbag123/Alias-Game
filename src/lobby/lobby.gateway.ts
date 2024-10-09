@@ -44,6 +44,14 @@ export class LobbyGateway implements OnGatewayConnection, OnGatewayDisconnect {
   handleConnection(client: Socket): void {
     const { userId, userName } = client.data.user;
 
+    this.logger.log(`Client connected to lobby: ${userName}`);
+
+    const gameId = this.gameStateService.checkIfUserIsInGame(userId);
+    if (gameId) {
+      client.emit('game:joined', gameId);
+      return;
+    }
+
     const games = this.gameStateService.getSerializedGames();
     client.emit('games:updated', games);
     this.logger.log(`Emitting games: to client: ${userName}`, games);
@@ -51,6 +59,15 @@ export class LobbyGateway implements OnGatewayConnection, OnGatewayDisconnect {
 
   handleDisconnect(client: Socket): void {
     this.logger.log(`Client disconnected from lobby: ${client.id}`);
+  }
+
+  @SubscribeMessage('user-stats:get')
+  async handleUserStatsGet(@ConnectedSocket() client: Socket): Promise<void> {
+    const { userName } = client.data.user;
+    // const userStats = this.gameStateService.getUserStats(userId);
+    const userStats = await this.gameStateService.getUserStats(userName);
+    console.log('STATS HERE: ', userStats);
+    client.emit('user-stats', userStats);
   }
 
   /**

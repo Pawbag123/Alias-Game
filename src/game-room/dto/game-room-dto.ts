@@ -18,7 +18,4 @@ export class GameRoomDto {
 
   @Expose()
   blueTeam: string[];
-
-  @Expose()
-  noTeam: string[];
 }

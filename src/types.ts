@@ -1,4 +1,6 @@
 export const MAX_USERS = 6;
+export const MAX_TURNS = 8;
+export const TURN_TIME = 60;
 export const JOIN_TIMEOUT = 5000;
 
 /**
@@ -20,8 +22,8 @@ export interface Game {
   wordsUsed: string[];
   currentWord: string;
   score: {
-    red: number,
-    blue: number
+    red: number;
+    blue: number;
   };
   turn: Turn | null;
 }
@@ -34,15 +36,15 @@ export interface Turn {
 }
 
 export interface Stats extends IngameStats {
-  gamesPlayed: number,
-  wins: number,
-  loses: number,
-  draw: number
+  gamesPlayed: number;
+  wins: number;
+  loses: number;
+  draw: number;
 }
 
 export interface IngameStats {
-  wordsGuessed: number,
-  wellDescribed: number,
+  wordsGuessed: number;
+  wellDescribed: number;
 }
 
 /**
@@ -64,7 +66,6 @@ export interface ActiveUser {
 export enum Team {
   RED = 'redTeam',
   BLUE = 'blueTeam',
-  NO_TEAM = 'noTeam',
 }
 
 /**

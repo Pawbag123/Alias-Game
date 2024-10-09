@@ -3,7 +3,7 @@ import { WsException } from '@nestjs/websockets';
 import { GameStateService } from 'src/game-state/game-state.service';
 
 @Injectable()
-export class HostGuard implements CanActivate {
+export class GuessingTeamGuard implements CanActivate {
   constructor(private gameStateService: GameStateService) {}
 
   canActivate(context: ExecutionContext): boolean {
@@ -11,12 +11,11 @@ export class HostGuard implements CanActivate {
     const gameId = client.data.gameId;
     const userId = client.data.user.userId;
 
-    // Fetch the game details
-    const game = this.gameStateService.getGameById(gameId);
-
-    // Check if the user is the host
-    if (game.host !== userId) {
-      throw new WsException('You are not the host of this game');
+    if (
+      this.gameStateService.isGameStarted(gameId) &&
+      !this.gameStateService.isAllowedToGuess(userId, gameId)
+    ) {
+      throw new WsException('You are not allowed to guess in this turn');
     }
 
     return true;

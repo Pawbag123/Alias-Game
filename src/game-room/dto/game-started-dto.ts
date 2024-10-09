@@ -1,5 +1,5 @@
 import { Expose } from 'class-transformer';
-import { IngameStats, Turn } from 'src/lobby/types';
+import { IngameStats, Turn } from 'src/types';
 
 export class GameStartedDto {
   @Expose()
@@ -24,11 +24,11 @@ export class GameStartedDto {
   turn: Turn;
 
   @Expose()
-  currentWord: string;
+  currentWord: string | undefined;
 
   @Expose()
   score: {
-    red: number,
-    blue: number
+    red: number;
+    blue: number;
   };
 }

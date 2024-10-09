@@ -57,4 +57,11 @@ export class AppController {
   dashboard() {
     return {};
   }
+
+  @Get('test')
+  @Render('test-layout')
+  test() {
+    const message = 'Hello from the server!';
+    return { message };
+  }
 }
