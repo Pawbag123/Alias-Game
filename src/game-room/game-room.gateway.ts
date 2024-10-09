@@ -13,7 +13,7 @@ import { Namespace, Server, Socket } from 'socket.io';
 import { GameRoomService } from './game-room.service';
 import { GameStateService } from 'src/game-state/game-state.service';
 import { GameMechanicsService } from './game-mechanics.service';
-import { Team } from 'src/types';
+import { MAX_TURNS, Team, TURN_TIME } from 'src/types';
 import { Logger, UseFilters, UseGuards } from '@nestjs/common';
 import { ChatService } from 'src/chat/chat.service';
 import { GameStartedDto } from './dto/game-started-dto';
@@ -274,21 +274,18 @@ export class GameRoomGateway
   //! Heres where turns are managed
   async handleTurns(gameId: string) {
     let rounds = 0;
-    const totalRounds = 2;
+    const totalRounds = MAX_TURNS;
 
     while (rounds < totalRounds) {
       this.gameMechanicsService.nextTurn(gameId); // Handles both game initialization and next turn
       this.gameMechanicsService.newWord(gameId); // Generate a new word
 
-      // find socket that is describing
-      // emit game-started:updated:desc to him
-      // emit game-started:updated to all the others
       this.emitGameStartedUpdated(gameId);
       const { turn, currentWord } = this.gameStateService.getGameById(gameId);
       console.log(`STATE NUMBER ${rounds}`, turn);
       console.log(currentWord);
 
-      await this.startTimer(gameId, 30); // 10 seconds for each turn
+      await this.startTimer(gameId, TURN_TIME);
 
       rounds++;
     }
@@ -321,10 +318,10 @@ export class GameRoomGateway
   async handleUserStatsGet(
     @ConnectedSocket() client: Socket,
     @MessageBody() { userName }: { userName: string },
-  ): Promise<any> {
+  ): Promise<void> {
     this.logger.log('User stats requested', userName);
-     const userStats = await this.gameStateService.getUserStats(userName);
-     console.log("STATS HERE: ", userStats);
+    const userStats = await this.gameStateService.getUserStats(userName);
+    console.log('STATS HERE: ', userStats);
     client.emit('user-stats', userStats);
   }
 

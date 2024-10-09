@@ -1,4 +1,6 @@
 export const MAX_USERS = 6;
+export const MAX_TURNS = 8;
+export const TURN_TIME = 60;
 export const JOIN_TIMEOUT = 5000;
 
 /**

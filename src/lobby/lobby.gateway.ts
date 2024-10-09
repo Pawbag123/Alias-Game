@@ -62,18 +62,11 @@ export class LobbyGateway implements OnGatewayConnection, OnGatewayDisconnect {
   }
 
   @SubscribeMessage('user-stats:get')
-  handleUserStatsGet(@ConnectedSocket() client: Socket): void {
-    const { userId } = client.data.user;
+  async handleUserStatsGet(@ConnectedSocket() client: Socket): Promise<void> {
+    const { userName } = client.data.user;
     // const userStats = this.gameStateService.getUserStats(userId);
-    const userStats = {
-      userName: 'user',
-      gamesPlayed: 4,
-      gamesWon: 2,
-      gamesLost: 1,
-      draws: 1,
-      wordsGuessed: 12,
-      wordsDescribed: 20,
-    };
+    const userStats = await this.gameStateService.getUserStats(userName);
+    console.log('STATS HERE: ', userStats);
     client.emit('user-stats', userStats);
   }
 

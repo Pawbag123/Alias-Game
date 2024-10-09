@@ -437,11 +437,12 @@
     }
 
     function showUserStats(userInfo) {
+      console.log('User stats:', userInfo);
       $('#userName').text(userInfo.userName);
       $('#gamesPlayed').text(userInfo.gamesPlayed);
       $('#wins').text(userInfo.wins);
       $('#loses').text(userInfo.loses);
-      $('#draw').text(userInfo.draw);
+      $('#draw').text(userInfo.draw); 
       $('#wordsGuessed').text(userInfo.wordsGuessed);
       $('#wellDescribed').text(userInfo.wellDescribed);
       
