@@ -141,7 +141,7 @@ export class GameStateService {
   getTeamOfPlayer(userId: string, gameId: string): Team {
     const game = this.getGameById(gameId);
     const player = game.players.find((player) => player.userId === userId);
-    return player ? player.team : Team.NO_TEAM;
+    return player ? player.team : null;
   }
 
   gameExists(gameId: string): boolean {
@@ -167,11 +167,11 @@ export class GameStateService {
     const newPlayer: Player = {
       userId,
       name: userName,
-      team: Team.NO_TEAM,
+      team: Team.RED,
       inGameStats: {
         wordsGuessed: 0,
         wellDescribed: 0,
-      }
+      },
     };
 
     const newGame: Game = {
@@ -185,7 +185,7 @@ export class GameStateService {
       currentWord: '',
       score: {
         red: 0,
-        blue: 0
+        blue: 0,
       },
       turn: null,
     };
@@ -223,9 +223,6 @@ export class GameStateService {
       blueTeam: game.players
         .filter((player) => player.team === Team.BLUE)
         .map((player) => player.name),
-      noTeam: game.players
-        .filter((player) => player.team === Team.NO_TEAM)
-        .map((player) => player.name),
     });
   }
 
@@ -239,7 +236,7 @@ export class GameStateService {
       isGameStarted: game.isGameStarted,
       redTeam: game.players
         .filter((player) => player.team === Team.RED)
-        .map((player) => [player.name, this.hasUserSocketId(player.userId)], ),
+        .map((player) => [player.name, this.hasUserSocketId(player.userId)]),
       blueTeam: game.players
         .filter((player) => player.team === Team.BLUE)
         .map((player) => [player.name, this.hasUserSocketId(player.userId)]),
@@ -292,16 +289,29 @@ export class GameStateService {
     game.players = game.players.filter((player) => player.userId !== userId);
   }
 
+  getTeamToJoin(gameId: string): Team {
+    const game = this.getGameById(gameId);
+    const redTeamPlayers = game.players.filter(
+      (player) => player.team === Team.RED,
+    );
+    const blueTeamPlayers = game.players.filter(
+      (player) => player.team === Team.BLUE,
+    );
+    return redTeamPlayers.length >= blueTeamPlayers.length
+      ? Team.BLUE
+      : Team.RED;
+  }
+
   addUserToGame(userId: string, userName: string, gameId: string): void {
     const game = this.getGameById(gameId);
     const newPlayer: Player = {
       userId,
       name: userName,
-      team: Team.NO_TEAM,
+      team: this.getTeamToJoin(gameId),
       inGameStats: {
         wordsGuessed: 0,
         wellDescribed: 0,
-      }
+      },
     };
     game.players.push(newPlayer);
   }
@@ -387,7 +397,7 @@ export class GameStateService {
 
   endGame(gameId: string) {
     const game = this.getGameById(gameId);
-    console.log("ESTO ES LO QUE LLEGA DEL JUEGO CUANDO TERMINA: ", game);
+    console.log('ESTO ES LO QUE LLEGA DEL JUEGO CUANDO TERMINA: ', game);
     this.updatePlayersStats(game.players, game.score);
     this.saveInDatabase(game);
     this.removeGameRoom(gameId);
@@ -396,7 +406,6 @@ export class GameStateService {
   async saveInDatabase(game: Game): Promise<Games> {
     // Get Chat Id
 
-    
     try {
       const newGame = new this.GamesModel({
         gameId: game.id,
@@ -406,7 +415,7 @@ export class GameStateService {
         wordsUsed: game.wordsUsed,
       });
 
-      console.log(" SCHEMAPOSE ",newGame);
+      console.log(' SCHEMAPOSE ', newGame);
 
       // Save the game document in the database
       return await newGame.save();
@@ -433,13 +442,16 @@ export class GameStateService {
     }));
   }
 
-  async updatePlayersStats(players: Player[], gameScore: { red: number; blue: number }): Promise<void> {
-    console.log("Players at the end of the game: ", players);
-  
+  async updatePlayersStats(
+    players: Player[],
+    gameScore: { red: number; blue: number },
+  ): Promise<void> {
+    console.log('Players at the end of the game: ', players);
+
     for (const player of players) {
       const { userId, inGameStats } = player;
       const { wordsGuessed, wellDescribed } = inGameStats;
-  
+
       try {
         // Prepare the update object
         const update: any = {
@@ -449,7 +461,7 @@ export class GameStateService {
             'stats.wellDescribed': wellDescribed,
           },
         };
-  
+
         // Check if the game is a draw or the player won/lost
         if (this.isGameDraw(gameScore)) {
           update.$inc['stats.draw'] = 1;
@@ -458,17 +470,15 @@ export class GameStateService {
         } else {
           update.$inc['stats.loses'] = 1;
         }
-  
+
         // Perform the update directly on the user document
         await this.userModel.updateOne({ _id: userId }, update);
         console.log(`Updated stats for user with ID: ${userId}`);
-        
       } catch (error) {
         console.error(`Error updating stats for user ${userId}: `, error);
       }
     }
   }
-  
 
   // Function to determine if the game was a draw
   private isGameDraw(gameScore: { red: number; blue: number }): boolean {
@@ -476,7 +486,10 @@ export class GameStateService {
   }
 
   // Function to determine if the player was on the winning team
-  private isPlayerOnWinningTeam(player: Player, gameScore: { red: number; blue: number }): boolean {
+  private isPlayerOnWinningTeam(
+    player: Player,
+    gameScore: { red: number; blue: number },
+  ): boolean {
     const { team } = player;
     const winningTeam = gameScore.red > gameScore.blue ? 'redTeam' : 'blueTeam';
     return team === winningTeam;

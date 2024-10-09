@@ -353,12 +353,20 @@ export class GameRoomGateway
     const { userName, userId } = client.data.user;
     const { gameId } = client.data;
     this.logger.log(`Chat message received: ${message}`);
+    let validatedMessage;
+    let isGuessed;
+    try {
+      [validatedMessage, isGuessed] = this.gameMechanicsService.validateWord(
+        userId,
+        gameId,
+        message,
+      );
+    } catch (error) {
+      this.logger.error(error);
+      throw new WsException(error.message);
+    }
 
-    let validatedMessage = this.gameMechanicsService.validateWord(
-      userId,
-      gameId,
-      message,
-    );
+    this.logger.debug('Validated message:', validatedMessage);
     const chatResponse = await this.chatService.handleChatMessage(
       userId,
       userName,
@@ -366,9 +374,12 @@ export class GameRoomGateway
       validatedMessage,
     );
 
+    this.logger.debug('Chat response:', chatResponse);
+
     this.gameRoom.to(gameId).emit('chat:update', chatResponse);
 
-    if (message.includes('✅')) {
+    if (isGuessed) {
+      this.logger.debug('Word guessed');
       this.gameRoom.to(gameId).emit(
         'game-started:updated', // or 'game-started:new-turn' if you want to indicate a new turn
         this.gameStateService.getSerializedGameStarted(gameId),
