@@ -71,7 +71,9 @@
       </div>
     </div>
   </div>
-  <div id="error-message" style="display: none; color: red;"></div>
+  <div id="error-message" style="display: none; color: red;">
+  </div>
+    <button id="logoutBtn" class="btn btn-light" style="display: none; border: 2px solid #ccc;">Log out</button>
   <div class="container mt-5">
 
     <h1 id="game-room-name" class="text-center mb-4"></h1>
@@ -368,11 +370,18 @@
     }
 
     const renderError = (error) => {
+      const logoutBtn = document.getElementById('logoutBtn');
+      logoutBtn.addEventListener('click', (e) => {
+        e.preventDefault();
+        localStorage.clear();
+        window.location.href = '/login';
+      });
       const errorDiv = document.getElementById('error-message');
       const container = document.getElementsByClassName('container mt-5')[0];
       container.style.display = 'none';
       errorDiv.innerHTML = `Error: ${error}`;
       errorDiv.style.display = 'block';
+      logoutBtn.style.display = 'block';
     }
 
     const renderGameStarted = (gameStarted) => {

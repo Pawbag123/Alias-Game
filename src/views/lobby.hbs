@@ -172,6 +172,7 @@
     }
 
     function renderError(message) {
+      document.getElementById('profileBtn').style.display = 'none';
       const errorDiv = document.getElementById('error-message');
       const container = document.getElementsByClassName('container')[0];
       container.style.display = 'none';
