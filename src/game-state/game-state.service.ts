@@ -2,6 +2,7 @@ import { Injectable, Logger } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { plainToClass } from 'class-transformer';
 import { Model } from 'mongoose';
+import { User } from 'src/auth/schemas/user.schema';
 
 import { GameRoomDto } from 'src/game-room/dto/game-room-dto';
 import { GameStartedDto } from 'src/game-room/dto/game-started-dto';
@@ -21,7 +22,8 @@ export class GameStateService {
   private activeUsers: ActiveUser[] = [];
 
   constructor(
-    @InjectModel(Games.name) private readonly GamesModel: Model<Games>, // Inject DbGame model
+    @InjectModel(Games.name) private readonly GamesModel: Model<Games>,
+    @InjectModel(User.name) private readonly userModel: Model<User>, // Inject DbGame model
   ) {}
 
   getActiveUserById(userId: string): ActiveUser {
@@ -367,7 +369,7 @@ export class GameStateService {
   endGame(gameId: string) {
     const game = this.getGameById(gameId);
     console.log("ESTO ES LO QUE LLEGA DEL JUEGO CUANDO TERMINA: ", game);
-    this.updatePlayersStats(game.players);
+    this.updatePlayersStats(game.players, game.score);
     this.saveInDatabase(game);
     this.removeGameRoom(gameId);
   }
@@ -382,7 +384,6 @@ export class GameStateService {
         host: game.host,
         players: game.players,
         score: game.score,
-        maxUsers: game.maxUsers,
         wordsUsed: game.wordsUsed,
       });
 
@@ -403,8 +404,52 @@ export class GameStateService {
     }));
   }
 
-  updatePlayersStats(players: Player[]){
-    
-    console.log("ESTOS SON TODOS LOS JUGADORS DEL JUEGO CUANDO TERMINO: ", players)
+  async updatePlayersStats(players: Player[], gameScore: { red: number; blue: number }): Promise<void> {
+    console.log("Players at the end of the game: ", players);
+  
+    for (const player of players) {
+      const { userId, inGameStats } = player;
+      const { wordsGuessed, wellDescribed } = inGameStats;
+  
+      try {
+        // Prepare the update object
+        const update: any = {
+          $inc: {
+            'stats.gamesPlayed': 1,
+            'stats.wordsGuessed': wordsGuessed,
+            'stats.wellDescribed': wellDescribed,
+          },
+        };
+  
+        // Check if the game is a draw or the player won/lost
+        if (this.isGameDraw(gameScore)) {
+          update.$inc['stats.draw'] = 1;
+        } else if (this.isPlayerOnWinningTeam(player, gameScore)) {
+          update.$inc['stats.wins'] = 1;
+        } else {
+          update.$inc['stats.loses'] = 1;
+        }
+  
+        // Perform the update directly on the user document
+        await this.userModel.updateOne({ _id: userId }, update);
+        console.log(`Updated stats for user with ID: ${userId}`);
+        
+      } catch (error) {
+        console.error(`Error updating stats for user ${userId}: `, error);
+      }
+    }
+  }
+  
+
+  // Function to determine if the game was a draw
+  private isGameDraw(gameScore: { red: number; blue: number }): boolean {
+    return gameScore.red === gameScore.blue;
+  }
+
+  // Function to determine if the player was on the winning team
+  private isPlayerOnWinningTeam(player: Player, gameScore: { red: number; blue: number }): boolean {
+    const { team } = player;
+    const winningTeam = gameScore.red > gameScore.blue ? 'redTeam' : 'blueTeam';
+    return team === winningTeam;
   }
 }
