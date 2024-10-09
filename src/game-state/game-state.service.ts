@@ -226,7 +226,10 @@ export class GameStateService {
     });
   }
 
-  getSerializedGameStarted(gameId: string): GameStartedDto {
+  getSerializedGameStarted(
+    gameId: string,
+    isDescriber?: boolean,
+  ): GameStartedDto {
     const game = this.getGameById(gameId);
 
     return plainToClass(GameStartedDto, {
@@ -248,7 +251,7 @@ export class GameStateService {
             describerName: game.turn.describerName,
           }
         : null,
-      currentWord: game.currentWord,
+      currentWord: isDescriber ? game.currentWord : undefined,
       score: game.score,
     });
   }
@@ -267,6 +270,11 @@ export class GameStateService {
       (player) => player.userId === userId,
     );
     return playerExists;
+  }
+
+  getDescriberSocketId(gameId: string) {
+    const game = this.getGameById(gameId);
+    return this.getActiveUserById(game.turn.describerId).socketId;
   }
 
   isGameHost(userId: string, gameId: string): boolean {

@@ -24,7 +24,7 @@ export class GameStartedDto {
   turn: Turn;
 
   @Expose()
-  currentWord: string;
+  currentWord: string | undefined;
 
   @Expose()
   score: {

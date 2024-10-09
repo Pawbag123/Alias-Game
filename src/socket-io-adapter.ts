@@ -104,9 +104,7 @@ const createSingleUserMiddleware =
       logger.error('No user in socket data');
       return next(new WsException('Unauthorized'));
     }
-    logger.debug('User', user);
-    logger.debug('Games', gameStateService.getAllGames());
-    logger.debug('Active users', gameStateService.getAllActiveUsers());
+
     const activeUser = gameStateService.getActiveUserById(user.userId);
     if (activeUser && activeUser.socketId) {
       logger.error('User already connected');

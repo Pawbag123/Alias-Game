@@ -113,12 +113,7 @@ export class GameRoomGateway
         this.gameMechanicsService.reconnectPlayer(userId, gameId, client.id);
         client.join(gameId);
         // const team = this.gameStateService.getTeamOfPlayer(userId, gameId);
-        this.gameRoom
-          .to(gameId)
-          .emit(
-            'game-started:updated',
-            this.gameStateService.getSerializedGameStarted(gameId),
-          );
+        this.emitGameStartedUpdated(gameId);
         client.broadcast.to(gameId).emit('chat:update', {
           userName: 'Server',
           message: `${userName} has reconnected`,
@@ -170,12 +165,7 @@ export class GameRoomGateway
       this.gameStateService.getGameById(gameId).isGameStarted
     ) {
       this.gameStateService.removePlayerSocketId(userId);
-      this.gameRoom
-        .to(gameId)
-        .emit(
-          'game-started:updated',
-          this.gameStateService.getSerializedGameStarted(gameId),
-        );
+      this.emitGameStartedUpdated(gameId);
       this.gameRoom.to(gameId).emit('chat:update', {
         userName: 'Server',
         message: `${client.data.user.userName} has disconnected`,
@@ -293,13 +283,7 @@ export class GameRoomGateway
       // find socket that is describing
       // emit game-started:updated:desc to him
       // emit game-started:updated to all the others
-
-      this.gameRoom
-        .to(gameId)
-        .emit(
-          'game-started:updated',
-          this.gameStateService.getSerializedGameStarted(gameId),
-        );
+      this.emitGameStartedUpdated(gameId);
       const { turn, currentWord } = this.gameStateService.getGameById(gameId);
       console.log(`STATE NUMBER ${rounds}`, turn);
       console.log(currentWord);
@@ -399,10 +383,35 @@ export class GameRoomGateway
 
     if (isGuessed) {
       this.logger.debug('Word guessed');
-      this.gameRoom.to(gameId).emit(
-        'game-started:updated', // or 'game-started:new-turn' if you want to indicate a new turn
+      this.emitGameStartedUpdated(gameId);
+    }
+  }
+
+  emitGameStartedUpdated(gameId: string) {
+    const describerSocket = this.gameRoom.sockets.get(
+      this.gameStateService.getDescriberSocketId(gameId),
+    );
+
+    if (!describerSocket) {
+      this.gameRoom
+        .to(gameId)
+        .emit(
+          'game-started:updated',
+          this.gameStateService.getSerializedGameStarted(gameId),
+        );
+      return;
+    }
+    this.gameRoom
+      .to(gameId)
+      .except(describerSocket.id)
+      .emit(
+        'game-started:updated',
         this.gameStateService.getSerializedGameStarted(gameId),
       );
-    }
+
+    describerSocket.emit(
+      'game-started:updated',
+      this.gameStateService.getSerializedGameStarted(gameId, true),
+    );
   }
 }

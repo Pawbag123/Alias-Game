@@ -87,7 +87,7 @@
 
           <div class="col-md-6">
             <p><strong>Describer:</strong> <span id="describer-name"></span></p>
-            <p><strong>Your word to describe:</strong> <span id="word-for-teammates"></span></p>
+            <p id="described-word"><strong>Your word to describe:</strong> <span id="word-for-teammates"></span></p>
           </div>
         </div>
       </div>
@@ -205,8 +205,35 @@
           socket.on('game-started:updated', (gameRoom) => {
           console.log('Actual state of the game: ', gameRoom);
 
+          console.log('user:', userName)
+
+          let userState;
+          if (gameRoom.currentWord)
+          {
+            userState = 'describer'
+          } else if (gameRoom.turn.team === 'redTeam' && gameRoom.redTeam.some(player => player[0] === userName) || gameRoom.turn.team === 'blueTeam' && gameRoom.blueTeam.some(player => player[0] === userName)) {
+            userState = 'guesser'
+          } else {
+            userState = 'enemy'
+          }
+
           const h1Name = document.getElementById('game-room-name');
-          h1Name.textContent = `Game Room: ${gameRoom.name}`;
+          let text;
+          if (userState === 'describer') {
+            text = `Your turn to describe!`;
+          } else if (userState === 'guesser') {
+            text = `Your turn to guess!`;
+          } else if (userState === 'enemy') {
+            text = `Enemy turn!`;
+          }
+          if (userState === 'enemy') {
+            document.getElementById('message').disabled = true;
+            document.querySelector('#chat-form button').disabled = true;
+          } else {
+            document.getElementById('message').disabled = false;
+            document.querySelector('#chat-form button').disabled = false;
+          }
+          h1Name.textContent = text;
           //!
           document.getElementById('timer').style.display = 'block';
           document.getElementById('join-red-team-button').style.display = 'none';
@@ -259,7 +286,9 @@
           document.getElementById('score-team-red').textContent = gameRoom.score.red;
           document.getElementById('score-team-blue').textContent = gameRoom.score.blue;
           document.getElementById('describer-name').textContent = gameRoom.turn.describerName;
-          document.getElementById('word-for-teammates').textContent = myTeam(userName, gameRoom) && (gameRoom.turn.describerId === userId) ? gameRoom.currentWord : '*'.repeat(gameRoom.currentWord.length);
+          document.getElementById('word-for-teammates').textContent = gameRoom.currentWord ? gameRoom.currentWord : '';
+          document.getElementById('described-word').style.display = gameRoom.currentWord ? 'block' : 'none';
+          
         });
 
         socket.on('timer:update', (data) => {
