@@ -333,6 +333,25 @@ export class GameRoomGateway
     return new Promise((resolve) => setTimeout(resolve, ms));
   }
 
+  @SubscribeMessage('user-stats:get')
+  handleUserStatsGet(
+    @ConnectedSocket() client: Socket,
+    @MessageBody() { userName }: { userName: string },
+  ): void {
+    this.logger.log('User stats requested', userName);
+    // const userStats = this.gameStateService.getUserStats(userId);
+    const userStats = {
+      userName: 'user',
+      gamesPlayed: 4,
+      gamesWon: 2,
+      gamesLost: 1,
+      draws: 1,
+      wordsGuessed: 12,
+      wordsDescribed: 20,
+    };
+    client.emit('user-stats', userStats);
+  }
+
   //!
   /*   @SubscribeMessage('game:word-guessed')
   async wordGuessed(gameId: string) {

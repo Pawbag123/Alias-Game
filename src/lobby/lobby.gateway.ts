@@ -61,6 +61,22 @@ export class LobbyGateway implements OnGatewayConnection, OnGatewayDisconnect {
     this.logger.log(`Client disconnected from lobby: ${client.id}`);
   }
 
+  @SubscribeMessage('user-stats:get')
+  handleUserStatsGet(@ConnectedSocket() client: Socket): void {
+    const { userId } = client.data.user;
+    // const userStats = this.gameStateService.getUserStats(userId);
+    const userStats = {
+      userName: 'user',
+      gamesPlayed: 4,
+      gamesWon: 2,
+      gamesLost: 1,
+      draws: 1,
+      wordsGuessed: 12,
+      wordsDescribed: 20,
+    };
+    client.emit('user-stats', userStats);
+  }
+
   /**
    * Create game by calling lobby service,
    * then emit game:updated to redirect client and emit updated games to all clients

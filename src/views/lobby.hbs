@@ -30,7 +30,7 @@
     <div class="container-fluid">
       <a class="navbar-brand" href="#">Alias</a>
       <div class="ms-auto">
-        <button id="profileBtn" class="btn btn-light me-2" onclick="showUserStats()" data-target="#profileModal">Profile</button>
+        <button id="profileBtn" class="btn btn-light me-2" onclick="fetchUserStats()" data-target="#profileModal">Profile</button>
         <button id="logoutBtn" class="btn btn-light">Log out</button>
       </div>
     </div>
@@ -153,6 +153,11 @@
           redirectToGame(gameId);
         });
 
+        socket.on('user-stats', (userInfo) => {
+          console.log('User stats:', userInfo);
+          showUserStats(userInfo);
+        });
+
         socket.on('exception', (error) => {
           console.error('Server exception:', error.message);
           renderErrorMessage(error.message);
@@ -203,16 +208,12 @@
       }
     }
 
-    function showUserStats(){
-      const userInfo = {
-        userName: 'user',
-        gamesPlayed: 0,
-        gamesWon: 0,
-        gamesLost: 0,
-        draws: 0,
-        wordsGuessed: 0,
-        wordsDescribed: 0
-      };
+    function fetchUserStats(){
+      console.log('Fetching user stats');
+      socket.emit('user-stats:get');
+    }
+
+    function showUserStats(userInfo){
       $('#userName').text(userInfo.userName);
       $('#gamesPlayed').text(userInfo.gamesPlayed);
       $('#gamesWon').text(userInfo.gamesWon);

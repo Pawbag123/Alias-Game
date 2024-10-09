@@ -184,6 +184,11 @@
           renderGameRoom(gameRoom);
         });
 
+        socket.on('user-stats', (userInfo) => {
+          console.log('User stats:', userInfo);
+          showUserStats(userInfo);
+        });
+
           socket.on('exception', (error) => {
           console.error('Server exception:', error.message);
           renderErrorMessage(error.message);
@@ -350,15 +355,6 @@
       const h1Name = document.getElementById('game-room-name');
       h1Name.textContent = `Game Room: ${gameRoom.name}`;
 
-      const userInfo = {
-        userName: 'user',
-        gamesPlayed: 4,
-        gamesWon: 2,
-        gamesLost: 1,
-        draws: 1,
-        wordsGuessed: 12,
-        wordsDescribed: 20
-      };
 
       // Update Red Team
       const redTeamList = document.getElementById('red-team');
@@ -370,7 +366,7 @@
         li.style.color = 'blue';
         li.style.textDecoration = 'underline';
         li.addEventListener('click', () => {
-          showUserStats(userInfo);
+          fetchUserStats(player);
         });
         redTeamList.appendChild(li);
       });
@@ -385,7 +381,7 @@
         li.style.color = 'blue';
         li.style.textDecoration = 'underline';
         li.addEventListener('click', () => {
-          showUserStats(userInfo);
+          fetchUserStats(player);
         });
         blueTeamList.appendChild(li);
       });
@@ -396,6 +392,11 @@
       const startGameBtn = document.getElementById('start-game-button');
       startGameBtn.style.display = isHost ? 'block' : 'none';
     };
+
+    function fetchUserStats(userName) {
+      console.log('Fetching user stats for:', userName);
+      socket.emit('user-stats:get', { userName });
+    }
 
     function showUserStats(userInfo) {
       $('#userName').text(userInfo.userName);
