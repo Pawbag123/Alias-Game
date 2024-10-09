@@ -1,19 +1,23 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import { GameStateService } from 'src/game-state/game-state.service';
-import { Team } from 'src/types';
+
+import { Team, WORDS_TO_GUESS } from 'src/types';
 
 @Injectable()
 export class GameMechanicsService {
+  private readonly logger = new Logger(GameMechanicsService.name);
+
   constructor(private readonly gameStateService: GameStateService) {
-    console.log('GameMechanicsService created');
+    this.logger.log('GameMechanicsService created');
   }
 
   startGame(gameId: string): void {
-    // add validation
+    this.logger.log(`Starting game ${gameId}`);
     this.gameStateService.setGameStarted(gameId);
   }
 
   reconnectPlayer(userId: string, gameId: string, socketId: string): void {
+    this.logger.log(`Reconnecting user ${userId} to game ${gameId}`);
     const user = this.gameStateService.getActiveUserById(userId);
     if (!user) {
       throw new Error('User not found');
@@ -31,249 +35,7 @@ export class GameMechanicsService {
   }
 
   generateWord(wordsUsed: string[]): string {
-    const words = [
-      // Fruits
-      'apple',
-      'banana',
-      'grape',
-      'orange',
-      'peach',
-      'lemon',
-      'cherry',
-      'mango',
-      'plum',
-      'melon',
-      'kiwi',
-      'strawberry',
-      'blueberry',
-      'pineapple',
-      'watermelon',
-      'pear',
-      'papaya',
-      'coconut',
-      // Animals
-      'elephant',
-      'giraffe',
-      'zebra',
-      'tiger',
-      'lion',
-      'panda',
-      'whale',
-      'eagle',
-      'falcon',
-      'rabbit',
-      'dog',
-      'cat',
-      'mouse',
-      'horse',
-      'cow',
-      'sheep',
-      'chicken',
-      'duck',
-      'frog',
-      'snake',
-      'owl',
-      // Household Items
-      'house',
-      'garden',
-      'window',
-      'door',
-      'kitchen',
-      'bedroom',
-      'roof',
-      'fence',
-      'garage',
-      'chimney',
-      'table',
-      'chair',
-      'couch',
-      'lamp',
-      'cup',
-      'plate',
-      'fork',
-      'knife',
-      'spoon',
-      'mirror',
-      'clock',
-      // Technology
-      'laptop',
-      'keyboard',
-      'mouse',
-      'screen',
-      'printer',
-      'tablet',
-      'phone',
-      'camera',
-      'speaker',
-      'headphones',
-      'charger',
-      'router',
-      'television',
-      'remote',
-      'monitor',
-      'smartphone',
-      'battery',
-      'USB',
-      'bluetooth',
-      // Vehicles
-      'car',
-      'bicycle',
-      'bus',
-      'train',
-      'airplane',
-      'helicopter',
-      'submarine',
-      'motorcycle',
-      'skateboard',
-      'truck',
-      'boat',
-      'scooter',
-      'van',
-      'trailer',
-      'ship',
-      'taxi',
-      'hoverboard',
-      // Music Instruments
-      'guitar',
-      'piano',
-      'drums',
-      'trumpet',
-      'flute',
-      'violin',
-      'saxophone',
-      'tambourine',
-      'cello',
-      'harp',
-      'clarinet',
-      'accordion',
-      'trombone',
-      'banjo',
-      'xylophone',
-      'harmonica',
-      'keyboard',
-      // Nature
-      'mountain',
-      'river',
-      'forest',
-      'beach',
-      'desert',
-      'valley',
-      'volcano',
-      'lake',
-      'island',
-      'cave',
-      'hill',
-      'waterfall',
-      'field',
-      'ocean',
-      'jungle',
-      'prairie',
-      'meadow',
-      'reef',
-      'savannah',
-      // Literature
-      'book',
-      'magazine',
-      'newspaper',
-      'novel',
-      'dictionary',
-      'encyclopedia',
-      'poem',
-      'journal',
-      'biography',
-      'atlas',
-      'comic',
-      'manual',
-      'guide',
-      'story',
-      'fiction',
-      'nonfiction',
-      'essay',
-      // Clothing
-      'shirt',
-      'pants',
-      'dress',
-      'jacket',
-      'hat',
-      'scarf',
-      'shoes',
-      'socks',
-      'gloves',
-      'belt',
-      'skirt',
-      'tie',
-      'sweater',
-      'blouse',
-      'coat',
-      'jeans',
-      'shorts',
-      'sandals',
-      'boots',
-      // Sports
-      'soccer',
-      'tennis',
-      'basketball',
-      'baseball',
-      'golf',
-      'swimming',
-      'cycling',
-      'running',
-      'skiing',
-      'surfing',
-      'hockey',
-      'volleyball',
-      'boxing',
-      'skating',
-      'archery',
-      'climbing',
-      'diving',
-      // Food
-      'bread',
-      'butter',
-      'cheese',
-      'milk',
-      'egg',
-      'yogurt',
-      'chocolate',
-      'honey',
-      'sugar',
-      'salt',
-      'pepper',
-      'pizza',
-      'burger',
-      'sandwich',
-      'pasta',
-      'rice',
-      'salad',
-      'soup',
-      'cake',
-      'cookie',
-      'pie',
-      'icecream',
-      'coffee',
-      'tea',
-      // Colors
-      'red',
-      'blue',
-      'green',
-      'yellow',
-      'orange',
-      'purple',
-      'pink',
-      'brown',
-      'black',
-      'white',
-      'gray',
-      'cyan',
-      'magenta',
-      'gold',
-      'silver',
-      'turquoise',
-      'beige',
-      'maroon',
-      'navy',
-      'teal',
-    ];
+    const words = WORDS_TO_GUESS;
 
     let selectedWord: string;
 
@@ -290,9 +52,8 @@ export class GameMechanicsService {
   }
 
   nextTurn(gameId: string) {
+    this.logger.log(`Next turn for game ${gameId}`);
     const game = this.gameStateService.getGameById(gameId);
-
-    console.log('ENRTO A NEXT TURN: ', game.players);
 
     // Initialize game and set the first turn if it's not already set
     if (!game.turn) {
@@ -305,7 +66,7 @@ export class GameMechanicsService {
       const randomPlayer = teamPlayers[randomIndex];
 
       game.turn = {
-        alreadyDiscribe: [],
+        alreadyDescribed: [],
         team: randomPlayer.team,
         describerId: randomPlayer.userId,
         describerName: randomPlayer.name,
@@ -315,7 +76,7 @@ export class GameMechanicsService {
       game.currentWord = this.generateWord(game.wordsUsed);
     } else {
       // Existing turn logic for subsequent turns
-      game.turn.alreadyDiscribe.push(game.turn.describerId);
+      game.turn.alreadyDescribed.push(game.turn.describerId);
 
       // Switch team
       const oppositeTeam = game.turn.team === Team.RED ? Team.BLUE : Team.RED;
@@ -324,14 +85,14 @@ export class GameMechanicsService {
       const nextDescriber = game.players.find(
         (player) =>
           player.team === oppositeTeam &&
-          !game.turn.alreadyDiscribe.includes(player.userId),
+          !game.turn.alreadyDescribed.includes(player.userId),
       );
 
       if (nextDescriber) {
         game.turn.describerId = nextDescriber.userId;
         game.turn.describerName = nextDescriber.name;
       } else {
-        game.turn.alreadyDiscribe = game.turn.alreadyDiscribe.filter(
+        game.turn.alreadyDescribed = game.turn.alreadyDescribed.filter(
           (playerId) =>
             game.players.some(
               (player) =>
@@ -357,7 +118,7 @@ export class GameMechanicsService {
       game.wordsUsed.push(game.currentWord);
     }
     game.currentWord = this.generateWord(game.wordsUsed);
-    console.log('new word : ', game.currentWord);
+    this.logger.debug('new word : ', game.currentWord);
     this.gameStateService.saveCurrentState(game);
   }
 
@@ -401,7 +162,7 @@ export class GameMechanicsService {
       // Find the player's team
       const player = game.players.find((p) => p.userId === userId);
       if (!player) {
-        console.log('Player not found!');
+        this.logger.log('Player not found!');
         return [message, false]; // Early return if player not found
       }
       if (player.team === turn.team) {
@@ -410,12 +171,10 @@ export class GameMechanicsService {
           // Check if the message is the current word or a derivative
           if (
             message.toLowerCase() === currentWord.toLowerCase() ||
-            this.wordDerivates(message, currentWord)
+            this.wordDerivatives(message, currentWord)
           ) {
-            // Return the word censored with *
+            // throw error if the message is a derivative of the current word
             throw new Error('You cannot use derivatives of described word');
-            const censoredWord = currentWord.replace(/./g, '*');
-            return [censoredWord, false];
           } else {
             return [message, false];
           }
@@ -440,7 +199,7 @@ export class GameMechanicsService {
     }
   }
 
-  wordDerivates(message: string, currentWord: string): boolean {
+  wordDerivatives(message: string, currentWord: string): boolean {
     const normalizedMessage = message.toLowerCase().replace(/[.,!?:;]/g, ''); // Remove punctuation
     const words = normalizedMessage.split(/\s+/); // Split message into words
     const baseWord = currentWord.toLowerCase();

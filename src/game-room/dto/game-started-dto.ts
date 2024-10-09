@@ -1,5 +1,5 @@
 import { Expose } from 'class-transformer';
-import { IngameStats, Turn } from 'src/types';
+import { Turn } from 'src/types';
 
 export class GameStartedDto {
   @Expose()
@@ -10,9 +10,6 @@ export class GameStartedDto {
 
   @Expose()
   host: string;
-
-  @Expose()
-  isGameStarted: boolean;
 
   @Expose()
   redTeam: [string, boolean][];

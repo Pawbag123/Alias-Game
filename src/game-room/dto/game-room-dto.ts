@@ -11,9 +11,6 @@ export class GameRoomDto {
   host: string;
 
   @Expose()
-  isGameStarted: boolean;
-
-  @Expose()
   redTeam: string[];
 
   @Expose()

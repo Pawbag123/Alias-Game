@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 
 import { JOIN_TIMEOUT, MAX_USERS } from '../types';
 import { CreateGameDto } from './dto/create-game-dto';
@@ -7,8 +7,10 @@ import { GameStateService } from 'src/game-state/game-state.service';
 
 @Injectable()
 export class LobbyService {
+  private readonly logger = new Logger(LobbyService.name);
+
   constructor(private readonly gameStateService: GameStateService) {
-    console.log('LobbyService created');
+    this.logger.log('LobbyService created');
   }
 
   /**
@@ -22,6 +24,7 @@ export class LobbyService {
     { gameName, userId, userName }: CreateGameDto,
     emitGamesUpdated: (gameId?: string) => void,
   ): string {
+    this.logger.log(`Creating game: ${gameName} by ${userName}`);
     if (this.gameStateService.isUserActive(userId)) {
       throw new Error('User already in game');
     }
@@ -57,6 +60,8 @@ export class LobbyService {
     { gameId, userId, userName }: JoinGameDto,
     emitGamesUpdated: () => void,
   ): void {
+    this.logger.log(`User ${userName} joining game: ${gameId}`);
+
     if (this.gameStateService.isUserActive(userId)) {
       throw new Error('User already in game');
     }
@@ -83,10 +88,5 @@ export class LobbyService {
     );
 
     this.gameStateService.addUserToGame(userId, userName, gameId);
-
-    console.log(
-      'User joined game:',
-      this.gameStateService.getActiveUserById(userId),
-    );
   }
 }

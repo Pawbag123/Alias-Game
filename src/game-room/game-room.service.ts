@@ -8,7 +8,7 @@ export class GameRoomService {
   private readonly logger = new Logger(GameRoomService.name);
 
   constructor(private readonly gameStateService: GameStateService) {
-    console.log('GameRoomService created');
+    this.logger.log('GameRoomService created');
   }
 
   //* Logic for transitioning a game from the lobby to the game room
@@ -31,7 +31,7 @@ export class GameRoomService {
       throw new Error('User already in game');
     }
 
-    // this should be omitted as gameId in user is to help with reconnecting to started game
+    // this can be omitted as gameId in user is to help with reconnecting to started game
     if (user.gameId !== gameId) {
       throw new Error('User not added to this game');
     }
@@ -46,8 +46,7 @@ export class GameRoomService {
 
   removePlayerFromGame(gameId: string, userId: string): void {
     this.logger.log(`Removing user ${userId} from game ${gameId}`);
-    const game = this.gameStateService.getGameById(gameId);
-    if (!game) {
+    if (!this.gameStateService.gameExists(gameId)) {
       throw new Error('Game not found');
     }
 

@@ -1,6 +1,6 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { Document } from 'mongoose';
-import { IngameStats } from 'src/types';
+import { InGameStats } from 'src/types';
 
 @Schema()
 export class Games extends Document {
@@ -26,7 +26,7 @@ export class Games extends Document {
     userId: string;
     name: string;
     team: string;
-    inGameStats: IngameStats;
+    inGameStats: InGameStats;
   }[];
 
   @Prop({

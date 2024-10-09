@@ -5,8 +5,7 @@ import { IoAdapter } from '@nestjs/platform-socket.io';
 import { WsException } from '@nestjs/websockets';
 import { Server, ServerOptions, Socket } from 'socket.io';
 import { GameStateService } from './game-state/game-state.service';
-
-const CLIENT_PORT = 3000;
+import { CLIENT_PORT } from './types';
 
 export class SocketIOAdapter extends IoAdapter {
   private readonly logger = new Logger(SocketIOAdapter.name);
@@ -76,17 +75,16 @@ const createTokenMiddleware =
   (jwtService: JwtService, logger: Logger) => (socket: Socket, next) => {
     const token =
       socket.handshake.auth.token || socket.handshake.headers['token'];
-
+    logger.log('Token middleware');
     if (!token) {
       logger.error('No token provided');
       return next(new WsException('Unauthorized'));
     }
 
-    logger.debug('right before loop');
     try {
       logger.debug('Token', token);
       const decoded = jwtService.verify(token);
-      logger.log('Decoded token', decoded);
+      logger.debug('Decoded token', decoded);
       socket.data.user = decoded;
       next();
     } catch (error) {
@@ -124,15 +122,7 @@ const createAllowedToGameMiddleware =
       logger.error('Game not found');
       return next(new WsException('Game not found'));
     }
-    // if (!user) {
-    //   logger.error('No user in socket data');
-    //   next(new WsException('Unauthorized'));
-    // }
-    // logger.debug('User', user);
-    // logger.debug('Games', gameStateService.getAllGames());
-    // logger.debug('Active users', gameStateService.getAllActiveUsers());
-    // const activeUser = gameStateService.getActiveUserById(user.userId);
-    // logger.debug('Active user', activeUser);
+
     if (!gameStateService.isUserAllowedInGame(userId, gameId)) {
       logger.error('User not allowed to join the game');
       return next(new WsException('User not allowed to join the game'));

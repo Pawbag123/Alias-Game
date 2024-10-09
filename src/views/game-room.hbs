@@ -205,9 +205,7 @@
 
           // MODULARIZ THIS ONE
           socket.on('game-started:updated', (gameRoom) => {
-          console.log('Actual state of the game: ', gameRoom);
-
-          console.log('user:', userName)
+          console.log('Current game state: ', gameRoom);
 
           let userState;
           if (gameRoom.currentWord)
@@ -246,9 +244,6 @@
           // Display the game info div
           const gameInfoDiv = document.getElementById('game-info');
           gameInfoDiv.style.display = 'block';
-
-          console.log('myTeam: ', myTeam(userName, gameRoom))
-          console.log('describer: ', gameRoom.turn.describer !== userId)
 
           const redTeamList = document.getElementById('red-team');
           redTeamList.innerHTML = '';  // Clear the list
@@ -437,7 +432,6 @@
     }
 
     function showUserStats(userInfo) {
-      console.log('User stats:', userInfo);
       $('#userName').text(userInfo.userName);
       $('#gamesPlayed').text(userInfo.gamesPlayed);
       $('#wins').text(userInfo.wins);

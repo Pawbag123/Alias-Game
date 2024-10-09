@@ -31,7 +31,7 @@ export class GameStateService {
     return this.activeUsers.find((user) => user.id === userId);
   }
 
-  getPlayerById(userId: string, gameId: string): Player {
+  private getPlayerById(userId: string, gameId: string): Player {
     const game = this.getGameById(gameId);
     return game.players.find((player) => player.userId === userId);
   }
@@ -47,7 +47,7 @@ export class GameStateService {
     return this.activeUsers.some((user) => user.id === userId);
   }
 
-  hasUserSocketId(userId: string): boolean {
+  private hasUserSocketId(userId: string): boolean {
     const user = this.getActiveUserById(userId);
     return user && user.socketId !== undefined;
   }
@@ -93,22 +93,6 @@ export class GameStateService {
     });
   }
 
-  getPlayersWithSocketsInGame(
-    gameId: string,
-  ): { socketId: string; team: Team }[] {
-    const game = this.getGameById(gameId);
-    return game.players
-      .filter((player) => this.isUserActive(player.userId))
-      .map((player) => ({
-        socketId: this.getActiveUserById(player.userId).socketId,
-        team: player.team,
-      }));
-  }
-
-  getAllGames(): Game[] {
-    return [...this.games];
-  }
-
   getGameById(gameId: string): Game {
     return this.games.find((game) => game.id === gameId);
   }
@@ -139,17 +123,11 @@ export class GameStateService {
     return game.isGameStarted;
   }
 
-  getTeamOfPlayer(userId: string, gameId: string): Team {
-    const game = this.getGameById(gameId);
-    const player = game.players.find((player) => player.userId === userId);
-    return player ? player.team : null;
-  }
-
   gameExists(gameId: string): boolean {
     return this.games.some((game) => game.id === gameId);
   }
 
-  checkIfUserIsInGame(userId: string): string | undefined {
+  getGameOfUser(userId: string): string | undefined {
     const user = this.activeUsers.find((user) => user.id === userId);
     if (user && user.gameId && !user.socketId) {
       return user.gameId;
@@ -217,7 +195,6 @@ export class GameStateService {
       id: game.id,
       name: game.name,
       host: game.host,
-      isGameStarted: game.isGameStarted,
       redTeam: game.players
         .filter((player) => player.team === Team.RED)
         .map((player) => player.name),
@@ -237,7 +214,6 @@ export class GameStateService {
       id: game.id,
       name: game.name,
       host: game.host,
-      isGameStarted: game.isGameStarted,
       redTeam: game.players
         .filter((player) => player.team === Team.RED)
         .map((player) => [player.name, this.hasUserSocketId(player.userId)]),
@@ -246,7 +222,7 @@ export class GameStateService {
         .map((player) => [player.name, this.hasUserSocketId(player.userId)]),
       turn: game.turn
         ? {
-            alreadyDiscribe: game.turn.alreadyDiscribe,
+            alreadyDescribed: game.turn.alreadyDescribed,
             team: game.turn.team,
             describerId: game.turn.describerId,
             describerName: game.turn.describerName,
@@ -298,7 +274,7 @@ export class GameStateService {
     game.players = game.players.filter((player) => player.userId !== userId);
   }
 
-  getTeamToJoin(gameId: string): Team {
+  private getTeamToJoin(gameId: string): Team {
     const game = this.getGameById(gameId);
     const redTeamPlayers = game.players.filter(
       (player) => player.team === Team.RED,
@@ -323,14 +299,6 @@ export class GameStateService {
       },
     };
     game.players.push(newPlayer);
-  }
-
-  displayGames(): void {
-    console.log('Games:', this.games);
-  }
-
-  displayActiveUsers(): void {
-    console.log('Active users:', this.activeUsers);
   }
 
   removeGameRoom(gameId: string): void {
@@ -363,7 +331,6 @@ export class GameStateService {
     }
   }
 
-  //TODO: implement handlers for edge cases
   /**
    * Function that is called when an user doesn't join a game from the lobby in a certain amount of time
    * it removes the user from the game and the active users array
@@ -440,20 +407,10 @@ export class GameStateService {
     return false;
   }
 
-  getAllActiveUsers(): Omit<ActiveUser, 'initialJoinTimeout'>[] {
-    return this.activeUsers.map(({ id, gameId, socketId }) => ({
-      id,
-      gameId,
-      socketId,
-    }));
-  }
-
   async updatePlayersStats(
     players: Player[],
     gameScore: { red: number; blue: number },
   ): Promise<void> {
-    console.log('Players at the end of the game: ', players);
-
     for (const player of players) {
       const { userId, inGameStats } = player;
       const { wordsGuessed, wellDescribed } = inGameStats;
@@ -479,7 +436,6 @@ export class GameStateService {
 
         // Perform the update directly on the user document
         await this.userModel.updateOne({ _id: userId }, update);
-        console.log(`Updated stats for user with ID: ${userId}`);
       } catch (error) {
         console.error(`Error updating stats for user ${userId}: `, error);
       }
@@ -501,7 +457,7 @@ export class GameStateService {
     return team === winningTeam;
   }
 
-  async getUserStats(userName: string){
+  async getUserStats(userName: string) {
     const user = await this.userModel.findOne({ username: userName });
     return {
       userName: userName,
@@ -510,8 +466,7 @@ export class GameStateService {
       loses: user.stats.loses,
       draw: user.stats.draw,
       wordsGuessed: user.stats.wordsGuessed,
-      wellDescribed: user.stats.wellDescribed
+      wellDescribed: user.stats.wellDescribed,
     };
-
   }
 }

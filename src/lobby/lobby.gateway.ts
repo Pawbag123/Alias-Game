@@ -8,7 +8,7 @@ import {
   ConnectedSocket,
   WsException,
 } from '@nestjs/websockets';
-import { Namespace, Server, Socket } from 'socket.io';
+import { Namespace, Socket } from 'socket.io';
 
 import { LobbyService } from './lobby.service';
 import { CreateGameDto } from './dto/create-game-dto';
@@ -46,7 +46,7 @@ export class LobbyGateway implements OnGatewayConnection, OnGatewayDisconnect {
 
     this.logger.log(`Client connected to lobby: ${userName}`);
 
-    const gameId = this.gameStateService.checkIfUserIsInGame(userId);
+    const gameId = this.gameStateService.getGameOfUser(userId);
     if (gameId) {
       client.emit('game:joined', gameId);
       return;
@@ -64,9 +64,8 @@ export class LobbyGateway implements OnGatewayConnection, OnGatewayDisconnect {
   @SubscribeMessage('user-stats:get')
   async handleUserStatsGet(@ConnectedSocket() client: Socket): Promise<void> {
     const { userName } = client.data.user;
-    // const userStats = this.gameStateService.getUserStats(userId);
+    this.logger.log('Getting user stats:', userName);
     const userStats = await this.gameStateService.getUserStats(userName);
-    console.log('STATS HERE: ', userStats);
     client.emit('user-stats', userStats);
   }
 

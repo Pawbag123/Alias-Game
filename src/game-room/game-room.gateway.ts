@@ -8,28 +8,22 @@ import {
   MessageBody,
   WsException,
 } from '@nestjs/websockets';
-import { Namespace, Server, Socket } from 'socket.io';
+import { Namespace, Socket } from 'socket.io';
 
 import { GameRoomService } from './game-room.service';
 import { GameStateService } from 'src/game-state/game-state.service';
 import { GameMechanicsService } from './game-mechanics.service';
 import { MAX_TURNS, Team, TURN_TIME } from 'src/types';
-import { Logger, UseFilters, UseGuards } from '@nestjs/common';
+import { Logger, UseGuards } from '@nestjs/common';
 import { ChatService } from 'src/chat/chat.service';
-import { GameStartedDto } from './dto/game-started-dto';
 import { HostGuard } from './guards/host.guard';
-import { WsExceptionFilter } from 'src/exceptions/ws-exception-filter';
 import { TooFewPlayersGuard } from './guards/too-few-players.guard';
 import { GuessingTeamGuard } from './guards/guessing-team.guard';
-import { time } from 'console';
 
-//TODO: add error emitters, handlers, try catch blocks, extend logic after game is started
-//TODO: change server emit to namespace emit
 /**
  * Gateway that handles connections in game room, using game-room namespace
  * Handles connecting and disconnecting from game room, joining teams, leaving game
  */
-// @UseFilters(new WsExceptionFilter())
 @WebSocketGateway({
   namespace: 'game-room',
   cors: {
@@ -44,9 +38,6 @@ export class GameRoomGateway
   @WebSocketServer()
   gameRoom: Namespace;
 
-  /**
-   * Lobby namespace
-   */
   lobby: Namespace;
 
   constructor(
@@ -81,7 +72,9 @@ export class GameRoomGateway
    * @returns
    */
   handleConnection(client: Socket): void {
-    this.logger.log(`Client connected in game room: ${client.id}`);
+    this.logger.log(
+      `Client connected in game room: ${client.data.user.userName}`,
+    );
 
     const { gameId } = client.handshake.query as {
       gameId: string;
@@ -90,7 +83,7 @@ export class GameRoomGateway
 
     client.data.gameId = gameId;
 
-    // Fetch and send missed messages, partially working
+    // Fetch and send missed messages
     const lastMessageId = client.handshake.auth.serverOffset ?? 0;
     this.logger.log('serverOffset: ', lastMessageId);
     this.chatService
@@ -112,7 +105,6 @@ export class GameRoomGateway
       try {
         this.gameMechanicsService.reconnectPlayer(userId, gameId, client.id);
         client.join(gameId);
-        // const team = this.gameStateService.getTeamOfPlayer(userId, gameId);
         this.emitGameStartedUpdated(gameId);
         client.broadcast.to(gameId).emit('chat:update', {
           userName: 'Server',
@@ -156,7 +148,9 @@ export class GameRoomGateway
    * @returns
    */
   handleDisconnect(client: Socket): void {
-    this.logger.log(`Client disconnected from game room: ${client.id}`);
+    this.logger.log(
+      `Client disconnected from game room: ${client.data.user.userName}`,
+    );
     const gameId = client.data.gameId;
     const userId = client.data.user.userId;
     // if game is started, only remove socketId
@@ -208,6 +202,7 @@ export class GameRoomGateway
    */
   @SubscribeMessage('game-room:leave')
   handleLeaveGame(@ConnectedSocket() client: Socket) {
+    this.logger.log(`User ${client.data.user.userName} leaving game room`);
     client.emit('game-room:left');
     client.disconnect();
   }
@@ -224,6 +219,7 @@ export class GameRoomGateway
   ) {
     const gameId = client.data.gameId;
     const userId = client.data.user.userId;
+    this.logger.log(`User ${userId} joining team: ${team}`);
     try {
       if (this.gameStateService.isGameStarted(gameId)) {
         throw new Error('Game already started');
@@ -282,8 +278,8 @@ export class GameRoomGateway
 
       this.emitGameStartedUpdated(gameId);
       const { turn, currentWord } = this.gameStateService.getGameById(gameId);
-      console.log(`STATE NUMBER ${rounds}`, turn);
-      console.log(currentWord);
+      this.logger.debug(`STATE NUMBER ${rounds}`, turn);
+      this.logger.debug('current word', currentWord);
 
       await this.startTimer(gameId, TURN_TIME);
 
@@ -321,7 +317,7 @@ export class GameRoomGateway
   ): Promise<void> {
     this.logger.log('User stats requested', userName);
     const userStats = await this.gameStateService.getUserStats(userName);
-    console.log('STATS HERE: ', userStats);
+    this.logger.debug('stats ', userStats);
     client.emit('user-stats', userStats);
   }
 
@@ -341,12 +337,13 @@ export class GameRoomGateway
     @ConnectedSocket() client: Socket,
     @MessageBody() { message }: { message: string }, // Temporarily 'any'
   ): Promise<void> {
-    // const { userId, userName, gameId } = payload;
     const { userName, userId } = client.data.user;
     const { gameId } = client.data;
     this.logger.log(`Chat message received: ${message}`);
+
     let validatedMessage;
     let isGuessed;
+
     try {
       [validatedMessage, isGuessed] = this.gameMechanicsService.validateWord(
         userId,
