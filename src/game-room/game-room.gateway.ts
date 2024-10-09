@@ -334,21 +334,13 @@ export class GameRoomGateway
   }
 
   @SubscribeMessage('user-stats:get')
-  handleUserStatsGet(
+  async handleUserStatsGet(
     @ConnectedSocket() client: Socket,
     @MessageBody() { userName }: { userName: string },
-  ): void {
+  ): Promise<any> {
     this.logger.log('User stats requested', userName);
-    // const userStats = this.gameStateService.getUserStats(userId);
-    const userStats = {
-      userName: 'user',
-      gamesPlayed: 4,
-      gamesWon: 2,
-      gamesLost: 1,
-      draws: 1,
-      wordsGuessed: 12,
-      wordsDescribed: 20,
-    };
+     const userStats = await this.gameStateService.getUserStats(userName);
+     console.log("STATS HERE: ", userStats);
     client.emit('user-stats', userStats);
   }
 

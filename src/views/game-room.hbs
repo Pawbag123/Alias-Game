@@ -39,11 +39,11 @@
       <div class="modal-body">
         <p><strong>User Name:</strong> <span id="userName"></span></p>
         <p><strong>Games Played:</strong> <span id="gamesPlayed"></span></p>
-        <p><strong>Games Won:</strong> <span id="gamesWon"></span></p>
-        <p><strong>Games Lost:</strong> <span id="gamesLost"></span></p>
-        <p><strong>Draws:</strong> <span id="draws"></span></p>
+        <p><strong>Won:</strong> <span id="wins"></span></p>
+        <p><strong>Lose:</strong> <span id="loses"></span></p>
+        <p><strong>Draws:</strong> <span id="draw"></span></p>
         <p><strong>Words Guessed:</strong> <span id="wordsGuessed"></span></p>
-        <p><strong>Words Well Described:</strong> <span id="wordsDescribed"></span></p>
+        <p><strong>Words Well Described:</strong> <span id="wellDescribed"></span></p>
       </div>
       <div class="modal-footer">
         <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
@@ -401,11 +401,11 @@
     function showUserStats(userInfo) {
       $('#userName').text(userInfo.userName);
       $('#gamesPlayed').text(userInfo.gamesPlayed);
-      $('#gamesWon').text(userInfo.gamesWon);
-      $('#gamesLost').text(userInfo.gamesLost);
-      $('#draws').text(userInfo.draws);
+      $('#wins').text(userInfo.wins);
+      $('#loses').text(userInfo.loses);
+      $('#draw').text(userInfo.draw);
       $('#wordsGuessed').text(userInfo.wordsGuessed);
-      $('#wordsDescribed').text(userInfo.wordsDescribed);
+      $('#wellDescribed').text(userInfo.wellDescribed);
       
       // Show the modal
       $('#profileModal').modal('show');

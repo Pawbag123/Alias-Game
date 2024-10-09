@@ -2,6 +2,7 @@ import { Injectable, Logger } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { plainToClass } from 'class-transformer';
 import { Model } from 'mongoose';
+import { use } from 'passport';
 import { User } from 'src/auth/schemas/user.schema';
 
 import { GameRoomDto } from 'src/game-room/dto/game-room-dto';
@@ -397,7 +398,6 @@ export class GameStateService {
 
   endGame(gameId: string) {
     const game = this.getGameById(gameId);
-    console.log('ESTO ES LO QUE LLEGA DEL JUEGO CUANDO TERMINA: ', game);
     this.updatePlayersStats(game.players, game.score);
     this.saveInDatabase(game);
     this.removeGameRoom(gameId);
@@ -414,8 +414,6 @@ export class GameStateService {
         score: game.score,
         wordsUsed: game.wordsUsed,
       });
-
-      console.log(' SCHEMAPOSE ', newGame);
 
       // Save the game document in the database
       return await newGame.save();
@@ -493,5 +491,19 @@ export class GameStateService {
     const { team } = player;
     const winningTeam = gameScore.red > gameScore.blue ? 'redTeam' : 'blueTeam';
     return team === winningTeam;
+  }
+
+  async getUserStats(userName: string){
+    const user = await this.userModel.findOne({ username: userName });
+    return {
+      userName: userName,
+      gamesPlayed: user.stats.gamesPlayed,
+      wins: user.stats.wins,
+      loses: user.stats.loses,
+      draw: user.stats.draw,
+      wordsGuessed: user.stats.wordsGuessed,
+      wellDescribed: user.stats.wellDescribed
+    };
+
   }
 }
