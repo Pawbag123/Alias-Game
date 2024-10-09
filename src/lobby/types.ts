@@ -19,7 +19,10 @@ export interface Game {
   maxUsers: number;
   wordsUsed: string[];
   currentWord: string;
-  score: [number, number];
+  score: {
+    red: number,
+    blue: number
+  };
   turn: Turn | null;
 }
 
@@ -28,6 +31,18 @@ export interface Turn {
   team: Team;
   describerId: string;
   describerName: string;
+}
+
+export interface Stats extends IngameStats {
+  gamesPlayed: number,
+  wins: number,
+  loses: number,
+  draw: number
+}
+
+export interface IngameStats {
+  wordsGuessed: number,
+  wellDescribed: number,
 }
 
 /**
@@ -68,6 +83,7 @@ export interface Player {
   userId: string;
   name: string;
   team: Team;
+  inGameStats: IngameStats;
 }
 
 // export const DUMMY_GAMES: Game[] = [

@@ -281,7 +281,7 @@ export class GameRoomGateway
   //! Heres where turns are managed
   async handleTurns(gameId: string) {
     let rounds = 0;
-    const totalRounds = 1;
+    const totalRounds = 2;
 
     while (rounds < totalRounds) {
       this.gameMechanicsService.nextTurn(gameId); // Handles both game initialization and next turn
