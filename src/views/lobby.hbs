@@ -9,6 +9,54 @@
   <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
 </head>
 <body class="bg-light">
+  <style>
+    .custom-navbar {
+      background-color: #2e2e2e;
+      padding: 1.5rem;
+    }
+
+    .navbar-brand {
+      font-size: 3rem;
+      color: white;
+    }
+
+    .btn-primary {
+      font-size: 1rem;
+    }
+  </style>
+
+  <!-- Navbar -->
+  <nav class="navbar navbar-expand-lg custom-navbar">
+    <div class="container-fluid">
+      <a class="navbar-brand" href="#">Alias</a>
+      <div class="ms-auto">
+        <button id="profileBtn" class="btn btn-light me-2" data-toggle="modal" data-target="#profileModal">Profile</button>
+        <button id="logoutBtn" class="btn btn-light">Log out</button>
+      </div>
+    </div>
+  </nav>
+
+  <!-- Profile Modal -->
+  <div class="modal fade" id="profileModal" tabindex="-1" role="dialog" aria-labelledby="profileModalLabel" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="profileModalLabel">Profile</h5>
+          <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+            <span aria-hidden="true">&times;</span>
+          </button>
+        </div>
+        <div class="modal-body">
+          <p>This is the profile modal content.</p>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Error Modal -->
   <div class="modal fade" id="errorModal" tabindex="-1" role="dialog" aria-labelledby="errorModalLabel" aria-hidden="true">
     <div class="modal-dialog" role="document">
       <div class="modal-content">
@@ -27,18 +75,17 @@
       </div>
     </div>
   </div>
+
   <div id="error-message" style="display: none; color: red;"></div>
   <div class="container">
     <h1>Game Lobby</h1>
-    <button id="logoutBtn">Logout</button>
-    <button id="createGameBtn">Create new room</button>
+    <button id="createGameBtn" class="btn btn-primary">Create new room</button>
     <div id="available-games">
       <h2>Available games</h2>
       <ul id="game-list">
-       <!-- The list of games will be rendered here -->
-      </ul> 
+        <!-- The list of games will be rendered here -->
+      </ul>
     </div>
-
   </div>
 
   <!-- Bootstrap and JavaScript dependencies -->
@@ -52,26 +99,29 @@
       const { userId, userName } = getUserInfo();
       const accessToken = localStorage.getItem('accessToken');
 
-      if(!socket) {
+      if (!socket) {
         socket = io('/lobby', {
           auth: { token: accessToken }
         });
       }
 
-      const logoutBtn = document.getElementById('logoutBtn');
-      logoutBtn.addEventListener('click', (e) => {
+      document.getElementById('logoutBtn').addEventListener('click', (e) => {
         e.preventDefault();
         localStorage.clear();
         window.location.href = '/login';
       });
-      
-      const createGameBtn = document.getElementById('createGameBtn');
 
-      createGameBtn.addEventListener('click', (e) => {
+      document.getElementById('createGameBtn').addEventListener('click', (e) => {
         e.preventDefault();
         socket.emit('game:create', {
           gameName: `${userName}'s Game`,
         });
+      });
+
+      document.getElementById('profileBtn').addEventListener('click', (e) => {
+        e.preventDefault();
+        const profileModal = new bootstrap.Modal(document.getElementById('profileModal'));
+        profileModal.show();
       });
 
       socket.on('connect_error', (error) => {
@@ -79,7 +129,6 @@
         renderError(error.message);
       });
 
-      // Socket events for game actions can be handled here
       socket.on('connect', () => {
         console.log(`Connected as ${userName} (ID: ${userId})`);
 
@@ -90,13 +139,11 @@
 
         socket.on('game:joined', (gameId) => {
           console.log('Joined game:', gameId);
-          // Redirect to the game page
           redirectToGame(gameId);
         });
 
         socket.on('game:created', (gameId) => {
           console.log('Created game:', gameId);
-          // Redirect to the game page
           redirectToGame(gameId);
         });
 
@@ -105,7 +152,7 @@
           renderErrorMessage(error.message);
         });
       });
-    }
+    };
 
     function getUserInfo() {
       const userId = localStorage.getItem('userId');
@@ -124,21 +171,14 @@
     function renderErrorMessage(message) {
       const errorModalBody = document.getElementById('errorModalBody');
       errorModalBody.innerHTML = `Error: ${message}`;
-
       $('#errorModal').modal('show');
-
-      {{!-- setTimeout(() => {
-        $('#errorModal').modal('hide');
-      }, 3000);  --}}
     }
 
-
-    // Render the list of available games
     function renderLobby(games) {
       const gameList = document.getElementById('game-list');
       gameList.innerHTML = ''; // Clear the list
 
-      if(games.length > 0) {
+      if (games.length > 0) {
         games.forEach(game => {
           const li = document.createElement('li');
           li.innerHTML = `
@@ -165,9 +205,6 @@
     function redirectToGame(gameId) {
       window.location.href = `/game/${gameId}`;
     }
-
-
-
   </script>
 </body>
 </html>
