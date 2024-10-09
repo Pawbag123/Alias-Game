@@ -235,6 +235,9 @@ export class GameRoomGateway
     const gameId = client.data.gameId;
     const userId = client.data.user.userId;
     try {
+      if (this.gameStateService.isGameStarted(gameId)) {
+        throw new Error('Game already started');
+      }
       if (team === Team.RED) {
         this.gameRoomService.joinRedTeam(gameId, userId);
       } else if (team === Team.BLUE) {
