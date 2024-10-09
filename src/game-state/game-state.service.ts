@@ -8,7 +8,7 @@ import { GameRoomDto } from 'src/game-room/dto/game-room-dto';
 import { GameStartedDto } from 'src/game-room/dto/game-started-dto';
 import { Games } from 'src/game-room/schema/game.schema';
 import { InLobbyGameDto } from 'src/lobby/dto/in-lobby-game-dto';
-import { ActiveUser, Game, Player, Team } from 'src/lobby/types';
+import { ActiveUser, Game, Player, Team } from 'src/types';
 
 /**
  * Service that handles the state of the game,

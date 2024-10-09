@@ -27,6 +27,31 @@
   </style>
 </head>
 
+<div class="modal fade" id="profileModal" tabindex="-1" role="dialog" aria-labelledby="profileModalLabel" aria-hidden="true">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="profileModalLabel">Profile</h5>
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body">
+        <p><strong>User Name:</strong> <span id="userName"></span></p>
+        <p><strong>Games Played:</strong> <span id="gamesPlayed"></span></p>
+        <p><strong>Games Won:</strong> <span id="gamesWon"></span></p>
+        <p><strong>Games Lost:</strong> <span id="gamesLost"></span></p>
+        <p><strong>Draws:</strong> <span id="draws"></span></p>
+        <p><strong>Words Guessed:</strong> <span id="wordsGuessed"></span></p>
+        <p><strong>Words Well Described:</strong> <span id="wordsDescribed"></span></p>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+      </div>
+    </div>
+  </div>
+</div>
+
 <body class="bg-light">
   <div class="modal fade" id="errorModal" tabindex="-1" role="dialog" aria-labelledby="errorModalLabel" aria-hidden="true">
     <div class="modal-dialog" role="document">
@@ -175,9 +200,14 @@
           socket.on('game-started:updated', (gameRoom) => {
           console.log('Actual state of the game: ', gameRoom);
 
-
+          const h1Name = document.getElementById('game-room-name');
+          h1Name.textContent = `Game Room: ${gameRoom.name}`;
           //!
           document.getElementById('timer').style.display = 'block';
+          document.getElementById('join-red-team-button').style.display = 'none';
+          document.getElementById('join-blue-team-button').style.display = 'none';
+          document.getElementById('start-game-button').style.display = 'none';
+          document.getElementById('leave-game-button').style.display = 'none';
 
           // Display the game info div
           const gameInfoDiv = document.getElementById('game-info');
@@ -185,6 +215,29 @@
 
           console.log('myTeam: ', myTeam(userName, gameRoom))
           console.log('describer: ', gameRoom.turn.describer !== userId)
+
+          const redTeamList = document.getElementById('red-team');
+          redTeamList.innerHTML = '';  // Clear the list
+          gameRoom.redTeam.forEach(player => {
+            const li = document.createElement('li');
+            li.textContent = player[0];
+            if (!player[1]) {
+              li.style.color = 'red';
+            }
+            redTeamList.appendChild(li);
+          });
+
+          // Update Blue Team
+          const blueTeamList = document.getElementById('blue-team');
+          blueTeamList.innerHTML = '';
+          gameRoom.blueTeam.forEach(player => {
+            const li = document.createElement('li');
+            li.textContent = player[0];
+            if (!player[1]) {
+              li.style.color = 'red';
+            }
+            blueTeamList.appendChild(li);
+          });
 
           // Remove existing border class first
           gameInfoDiv.classList.remove('red-team-border', 'blue-team-border');
@@ -212,9 +265,12 @@
         socket.on('chat:update', (msg) => {
           console.log(`Message received: ${msg}, 'serverOffset: `, msg.messageId)
           const serverOffset = msg.messageId;
-          const item = `<li>
+          const item = msg.userName === "Server" ? `<li style="color: red;">
+                <p>${msg.userName}:  ${msg.message} <small class="text-muted ms-auto">[${new Date(msg.time).toLocaleTimeString()}]</small></p>
+              </li>`: `<li>
               <p>${msg.userName}:  ${msg.message} <small class="text-muted ms-auto">[${new Date(msg.time).toLocaleTimeString()}]</small></p>
             </li>`
+
           messageList.insertAdjacentHTML('beforeend', item)
           /*
           const li = document.createElement('li');
@@ -285,10 +341,24 @@
       errorDiv.style.display = 'block';
     }
 
+    const renderGameStarted = (gameStarted) => {
+      
+    }
+
     const renderGameRoom = (gameRoom) => {
 
       const h1Name = document.getElementById('game-room-name');
       h1Name.textContent = `Game Room: ${gameRoom.name}`;
+
+      const userInfo = {
+        userName: 'user',
+        gamesPlayed: 4,
+        gamesWon: 2,
+        gamesLost: 1,
+        draws: 1,
+        wordsGuessed: 12,
+        wordsDescribed: 20
+      };
 
       // Update Red Team
       const redTeamList = document.getElementById('red-team');
@@ -296,6 +366,12 @@
       gameRoom.redTeam.forEach(player => {
         const li = document.createElement('li');
         li.textContent = player;
+        li.style.cursor = 'pointer';
+        li.style.color = 'blue';
+        li.style.textDecoration = 'underline';
+        li.addEventListener('click', () => {
+          showUserStats(userInfo);
+        });
         redTeamList.appendChild(li);
       });
 
@@ -305,23 +381,34 @@
       gameRoom.blueTeam.forEach(player => {
         const li = document.createElement('li');
         li.textContent = player;
+        li.style.cursor = 'pointer';
+        li.style.color = 'blue';
+        li.style.textDecoration = 'underline';
+        li.addEventListener('click', () => {
+          showUserStats(userInfo);
+        });
         blueTeamList.appendChild(li);
       });
 
-
-      {{!-- const noTeamList = document.getElementById('no-team');
-      noTeamList.innerHTML = '';
-      gameRoom.noTeam.forEach(player => {
-        const li = document.createElement('li');
-        li.textContent = player;
-        noTeamList.appendChild(li);
-      });  --}}
 
       // Check if the current user is the host and display Start Game button
       const isHost = gameRoom.host === localStorage.getItem('userId');
       const startGameBtn = document.getElementById('start-game-button');
       startGameBtn.style.display = isHost ? 'block' : 'none';
     };
+
+    function showUserStats(userInfo) {
+      $('#userName').text(userInfo.userName);
+      $('#gamesPlayed').text(userInfo.gamesPlayed);
+      $('#gamesWon').text(userInfo.gamesWon);
+      $('#gamesLost').text(userInfo.gamesLost);
+      $('#draws').text(userInfo.draws);
+      $('#wordsGuessed').text(userInfo.wordsGuessed);
+      $('#wordsDescribed').text(userInfo.wordsDescribed);
+      
+      // Show the modal
+      $('#profileModal').modal('show');
+    }
 
     function leaveRoom() {
       socket.emit('game-room:leave');

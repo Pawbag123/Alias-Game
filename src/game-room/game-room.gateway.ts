@@ -13,7 +13,7 @@ import { Namespace, Server, Socket } from 'socket.io';
 import { GameRoomService } from './game-room.service';
 import { GameStateService } from 'src/game-state/game-state.service';
 import { GameMechanicsService } from './game-mechanics.service';
-import { Team } from 'src/lobby/types';
+import { Team } from 'src/types';
 import { Logger, UseFilters, UseGuards } from '@nestjs/common';
 import { ChatService } from 'src/chat/chat.service';
 import { GameStartedDto } from './dto/game-started-dto';
@@ -119,7 +119,7 @@ export class GameRoomGateway
             'game-started:updated',
             this.gameStateService.getSerializedGameStarted(gameId),
           );
-        this.gameRoom.to(gameId).emit('chat:update', {
+        client.broadcast.to(gameId).emit('chat:update', {
           userName: 'Server',
           message: `${userName} has reconnected`,
           time: new Date(),
@@ -143,7 +143,7 @@ export class GameRoomGateway
           'game-room:updated',
           this.gameStateService.getSerializedGameRoom(gameId),
         );
-      this.gameRoom.to(gameId).emit('chat:update', {
+      client.broadcast.to(gameId).emit('chat:update', {
         userName: 'Server',
         message: `${userName} has joined the room`,
         time: new Date(),

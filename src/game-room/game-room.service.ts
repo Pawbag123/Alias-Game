@@ -1,6 +1,6 @@
 import { Injectable, Logger } from '@nestjs/common';
 
-import { Team } from 'src/lobby/types';
+import { Team } from 'src/types';
 import { GameStateService } from 'src/game-state/game-state.service';
 
 @Injectable()

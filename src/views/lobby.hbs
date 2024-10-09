@@ -30,7 +30,7 @@
     <div class="container-fluid">
       <a class="navbar-brand" href="#">Alias</a>
       <div class="ms-auto">
-        <button id="profileBtn" class="btn btn-light me-2" data-toggle="modal" data-target="#profileModal">Profile</button>
+        <button id="profileBtn" class="btn btn-light me-2" onclick="showUserStats()" data-target="#profileModal">Profile</button>
         <button id="logoutBtn" class="btn btn-light">Log out</button>
       </div>
     </div>
@@ -47,7 +47,13 @@
           </button>
         </div>
         <div class="modal-body">
-          <p>This is the profile modal content.</p>
+          <p><strong>User Name:</strong> <span id="userName"></span></p>
+          <p><strong>Games Played:</strong> <span id="gamesPlayed"></span></p>
+          <p><strong>Games Won:</strong> <span id="gamesWon"></span></p>
+          <p><strong>Games Lost:</strong> <span id="gamesLost"></span></p>
+          <p><strong>Draws:</strong> <span id="draws"></span></p>
+          <p><strong>Words Guessed:</strong> <span id="wordsGuessed"></span></p>
+          <p><strong>Words Well Described:</strong> <span id="wordsDescribed"></span></p>
         </div>
         <div class="modal-footer">
           <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
@@ -195,6 +201,28 @@
       } else {
         gameList.innerHTML = '<li>No rooms created</li>';
       }
+    }
+
+    function showUserStats(){
+      const userInfo = {
+        userName: 'user',
+        gamesPlayed: 0,
+        gamesWon: 0,
+        gamesLost: 0,
+        draws: 0,
+        wordsGuessed: 0,
+        wordsDescribed: 0
+      };
+      $('#userName').text(userInfo.userName);
+      $('#gamesPlayed').text(userInfo.gamesPlayed);
+      $('#gamesWon').text(userInfo.gamesWon);
+      $('#gamesLost').text(userInfo.gamesLost);
+      $('#draws').text(userInfo.draws);
+      $('#wordsGuessed').text(userInfo.wordsGuessed);
+      $('#wordsDescribed').text(userInfo.wordsDescribed);
+      
+      // Show the modal
+      $('#profileModal').modal('show');
     }
 
     function joinGame(gameId) {
