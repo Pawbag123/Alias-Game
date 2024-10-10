@@ -1,3 +1,12 @@
+/**
+ * Algorithm to calculate the Levenshtein distance between two strings.
+ * that checks for similarity by checking
+ * the number of single-character edits (insertions, deletions, or substitutions)
+ * Used in the game mechanics to check if the guessed word is close enough to the current word.
+ * @param a - first string (message)
+ * @param b - second string (current word)
+ * @returns - the Levenshtein distance between the two strings
+ */
 export const calculateLevenshteinDistance = (a: string, b: string): number => {
   const matrix: number[][] = Array.from({ length: a.length + 1 }, () =>
     Array.from({ length: b.length + 1 }, () => 0),

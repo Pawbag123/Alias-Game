@@ -8,8 +8,10 @@ export class HostGuard implements CanActivate {
 
   canActivate(context: ExecutionContext): boolean {
     const client = context.switchToWs().getClient();
-    const gameId = client.data.gameId;
-    const userId = client.data.user.userId;
+    const {
+      gameId,
+      user: { userId },
+    } = client.data;
 
     // Fetch the game details
     const game = this.gameStateService.getGameById(gameId);

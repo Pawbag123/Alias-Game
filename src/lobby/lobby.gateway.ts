@@ -49,7 +49,12 @@ export class LobbyGateway implements OnGatewayConnection, OnGatewayDisconnect {
   @SubscribeMessage('user-stats:get')
   async handleUserStatsGet(@ConnectedSocket() client: Socket): Promise<void> {
     this.logger.log(`Getting user stats for ${client.data.user.userName}`);
-    this.lobbyService.getUserStats(client);
+    try {
+      await this.lobbyService.getUserStats(client);
+    } catch (error) {
+      this.logger.error('Error getting user stats:', error);
+      throw new WsException(error.message);
+    }
   }
 
   /**

@@ -21,6 +21,7 @@ import { TooFewPlayersGuard } from './guards/too-few-players.guard';
 import { GuessingTeamGuard } from './guards/guessing-team.guard';
 import { validateDescriberMessage } from 'src/utils/describe-validation';
 import { checkGuessedWord } from 'src/utils/guess-validation';
+import { use } from 'passport';
 
 /**
  * Gateway that handles connections in game room, using game-room namespace
@@ -81,13 +82,11 @@ export class GameRoomGateway
     const { gameId } = client.handshake.query as {
       gameId: string;
     };
-    const { userId, userName } = client.data.user;
-
     client.data.gameId = gameId;
 
     // Fetch and send missed messages
     const lastMessageId = client.handshake.auth.serverOffset ?? 0;
-    this.logger.log('serverOffset: ', lastMessageId);
+    this.logger.debug('serverOffset: ', lastMessageId);
     this.chatService
       .getMessagesAfter(lastMessageId, gameId)
       .then((recoveredMessages) => {
@@ -100,43 +99,15 @@ export class GameRoomGateway
         throw new WsException(error.message);
       });
 
-    if (
-      this.gameStateService.gameExists(gameId) &&
-      this.gameStateService.getGameById(gameId).isGameStarted
-    ) {
-      try {
-        this.gameMechanicsService.reconnectPlayer(userId, gameId, client.id);
-        client.join(gameId);
-        this.gameMechanicsService.emitGameStartedUpdated(this.gameRoom, gameId);
-        client.broadcast.to(gameId).emit('chat:update', {
-          userName: 'Server',
-          message: `${userName} has reconnected`,
-          time: new Date(),
-        });
-      } catch (error) {
-        this.logger.error(error);
-        throw new WsException(error.message);
+    try {
+      if (this.gameRoomService.isGameStarted(gameId)) {
+        this.gameMechanicsService.handlePlayerReconnect(client, this.gameRoom);
+      } else {
+        this.gameRoomService.handleUserConnectToGameRoom(client, this.gameRoom);
       }
-    } else {
-      try {
-        this.gameRoomService.addPlayerToGame(gameId, userId, client.id);
-      } catch (error) {
-        this.logger.error(error);
-        throw new WsException(error.message);
-      }
-
-      client.join(gameId);
-      this.gameRoom
-        .to(gameId)
-        .emit(
-          'game-room:updated',
-          this.gameStateService.getSerializedGameRoom(gameId),
-        );
-      client.broadcast.to(gameId).emit('chat:update', {
-        userName: 'Server',
-        message: `${userName} has joined the room`,
-        time: new Date(),
-      });
+    } catch (error) {
+      this.logger.error(error);
+      throw new WsException(error.message);
     }
   }
 
@@ -153,45 +124,18 @@ export class GameRoomGateway
     this.logger.log(
       `Client disconnected from game room: ${client.data.user.userName}`,
     );
-    const gameId = client.data.gameId;
-    const userId = client.data.user.userId;
     // if game is started, only remove socketId
-    if (
-      this.gameStateService.gameExists(gameId) &&
-      this.gameStateService.getGameById(gameId).isGameStarted
-    ) {
-      this.gameStateService.removePlayerSocketId(userId);
-      this.gameMechanicsService.emitGameStartedUpdated(this.gameRoom, gameId);
-      this.gameRoom.to(gameId).emit('chat:update', {
-        userName: 'Server',
-        message: `${client.data.user.userName} has disconnected`,
-        time: new Date(),
-      });
+    if (this.gameRoomService.isGameStarted(client.data.gameId)) {
+      this.gameMechanicsService.handleDisconnectFromStartedGame(
+        client,
+        this.gameRoom,
+      );
     } else {
       // else remove player from game, and delete his ActiveUser data
-      try {
-        this.gameRoomService.removePlayerFromGame(gameId, userId);
-      } catch (error) {
-        this.logger.error(error);
-        // throw new WsException(error.message);
-      }
-      if (this.gameStateService.gameExists(gameId)) {
-        this.gameRoom
-          .to(gameId)
-          .emit(
-            'game-room:updated',
-            this.gameStateService.getSerializedGameRoom(gameId),
-          );
-        this.gameRoom.to(gameId).emit('chat:update', {
-          userName: 'Server',
-          message: `${client.data.user.userName} has left the room`,
-          time: new Date(),
-        });
-      }
-
-      this.lobby.emit(
-        'games:updated',
-        this.gameStateService.getSerializedGames(),
+      this.gameRoomService.handleUserDisconnectFromGameRoom(
+        client,
+        this.gameRoom,
+        this.lobby,
       );
     }
   }
@@ -219,97 +163,28 @@ export class GameRoomGateway
     @ConnectedSocket() client: Socket,
     @MessageBody() { team }: { team: Team },
   ) {
-    const gameId = client.data.gameId;
-    const userId = client.data.user.userId;
-    this.logger.log(`User ${userId} joining team: ${team}`);
+    this.logger.log(`User ${client.data.user.userName} joining team: ${team}`);
     try {
-      if (this.gameStateService.isGameStarted(gameId)) {
-        throw new Error('Game already started');
-      }
-      if (team === Team.RED) {
-        this.gameRoomService.joinRedTeam(gameId, userId);
-      } else if (team === Team.BLUE) {
-        this.gameRoomService.joinBlueTeam(gameId, userId);
-      } else {
-        throw new Error('Invalid team');
-      }
+      this.gameRoomService.joinTeam(team, client, this.gameRoom);
     } catch (error) {
       this.logger.error(error);
       throw new WsException(error.message);
     }
-
-    this.gameRoom
-      .to(gameId)
-      .emit(
-        'game-room:updated',
-        this.gameStateService.getSerializedGameRoom(gameId),
-      );
   }
 
   /**
    * Handler to start game
    * Calls game mechanics service to start the game
-   * @param gameId - id of the game to start
    */
   @SubscribeMessage('game-room:start')
   @UseGuards(HostGuard, TooFewPlayersGuard)
   handleStartGame(@ConnectedSocket() client: Socket) {
-    const { gameId } = client.data;
     try {
-      this.gameMechanicsService.startGame(gameId);
-      this.lobby.emit(
-        'games:updated',
-        this.gameStateService.getSerializedGames(),
-      );
-      //* this.gameMechanicsService.turns(gameId); this didn't work
-      this.handleTurns(gameId);
+      this.gameMechanicsService.startGame(client, this.gameRoom, this.lobby);
     } catch (error) {
       this.logger.error(error);
       throw new WsException(error.message);
     }
-  }
-
-  //! Heres where turns are managed
-  async handleTurns(gameId: string) {
-    let rounds = 0;
-    const totalRounds = MAX_TURNS;
-
-    while (rounds < totalRounds) {
-      this.gameMechanicsService.nextTurn(gameId); // Handles both game initialization and next turn
-      this.gameMechanicsService.newWord(gameId); // Generate a new word
-
-      this.gameMechanicsService.emitGameStartedUpdated(this.gameRoom, gameId);
-      const { turn, currentWord } = this.gameStateService.getGameById(gameId);
-      this.logger.debug(`STATE NUMBER ${rounds}`, turn);
-      this.logger.debug('current word', currentWord);
-
-      await this.startTimer(gameId, TURN_TIME);
-
-      rounds++;
-    }
-
-    this.gameRoom
-      .to(gameId)
-      .emit('game:end', this.gameStateService.getSerializedGameStarted(gameId));
-
-    this.gameStateService.endGame(gameId);
-    // Disconnect all sockets connected to room gameId
-    const sockets = await this.gameRoom.in(gameId).fetchSockets();
-    sockets.forEach((socket) => socket.disconnect());
-    this.lobby.emit(
-      'games:updated',
-      this.gameStateService.getSerializedGames(),
-    );
-  }
-
-  async startTimer(gameId: string, duration: number) {
-    for (let remaining = duration; remaining > 0; remaining--) {
-      this.gameRoom.to(gameId).emit('timer:update', { remaining });
-      await this.delay(1000); // Wait for 1 second before next update
-    }
-  }
-  delay(ms: number): Promise<void> {
-    return new Promise((resolve) => setTimeout(resolve, ms));
   }
 
   @SubscribeMessage('user-stats:get')
@@ -318,62 +193,14 @@ export class GameRoomGateway
     @MessageBody() { userName }: { userName: string },
   ): Promise<void> {
     this.logger.log('User stats requested', userName);
-    const userStats = await this.gameStateService.getUserStats(userName);
-    this.logger.debug('stats ', userStats);
-    client.emit('user-stats', userStats);
+    try {
+      const userStats = await this.gameStateService.getUserStats(userName);
+      client.emit('user-stats', userStats);
+    } catch (error) {
+      this.logger.error(error);
+      throw new WsException(error.message);
+    }
   }
-
-  //!
-  /*   @SubscribeMessage('game:word-guessed')
-  async wordGuessed(gameId: string) {
-    this.gameMechanicsService.playerGuessed(gameId)
-    this.server.to(gameId).emit(
-      'game-started:updated', //? 'game-started:new-turn'
-      this.gameStateService.getSerializedGameStarted(gameId)
-    );
-  } */
-
-  // @SubscribeMessage('chat:message')
-  // @UseGuards(GuessingTeamGuard)
-  // async handleChatMessage(
-  //   @ConnectedSocket() client: Socket,
-  //   @MessageBody() { message }: { message: string },
-  // ): Promise<void> {
-  //   const { userName, userId } = client.data.user;
-  //   const { gameId } = client.data;
-  //   this.logger.log(`Chat message received: ${message}`);
-
-  //   let validatedMessage;
-  //   let isGuessed;
-
-  //   try {
-  //     [validatedMessage, isGuessed] = this.gameMechanicsService.validateWord(
-  //       userId,
-  //       gameId,
-  //       message,
-  //     );
-  //   } catch (error) {
-  //     this.logger.error(error);
-  //     throw new WsException(error.message);
-  //   }
-
-  //   this.logger.debug('Validated message:', validatedMessage);
-  //   const chatResponse = await this.chatService.handleChatMessage(
-  //     userId,
-  //     userName,
-  //     gameId,
-  //     validatedMessage,
-  //   );
-
-  //   this.logger.debug('Chat response:', chatResponse);
-
-  //   this.gameRoom.to(gameId).emit('chat:update', chatResponse);
-
-  //   if (isGuessed) {
-  //     this.logger.debug('Word guessed');
-  //     this.emitGameStartedUpdated(gameId);
-  //   }
-  // }
 
   @SubscribeMessage('chat:message')
   @UseGuards(GuessingTeamGuard)
@@ -384,15 +211,23 @@ export class GameRoomGateway
     const { userName, userId } = client.data.user;
     const { gameId } = client.data;
     this.logger.log(`Chat message received: ${message}`);
+
+    if (!this.gameRoomService.isGameStarted(gameId)) {
+      const chatResponse = await this.chatService.handleChatMessage(
+        userId,
+        userName,
+        gameId,
+        message,
+      );
+      this.gameRoom.to(gameId).emit('chat:update', chatResponse);
+      return;
+    }
+
     const isDescriber = this.gameStateService.isDescriber(userId, gameId);
     const currentWord = this.gameStateService.getCurrentWord(gameId);
-
     if (isDescriber) {
       try {
-        const [validatedMessage, isAllowed] = validateDescriberMessage(
-          currentWord,
-          message,
-        );
+        const isAllowed = validateDescriberMessage(currentWord, message);
         if (!isAllowed) {
           throw new Error('Message is not allowed');
         }
@@ -400,7 +235,7 @@ export class GameRoomGateway
           userId,
           userName,
           gameId,
-          validatedMessage,
+          message,
         );
         this.gameRoom.to(gameId).emit('chat:update', chatResponse);
       } catch (error) {
@@ -437,32 +272,4 @@ export class GameRoomGateway
       }
     }
   }
-
-  //   emitGameStartedUpdated(gameId: string) {
-  //     const describerSocket = this.gameRoom.sockets.get(
-  //       this.gameStateService.getDescriberSocketId(gameId),
-  //     );
-
-  //     if (!describerSocket) {
-  //       this.gameRoom
-  //         .to(gameId)
-  //         .emit(
-  //           'game-started:updated',
-  //           this.gameStateService.getSerializedGameStarted(gameId),
-  //         );
-  //       return;
-  //     }
-  //     this.gameRoom
-  //       .to(gameId)
-  //       .except(describerSocket.id)
-  //       .emit(
-  //         'game-started:updated',
-  //         this.gameStateService.getSerializedGameStarted(gameId),
-  //       );
-
-  //     describerSocket.emit(
-  //       'game-started:updated',
-  //       this.gameStateService.getSerializedGameStarted(gameId, true),
-  //     );
-  //   }
 }

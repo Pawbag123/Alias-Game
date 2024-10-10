@@ -5,6 +5,13 @@ import {
 } from 'src/types';
 import { calculateLevenshteinDistance } from './levenshtein-distance';
 
+/**
+ * Function that checks if the guessed word is correct, close, or incorrect.
+ * Used in the game mechanics to validate the guessed word.
+ * @param currentWord - the current word
+ * @param message - the guessed word
+ * @returns [validatedMessage, wordStatus] - the validated message and the status of the word
+ */
 export const checkGuessedWord = (
   currentWord: string,
   message: string,
@@ -22,6 +29,8 @@ export const checkGuessedWord = (
   }
 
   // Levenshtein Distance check (allowing some misspellings)
+  // disable checking for short words to avoid false positives
+  // check if the distance is less than the threshold
   if (
     normalizedMessage.length > MIN_LEVENSHTEIN_WORD_LENGTH &&
     calculateLevenshteinDistance(

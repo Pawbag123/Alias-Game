@@ -2,6 +2,7 @@ import { Injectable, Logger } from '@nestjs/common';
 
 import { Team } from 'src/types';
 import { GameStateService } from 'src/game-state/game-state.service';
+import { Namespace, Socket } from 'socket.io';
 
 @Injectable()
 export class GameRoomService {
@@ -14,93 +15,107 @@ export class GameRoomService {
   //* Logic for transitioning a game from the lobby to the game room
   addPlayerToGame(gameId: string, userId: string, socketId: string): void {
     this.logger.log(`Adding user ${userId} to game ${gameId}`);
-    if (!this.gameStateService.gameExists(gameId)) {
-      throw new Error('Game not found');
-    }
-
-    if (!this.gameStateService.isUserAllowedInGame(userId, gameId)) {
-      throw new Error('User not allowed to join game');
-    }
-
-    const user = this.gameStateService.getActiveUserById(userId);
-    if (!user) {
-      throw new Error('User not found');
-    }
-
-    if (user.socketId) {
-      throw new Error('User already in game');
-    }
-
-    // this can be omitted as gameId in user is to help with reconnecting to started game
-    if (user.gameId !== gameId) {
-      throw new Error('User not added to this game');
-    }
 
     //* Clear the timeout for removing the user from the game
-    clearTimeout(user.initialJoinTimeout);
-    delete user.initialJoinTimeout;
+    this.gameStateService.clearUserTimeout(userId);
 
     //* Add current socket ID to user
-    user.socketId = socketId;
+    this.gameStateService.getActiveUserById(userId).socketId = socketId;
   }
 
-  removePlayerFromGame(gameId: string, userId: string): void {
+  handleUserConnectToGameRoom(client: Socket, gameRoom: Namespace): void {
+    const {
+      gameId,
+      user: { userName, userId },
+    } = client.data;
+    this.addPlayerToGame(gameId, userId, client.id);
+
+    this.logger.debug(`User ${userName} joined game ${gameId}`);
+    client.join(gameId);
+
+    gameRoom
+      .to(gameId)
+      .emit(
+        'game-room:updated',
+        this.gameStateService.getSerializedGameRoom(gameId),
+      );
+
+    client.broadcast.to(gameId).emit('chat:update', {
+      userName: 'Server',
+      message: `${userName} has joined the room`,
+      time: new Date(),
+    });
+  }
+
+  handleUserDisconnectFromGameRoom(
+    client: Socket,
+    gameRoom: Namespace,
+    lobby: Namespace,
+  ): void {
+    const {
+      gameId,
+      user: { userId },
+    } = client.data;
     this.logger.log(`Removing user ${userId} from game ${gameId}`);
-    if (!this.gameStateService.gameExists(gameId)) {
-      throw new Error('Game not found');
-    }
 
     const user = this.gameStateService.getActiveUserById(userId);
-    if (!user) {
-      throw new Error('User not found');
-    }
 
-    if (user.gameId !== gameId) {
-      throw new Error('User not in this game');
+    if (
+      !this.gameStateService.gameExists(gameId) ||
+      !user ||
+      user.gameId !== gameId
+    ) {
+      return;
     }
 
     //* Remove user from game
-    this.gameStateService.removePlayerFromGame(userId, gameId);
+    this.gameStateService.handleUserRemove(userId, gameId);
 
-    this.gameStateService.removeActiveUser(userId);
-
-    if (
-      this.gameStateService.isGameHost(userId, gameId) &&
-      !this.gameStateService.isGameEmpty(gameId)
-    ) {
-      this.gameStateService.moveHostToNextUser(gameId);
-    } else if (this.gameStateService.isGameEmpty(gameId)) {
-      this.gameStateService.removeGameRoom(gameId);
-    }
-
-    //* Remove user from active users
+    this.updateGamesInfoAfterDisconnect(client, gameRoom, lobby);
   }
 
-  joinRedTeam(gameId: string, userId: string): void {
-    this.logger.log(`User ${userId} joining red team in game ${gameId}`);
-    const game = this.gameStateService.getGameById(gameId);
-    if (!game) {
-      throw new Error('Game not found');
-    }
+  joinTeam(team: Team, client: Socket, gameRoom: Namespace): void {
+    const {
+      gameId,
+      user: { userId },
+    } = client.data;
 
-    if (!this.gameStateService.isUserAllowedInGame(userId, gameId)) {
-      throw new Error('User not allowed to join game');
-    }
-
-    this.gameStateService.movePlayerToTeam(userId, gameId, Team.RED);
+    this.gameStateService.movePlayerToTeam(userId, gameId, team);
+    gameRoom
+      .to(gameId)
+      .emit(
+        'game-room:updated',
+        this.gameStateService.getSerializedGameRoom(gameId),
+      );
   }
 
-  joinBlueTeam(gameId: string, userId: string): void {
-    this.logger.log(`User ${userId} joining blue team in game ${gameId}`);
-    const game = this.gameStateService.getGameById(gameId);
-    if (!game) {
-      throw new Error('Game not found');
+  isGameStarted(gameId: string): boolean {
+    return (
+      this.gameStateService.gameExists(gameId) &&
+      this.gameStateService.isGameStarted(gameId)
+    );
+  }
+
+  updateGamesInfoAfterDisconnect(
+    client: Socket,
+    gameRoom: Namespace,
+    lobby: Namespace,
+  ): void {
+    const gameId = client.data.gameId;
+    if (this.gameStateService.gameExists(gameId)) {
+      gameRoom
+        .to(gameId)
+        .emit(
+          'game-room:updated',
+          this.gameStateService.getSerializedGameRoom(gameId),
+        );
+      gameRoom.to(gameId).emit('chat:update', {
+        userName: 'Server',
+        message: `${client.data.user.userName} has left the room`,
+        time: new Date(),
+      });
     }
 
-    if (!this.gameStateService.isUserAllowedInGame(userId, gameId)) {
-      throw new Error('User not allowed to join game');
-    }
-
-    this.gameStateService.movePlayerToTeam(userId, gameId, Team.BLUE);
+    lobby.emit('games:updated', this.gameStateService.getSerializedGames());
   }
 }

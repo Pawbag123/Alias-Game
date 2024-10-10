@@ -243,6 +243,14 @@ export class GameStateService {
     return game.currentWord;
   }
 
+  clearUserTimeout(userId: string): void {
+    const user = this.getActiveUserById(userId);
+    if (user && user.initialJoinTimeout) {
+      clearTimeout(user.initialJoinTimeout);
+      delete user.initialJoinTimeout;
+    }
+  }
+
   movePlayerToTeam(userId: string, gameId: string, team: Team): void {
     const game = this.getGameById(gameId);
     const player = game.players.find((player) => player.userId === userId);
@@ -277,6 +285,17 @@ export class GameStateService {
   moveHostToNextUser(gameId: string): void {
     const game = this.getGameById(gameId);
     game.host = game.players[0].userId;
+  }
+
+  handleUserRemove(userId: string, gameId: string): void {
+    this.removePlayerFromGame(userId, gameId);
+    this.removeActiveUser(userId);
+
+    if (this.isGameHost(userId, gameId) && !this.isGameEmpty(gameId)) {
+      this.moveHostToNextUser(gameId);
+    } else if (this.isGameEmpty(gameId)) {
+      this.removeGameRoom(gameId);
+    }
   }
 
   removePlayerFromGame(userId: string, gameId: string): void {
@@ -469,6 +488,9 @@ export class GameStateService {
 
   async getUserStats(userName: string) {
     const user = await this.userModel.findOne({ username: userName });
+    if (!user) {
+      throw new Error(`User with username ${userName} not found`);
+    }
     return {
       userName: userName,
       gamesPlayed: user.stats.gamesPlayed,

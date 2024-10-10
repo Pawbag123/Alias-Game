@@ -1,8 +1,8 @@
 import { Injectable, Logger } from '@nestjs/common';
-import { Namespace } from 'socket.io';
+import { Namespace, Socket } from 'socket.io';
 import { GameStateService } from 'src/game-state/game-state.service';
 
-import { Team, WORDS_TO_GUESS } from 'src/types';
+import { MAX_TURNS, Team, TURN_TIME, WORDS_TO_GUESS } from 'src/types';
 
 @Injectable()
 export class GameMechanicsService {
@@ -12,9 +12,59 @@ export class GameMechanicsService {
     this.logger.log('GameMechanicsService created');
   }
 
-  startGame(gameId: string): void {
+  startGame(client: Socket, gameRoom: Namespace, lobby: Namespace): void {
+    const { gameId } = client.data;
     this.logger.log(`Starting game ${gameId}`);
     this.gameStateService.setGameStarted(gameId);
+    lobby.emit('games:updated', this.gameStateService.getSerializedGames());
+    this.handleTurns(gameId, gameRoom, lobby);
+  }
+
+  private async handleTurns(
+    gameId: string,
+    gameRoom: Namespace,
+    lobby: Namespace,
+  ) {
+    let rounds = 0;
+    const totalRounds = MAX_TURNS;
+
+    while (rounds < totalRounds) {
+      this.nextTurn(gameId); // Handles both game initialization and next turn
+      this.newWord(gameId); // Generate a new word
+
+      this.emitGameStartedUpdated(gameRoom, gameId);
+      const { turn, currentWord } = this.gameStateService.getGameById(gameId);
+      this.logger.debug(`STATE NUMBER ${rounds}`, turn);
+      this.logger.debug('current word', currentWord);
+
+      await this.startTimer(gameId, TURN_TIME, gameRoom);
+
+      rounds++;
+    }
+
+    gameRoom
+      .to(gameId)
+      .emit('game:end', this.gameStateService.getSerializedGameStarted(gameId));
+
+    this.gameStateService.endGame(gameId);
+    // Disconnect all sockets connected to room gameId
+    const sockets = await gameRoom.in(gameId).fetchSockets();
+    sockets.forEach((socket) => socket.disconnect());
+    lobby.emit('games:updated', this.gameStateService.getSerializedGames());
+  }
+
+  private async startTimer(
+    gameId: string,
+    duration: number,
+    gameRoom: Namespace,
+  ) {
+    for (let remaining = duration; remaining > 0; remaining--) {
+      gameRoom.to(gameId).emit('timer:update', { remaining });
+      await this.delay(1000); // Wait for 1 second before next update
+    }
+  }
+  delay(ms: number): Promise<void> {
+    return new Promise((resolve) => setTimeout(resolve, ms));
   }
 
   reconnectPlayer(userId: string, gameId: string, socketId: string): void {
@@ -176,5 +226,34 @@ export class GameMechanicsService {
       'game-started:updated',
       this.gameStateService.getSerializedGameStarted(gameId, true),
     );
+  }
+
+  handleDisconnectFromStartedGame(client: Socket, gameRoom: Namespace): void {
+    const {
+      gameId,
+      user: { userId },
+    } = client.data;
+    this.gameStateService.removePlayerSocketId(userId);
+    this.emitGameStartedUpdated(gameRoom, gameId);
+    gameRoom.to(gameId).emit('chat:update', {
+      userName: 'Server',
+      message: `${client.data.user.userName} has disconnected`,
+      time: new Date(),
+    });
+  }
+
+  handlePlayerReconnect(client: Socket, gameRoom: Namespace): void {
+    const {
+      gameId,
+      user: { userId, userName },
+    } = client.data;
+    this.reconnectPlayer(userId, gameId, client.id);
+    client.join(gameId);
+    this.emitGameStartedUpdated(gameRoom, gameId);
+    client.broadcast.to(gameId).emit('chat:update', {
+      userName: 'Server',
+      message: `${userName} has reconnected`,
+      time: new Date(),
+    });
   }
 }

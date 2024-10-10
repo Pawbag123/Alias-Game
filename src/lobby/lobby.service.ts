@@ -30,7 +30,7 @@ export class LobbyService {
       userName,
       MAX_USERS,
       JOIN_TIMEOUT,
-      this.gameCreationHandler(lobby),
+      this.gameCreateHandler(lobby),
     );
 
     const games = this.gameStateService.getSerializedGames();
@@ -89,12 +89,12 @@ export class LobbyService {
     this.logger.log(`Emitting games: to client: ${userName}`, games);
   }
 
-  gameJoinHandler = (lobby: Namespace) => () => {
+  private gameJoinHandler = (lobby: Namespace) => () => {
     const games = this.gameStateService.getSerializedGames();
     lobby.emit('games:updated', games);
   };
 
-  gameCreationHandler = (lobby: Namespace) => (gameId?: string) => {
+  private gameCreateHandler = (lobby: Namespace) => (gameId?: string) => {
     const games = this.gameStateService.getSerializedGames();
     lobby.emit('games:updated', games);
     if (gameId) {
@@ -111,7 +111,12 @@ export class LobbyService {
   getUserStats = async (client: Socket) => {
     const { userName } = client.data.user;
     this.logger.log('Getting user stats:', userName);
-    const userStats = await this.gameStateService.getUserStats(userName);
-    client.emit('user-stats', userStats);
+    try {
+      const userStats = await this.gameStateService.getUserStats(userName);
+      client.emit('user-stats', userStats);
+    } catch (error) {
+      this.logger.error('Error getting user stats:', error);
+      throw new Error(error);
+    }
   };
 }

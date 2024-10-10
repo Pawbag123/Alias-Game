@@ -297,9 +297,9 @@
           console.log(`Message received: ${msg}, 'serverOffset: `, msg.messageId)
           const serverOffset = msg.messageId;
           const item = msg.userName === "Server" ? `<li style="color: red;">
-                <p>${msg.userName}:  ${msg.message} <small class="text-muted ms-auto">[${new Date(msg.time).toLocaleTimeString()}]</small></p>
+                <p><small class="text-muted ms-auto">[${new Date(msg.time).toLocaleTimeString()}]</small> ${msg.userName}:  ${msg.message} </p>
               </li>`: `<li>
-              <p>${msg.userName}:  ${msg.message} <small class="text-muted ms-auto">[${new Date(msg.time).toLocaleTimeString()}]</small></p>
+              <p><small class="text-muted ms-auto">[${new Date(msg.time).toLocaleTimeString()}]</small> ${msg.userName}:  ${msg.message} </p>
             </li>`
 
           messageList.insertAdjacentHTML('beforeend', item)
