@@ -78,4 +78,16 @@ export class ChatService {
       return [];
     }
   }
+
+  async recoverAndEmitMessages(client: any, gameId: string) {
+    const lastMessageId = client.handshake.auth.serverOffset ?? 0;
+    const recoveredMessages = await this.getMessagesAfter(
+      lastMessageId,
+      gameId,
+    );
+
+    recoveredMessages.forEach((message) => {
+      client.emit('chat:update', message);
+    });
+  }
 }

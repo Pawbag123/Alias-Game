@@ -1,8 +1,17 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { Namespace, Socket } from 'socket.io';
+import { ChatService } from 'src/chat/chat.service';
 import { GameStateService } from 'src/game-state/game-state.service';
 
-import { MAX_TURNS, Team, TURN_TIME, WORDS_TO_GUESS } from 'src/types';
+import {
+  MAX_TURNS,
+  Team,
+  TURN_TIME,
+  WORDS_TO_GUESS,
+  WordStatus,
+} from 'src/types';
+import { validateDescriberMessage } from 'src/utils/describe-validation';
+import { checkGuessedWord } from 'src/utils/guess-validation';
 
 @Injectable()
 export class GameMechanicsService {
@@ -255,5 +264,81 @@ export class GameMechanicsService {
       message: `${userName} has reconnected`,
       time: new Date(),
     });
+  }
+
+  async handleGuessingPlayerMessage(
+    currentWord: string,
+    message: string,
+    chatService: ChatService,
+    client: Socket,
+    gameRoom: Namespace,
+  ): Promise<void> {
+    const {
+      gameId,
+      user: { userId, userName },
+    } = client.data;
+    const [validatedMessage, wordStatus] = checkGuessedWord(
+      currentWord,
+      message,
+    );
+    const chatResponse = await chatService.handleChatMessage(
+      userId,
+      userName,
+      gameId,
+      validatedMessage,
+    );
+    gameRoom.to(gameId).emit('chat:update', chatResponse);
+    if (wordStatus === WordStatus.SIMILAR) {
+      gameRoom.to(gameId).emit('chat:update', {
+        userName: 'Server',
+        message: `Your guess is close!`,
+        time: new Date(),
+      });
+    } else if (wordStatus === WordStatus.GUESSED) {
+      this.playerGuessed(gameId, userId);
+      gameRoom.to(gameId).emit('chat:update', {
+        userName: 'Server',
+        message: `Word guessed!`,
+        time: new Date(),
+      });
+      this.emitGameStartedUpdated(gameRoom, gameId);
+    }
+  }
+
+  isDescriber(userId: string, gameId: string): boolean {
+    return this.gameStateService.isDescriber(userId, gameId);
+  }
+
+  getCurrentWord(gameId: string): string {
+    return this.gameStateService.getCurrentWord(gameId);
+  }
+
+  async handleDescriberMessage(
+    currentWord: string,
+    message: string,
+    chatService: ChatService,
+    client: Socket,
+    gameRoom: Namespace,
+  ): Promise<void> {
+    const {
+      gameId,
+      user: { userId, userName },
+    } = client.data;
+    const isAllowed = validateDescriberMessage(currentWord, message);
+    if (!isAllowed) {
+      throw new Error('Message is not allowed');
+    }
+    const chatResponse = await chatService.handleChatMessage(
+      userId,
+      userName,
+      gameId,
+      message,
+    );
+    gameRoom.to(gameId).emit('chat:update', chatResponse);
+  }
+
+  async getUserStats(userName: string, client: Socket) {
+    const userStats = await this.gameStateService.getUserStats(userName);
+    client.emit('user-stats', userStats);
   }
 }
