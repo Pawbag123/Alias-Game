@@ -94,10 +94,47 @@
         </div>
       </div>
     </div>
+
+
+    <div class="d-flex justify-content-center">
+      <div id="game-info2" class="card mb-4" style="width: 60%; display: none;">
+        <div class="text-center mb-4">
+          <!-- Team turn message centered -->
+          <p style="font-size: 26px;"><strong><span id="team-turn-new"></span></strong></p>
+        </div>
+        
+        <!-- Grid layout for scores and timer -->
+        <div class="row mb-4">
+          <!-- Red team score on the left -->
+          <div class="col-4 text-center">
+            <p><strong></strong><span id="score-team-red-new" style="color: red; font-size: 2rem;">0</span></p>
+          </div>
+          <!-- Timer in the center -->
+          <div class="col-4 text-center">
+            <span id="time-remaining-new" style="font-size: 2.5rem;">0</span>
+          </div>
+          <!-- Blue team score on the right -->
+          <div class="col-4 text-center">
+            <p><strong></strong> <span id="score-team-blue-new" style="color: blue; font-size: 2rem;">0</span></p>
+          </div>
+        </div>
+        
+        <!-- Describer name and word centered and stacked -->
+        <div class="text-center">
+          <p><strong><span id="describer-name-new" style="font-size: 1.3rem;"></span></strong></p>
+          <p><strong></strong> <span id="word-for-teammates-new" style="font-size: 1.5rem;"></span></p>
+        </div>
+        
+      </div>
+    </div>
+
     <!-- Timer -->
+    
+    <!--
     <div id="timer" class="text-center mt-4" style="font-size: 24px; display: none;">
       Time Remaining: <span id="time-remaining">0</span> seconds
     </div>
+    -->
 
     <div class="card shadow-sm mb-4">
       <div class="card-body">
@@ -135,13 +172,13 @@
         <ul id="no-team" class="list-group">
           <!-- No team members will be updated here dynamically -->
         </ul>
-      </div>
-    </div> --}}
+      </div>--}}
+    </div> 
 
 
     <div class="d-flex justify-content-center">
-      <button id="leave-game-button" class="btn btn-secondary me-3" onclick="leaveRoom()">Leave Game</button>
-      <button id="start-game-button" class="btn btn-success" onclick="startGame()">Start Game</button>
+      <button id="leave-game-button" class="btn btn-secondary mx-2" onclick="leaveRoom()">Leave Game</button>
+      <button id="start-game-button" class="btn btn-success mx-2" onclick="startGame()">Start Game</button>
     </div>
 
   </div>
@@ -203,8 +240,8 @@
         });
 
 
-          // MODULARIZ THIS ONE
-          socket.on('game-started:updated', (gameRoom) => {
+        // MODULARIZ THIS ONE
+        socket.on('game-started:updated', (gameRoom) => {
           console.log('Actual state of the game: ', gameRoom);
 
           console.log('user:', userName)
@@ -237,14 +274,14 @@
           }
           h1Name.textContent = text;
           //!
-          document.getElementById('timer').style.display = 'block';
+          //document.getElementById('timer').style.display = 'block';
           document.getElementById('join-red-team-button').style.display = 'none';
           document.getElementById('join-blue-team-button').style.display = 'none';
           document.getElementById('start-game-button').style.display = 'none';
           document.getElementById('leave-game-button').style.display = 'none';
 
           // Display the game info div
-          const gameInfoDiv = document.getElementById('game-info');
+          const gameInfoDiv = document.getElementById('game-info2');
           gameInfoDiv.style.display = 'block';
 
           console.log('myTeam: ', myTeam(userName, gameRoom))
@@ -283,18 +320,29 @@
             gameInfoDiv.classList.add('blue-team-border');
           }
 
-          // Update game state details
-          document.getElementById('team-turn').textContent = gameRoom.turn.team === 'redTeam' ? 'Red' : 'Blue';
-          document.getElementById('score-team-red').textContent = gameRoom.score.red;
-          document.getElementById('score-team-blue').textContent = gameRoom.score.blue;
-          document.getElementById('describer-name').textContent = gameRoom.turn.describerName;
-          document.getElementById('word-for-teammates').textContent = gameRoom.currentWord ? gameRoom.currentWord : '';
+          // Update game state details - game-info
+          //document.getElementById('team-turn').textContent = gameRoom.turn.team === 'redTeam' ? 'Red' : 'Blue';
+          //document.getElementById('score-team-red').textContent = gameRoom.score.red;
+          //document.getElementById('score-team-blue').textContent = gameRoom.score.blue;
+          //document.getElementById('describer-name').textContent = gameRoom.turn.describerName;
+          //document.getElementById('word-for-teammates').textContent = gameRoom.currentWord ? gameRoom.currentWord : '';
+          //document.getElementById('described-word').style.display = gameRoom.currentWord ? 'block' : 'none';
+
+          // Update game state details - game-info2
+          console.log('condition: ', gameRoom.turn.describerName !== userName )
+          console.log('if true: ', `${gameRoom.turn.describerName} is describing`)
+          console.log('if false: ', 'You have to describe the word!')
+          document.getElementById('team-turn-new').textContent = gameRoom.turn.team === 'redTeam' ? 'Red team plays!' : 'Blue team plays!';
+          document.getElementById('score-team-red-new').textContent = gameRoom.score.red;
+          document.getElementById('score-team-blue-new').textContent = gameRoom.score.blue;
+          document.getElementById('describer-name-new').textContent = gameRoom.turn.describerName !== userName ? `${gameRoom.turn.describerName} is describing` : 'You have to describe the word!';
+          document.getElementById('word-for-teammates-new').textContent = gameRoom.currentWord ? gameRoom.currentWord : '';
           document.getElementById('described-word').style.display = gameRoom.currentWord ? 'block' : 'none';
           
         });
 
         socket.on('timer:update', (data) => {
-          document.getElementById('time-remaining').textContent = data.remaining;
+          document.getElementById('time-remaining-new').textContent = data.remaining;
         });
 
         //chat message events 
