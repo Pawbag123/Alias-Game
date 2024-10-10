@@ -1,26 +1,34 @@
-import { Controller, Get, Render } from '@nestjs/common';
-import { AppService } from './app.service';
+import { Controller, Get, Param, Render } from '@nestjs/common';
 
 @Controller()
 export class AppController {
-  constructor(private readonly appService: AppService) {}
-
   @Get()
-  @Render('home') 
+  @Render('home')
   home() {
-    return {}
+    return {};
+  }
+
+  @Get('lobby')
+  @Render('lobby')
+  getLobby() {
+    return {};
+  }
+
+  @Get('game/:gameId')
+  @Render('game-room')
+  getGame(@Param('gameId') gameId: string) {
+    return { gameId }; // Return game ID for rendering
   }
 
   @Get('login')
   @Render('login')
   loginPage() {
-    return {}
+    return {};
   }
 
-  @Get('dashboard')
-  @Render('dashboard')
-  dashboard() {
-    return {}
+  @Get('register')
+  @Render('register')
+  registerPage() {
+    return {};
   }
-
 }

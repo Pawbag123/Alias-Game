@@ -4,57 +4,134 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Login</title>
+  <!-- Bootstrap CSS CDN -->
+  <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
 </head>
-<body>
-  <h1>Login</h1>
-  <div id="message" style="color: green; display: none">Logged in successfully!</div>
+<body class="bg-light">
+  <div class="container">
+    <div class="row justify-content-center">
+      <div class="col-md-6">
+        <h1 class="text-center my-4">Login</h1>
+        <div id="message" class="alert alert-success" style="display: none">Logged in successfully!</div>
+        <form id="loginForm" class="card p-4 shadow-sm">
+          <div class="form-group">
+            <label for="userName">Username:</label>
+            <input type="text" class="form-control" id="userName" name="userName" required>
+          </div>
+          <div class="form-group">
+            <label for="password">Password:</label>
+            <input type="password" class="form-control" id="password" name="password" required>
+          </div>
+          <button type="submit" class="btn btn-primary btn-block">Login</button>
+          <p>Don't have an account? <a href="/register">Register here</a></p>
+        </form>
+      </div>
+    </div>
+  </div>
 
-  <form id="loginForm">
-    <div>
-      <label for="username">Username:</label>
-      <input type="text" id="username" name="username" required>
-    </div>
-    <div>
-      <label for="password">Password:</label>
-      <input type="password" id="password" name="password" required>
-    </div>
-    <button type="submit">Login</button>
-  </form>
+  <!-- Bootstrap and JavaScript dependencies -->
+  <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.5.2/dist/js/bootstrap.bundle.min.js"></script>
 
   <script>
-    document.getElementById('loginForm').addEventListener('submit', async (e) => {
-      e.preventDefault()
 
-      const username = document.getElementById('username').value;
-      const password = document.getElementById('password').value;
-
-      try {
-        const response = await fetch('/auth/login', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({ username, password }),
-        })
-
-        const data = await response.json()
-
-        if(response.ok) {
-          //Success message
-          document.getElementById('message').style.display = 'block';
-
-          //Redirect after a delay
-          setTimeout(() => {
-            window.location.href = 'dashboard'
-          }, 1000)
-        } else {
-          alert('Wrong credentials: ' + data.message)
-        }
-      } catch (error) {
-        console.error('Error logging in: ', error)
-        alert('An error occurred while logging in')
+    async function refreshToken() {
+    const refreshToken = localStorage.getItem('refreshToken');
+    
+    if (!refreshToken) return false; // No refresh token available, return false
+    
+    try {
+      const response = await fetch('/auth/refresh', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ refreshToken })
+      });
+      
+      if (response.ok) {
+        const data = await response.json();
+        localStorage.setItem('accessToken', data.accessToken); // Update the access token
+        return true; // Token refresh was successful
+      } else {
+        return false; // Token refresh failed
       }
-    })
+    } catch (error) {
+      console.error('Error refreshing token:', error);
+      return false;
+    }
+  }
+
+  async function verifyTokenAndRedirect() {
+    const accessToken = localStorage.getItem('accessToken');
+    
+    if (accessToken) {
+      try {
+        const response = await fetch('/auth/verify-token', {
+          method: 'GET',
+          headers: { 'Authorization': `Bearer ${accessToken}` },
+        });
+
+        if (response.ok) {
+          
+          window.location.href = '/lobby';
+        //{{!-- } else {
+          
+          //const refreshed = await refreshToken();
+          
+         // if (refreshed) {
+           // await verifyTokenAndRedirect(); --}}
+          } else {
+            clearLocalStorage();
+          }
+        //}
+      } catch (error) {
+        console.error('Error verifying token:', error);
+        clearLocalStorage();
+      }
+    }
+  }
+
+  function clearLocalStorage() {
+    localStorage.removeItem('accessToken');
+    localStorage.removeItem('refreshToken');
+    localStorage.removeItem('userName');
+    localStorage.removeItem('userId');
+  }
+
+    window.onload = async () => {
+    await verifyTokenAndRedirect();
+  };
+
+  document.getElementById('loginForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const userName = document.getElementById('userName').value;
+    const password = document.getElementById('password').value;
+
+    try {
+      const response = await fetch('/auth/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ username: userName, password })
+      });
+      const data = await response.json();
+
+      if (response.ok) {
+        document.getElementById('message').style.display = 'block';
+        localStorage.setItem('accessToken', data.accessToken);
+        localStorage.setItem('refreshToken', data.refreshToken);
+        localStorage.setItem('userName', data.user.username);
+        localStorage.setItem('userId', data.user.id);
+
+        setTimeout(() => {
+          window.location.href = '/lobby';
+        }, 1000);
+      } else {
+        alert('Wrong credentials: ' + data.message);
+      }
+    } catch (error) {
+      console.error('Error logging in:', error);
+      alert('An error occurred while logging in');
+    }
+  });
   </script>
 </body>
 </html>
