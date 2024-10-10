@@ -20,8 +20,10 @@ export class SocketIOAdapter extends IoAdapter {
   createIOServer(port: number, options?: ServerOptions) {
     const cors = {
       origin: [
-        `http://localhost:${CLIENT_PORT}`,
-        new RegExp(`/^http:\/\/192\.168\.1\.([1-9]|[1-9]\d):${CLIENT_PORT}$/`),
+        `http://localhost:${process.env.PORT || 3000}`,
+        new RegExp(
+          `/^http:\/\/192\.168\.1\.([1-9]|[1-9]\d):${process.env.PORT || 3000}$/`,
+        ),
       ],
     };
 
