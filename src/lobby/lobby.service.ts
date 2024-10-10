@@ -3,7 +3,7 @@ import { Injectable, Logger } from '@nestjs/common';
 import { JOIN_TIMEOUT, MAX_USERS } from '../types';
 import { CreateGameDto } from './dto/create-game-dto';
 import { JoinGameDto } from './dto/join-game-dto';
-import { GameStateService } from 'src/game-state/game-state.service';
+import { GameStateService } from '../game-state/game-state.service'; 
 
 @Injectable()
 export class LobbyService {

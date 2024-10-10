@@ -2,14 +2,13 @@ import { Injectable, Logger } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { plainToClass } from 'class-transformer';
 import { Model } from 'mongoose';
-import { use } from 'passport';
-import { User } from 'src/auth/schemas/user.schema';
+import { User } from '../auth/schemas/user.schema';
 
-import { GameRoomDto } from 'src/game-room/dto/game-room-dto';
-import { GameStartedDto } from 'src/game-room/dto/game-started-dto';
-import { Games } from 'src/game-room/schema/game.schema';
-import { InLobbyGameDto } from 'src/lobby/dto/in-lobby-game-dto';
-import { ActiveUser, Game, Player, Team } from 'src/types';
+import { GameRoomDto } from '../game-room/dto/game-room-dto';
+import { GameStartedDto } from '../game-room/dto/game-started-dto';
+import { Games } from '../game-room/schema/game.schema';
+import { InLobbyGameDto } from '../lobby/dto/in-lobby-game-dto';
+import { ActiveUser, Game, Player, Team } from '../types';
 
 /**
  * Service that handles the state of the game,
