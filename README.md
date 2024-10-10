@@ -66,21 +66,25 @@ The game concludes after a predetermined number of rounds, with the highest-scor
 **Frontend**: Handlebars 
 
 <p>
-  <a href="https://skillicons.dev" title="NodeJs">
-    <img src="https://skillicons.dev/icons?i=nodejs" width="48" alt="NestJS">
-  </a>
   <a href="https://skillicons.dev" title="TypeScript">
     <img src="https://skillicons.dev/icons?i=typescript" width="48" alt="TypeScript">
+  </a>
+  <a href="https://skillicons.dev" title="NodeJs">
+    <img src="https://skillicons.dev/icons?i=nodejs" width="48" alt="NodeJS">
   </a>
   <a href="https://skillicons.dev" title="NestJS">
     <img src="https://skillicons.dev/icons?i=nestjs" width="48" alt="NestJS">
   </a>
   <a href="https://skillicons.dev" title="MongoDB">
-    <img src="https://skillicons.dev/icons?i=mongodb" width="48" alt="PostgreSQL">
+    <img src="https://skillicons.dev/icons?i=mongodb" width="48" alt="MongoDB">
   </a>
-  <a href="https://skillicons.dev" title="Docker">
-    <img src="https://skillicons.dev/icons?i=handlebars" width="48" alt="Docker">
+  <a>
+    <img src="![images](https://github.com/user-attachments/assets/6e698f3b-dcd6-4047-a881-2312a30b7411)" width="48" alt="Handlebars">
   </a>
+<!--   
+    <a href="https://skillicons.dev" title="MongoDB">
+    <img src="https://skillicons.dev/icons?i=heroku" width="48" alt="Heroku">
+  </a> -->
 </p>
 
 ## Setup and Installation
