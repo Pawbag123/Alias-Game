@@ -49,7 +49,7 @@ The User schema defines the structure of user data for the Alias Game project. I
 | `wins` | Number | The number of games the user has won. | Yes |
 | `loses` | Number | The number of games the user has lost. | Yes |
 | `draw` | Number | The number of games that ended in a draw. | Yes |
-| `wordsGuessed	` | Number | The number of words the user has guessed. | Ye |
+| `wordsGuessed	` | Number | The number of words the user has guessed. | Yes |
 | `wellDescribed` | Number | The number of times the user's descriptions were rated well. | Yes |
 
 <br>
@@ -115,6 +115,21 @@ The Games schema tracks data related to individual game instances, including pla
 | --- | --- | --- | --- |
 | `wordsGuessed` | Number | The number of words the player has guessed. | Yes |
 | `wellDescribed` | Number | The number of times the player's descriptions were rated well. | Yes |
+
+#### 4. score
+- `Type:` Object
+- `Required:` Yes (default: { red: 0, blue: 0 })
+- `Description:` The total score for each team.
+
+| Parameter | Type | Description | Required |
+| --- | --- | --- | --- |
+| `red` | Number | Score for the red team. | Yes |
+| `blue` | Number | Score for the red team. | Yes |
+
+#### 5. wordsUsed
+- `Type:` Arrays of Strings
+- `Required:` Yes
+- `Description:` A list of words that have been used during the game.
 
 <br>
 
