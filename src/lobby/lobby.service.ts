@@ -1,9 +1,8 @@
 import { Injectable, Logger } from '@nestjs/common';
 
 import { JOIN_TIMEOUT, MAX_USERS } from '../types';
-import { CreateGameDto } from './dto/create-game-dto';
-import { JoinGameDto } from './dto/join-game-dto';
 import { GameStateService } from 'src/game-state/game-state.service';
+import { Namespace, Socket } from 'socket.io';
 
 @Injectable()
 export class LobbyService {
@@ -20,28 +19,25 @@ export class LobbyService {
    * - Set a timeout to remove the user from the game if they don't join from the lobby in a certain amount of time
    * @returns id of created games
    */
-  createGame(
-    { gameName, userId, userName }: CreateGameDto,
-    emitGamesUpdated: (gameId?: string) => void,
-  ): string {
+  createGame(gameName: string, client: Socket, lobby: Namespace): void {
+    const { userId, userName } = client.data.user;
     this.logger.log(`Creating game: ${gameName} by ${userName}`);
-    if (this.gameStateService.isUserActive(userId)) {
-      throw new Error('User already in game');
-    }
-
-    if (this.gameStateService.gameNameExists(gameName)) {
-      throw new Error('Game of specified name already exists');
-    }
 
     //* Create a new game
-    return this.gameStateService.createGame(
+    const gameId = this.gameStateService.createGame(
       gameName,
       userId,
       userName,
       MAX_USERS,
       JOIN_TIMEOUT,
-      emitGamesUpdated,
+      this.gameCreationHandler(lobby),
     );
+
+    const games = this.gameStateService.getSerializedGames();
+
+    client.emit('game:created', gameId);
+
+    client.broadcast.emit('games:updated', games);
   }
 
   /**
@@ -56,37 +52,66 @@ export class LobbyService {
    * @param userName - name of the user joining
    * @param emitGamesUpdated - function to emit updated games to all clients, works as a callback in timeout
    */
-  joinGame(
-    { gameId, userId, userName }: JoinGameDto,
-    emitGamesUpdated: () => void,
-  ): void {
+  joinGame(gameId: string, client: Socket, lobby: Namespace): void {
+    const { userId, userName } = client.data.user;
+
     this.logger.log(`User ${userName} joining game: ${gameId}`);
 
-    if (this.gameStateService.isUserActive(userId)) {
-      throw new Error('User already in game');
-    }
-
-    //* Find the game
-    if (!this.gameStateService.getGameById(gameId)) {
-      throw new Error('Game not found');
-    }
-
-    if (this.gameStateService.isGameFull(gameId)) {
-      throw new Error('Game is full');
-    }
-
-    if (this.gameStateService.isGameStarted(gameId)) {
-      throw new Error('Game already started');
-    }
-
-    //* Add the user to the game
     this.gameStateService.createJoinUser(
       userId,
       gameId,
       JOIN_TIMEOUT,
-      emitGamesUpdated,
+      this.gameJoinHandler(lobby),
     );
 
     this.gameStateService.addUserToGame(userId, userName, gameId);
+
+    const games = this.gameStateService.getSerializedGames();
+
+    client.emit('game:joined', gameId);
+
+    client.broadcast.emit('games:updated', games);
   }
+
+  handleConnection(client: Socket) {
+    const { userId, userName } = client.data.user;
+
+    this.logger.log(`Client connected to lobby: ${userName}`);
+
+    const gameId = this.gameStateService.getGameOfUser(userId);
+    if (gameId) {
+      client.emit('game:joined', gameId);
+      return;
+    }
+
+    const games = this.gameStateService.getSerializedGames();
+    client.emit('games:updated', games);
+    this.logger.log(`Emitting games: to client: ${userName}`, games);
+  }
+
+  gameJoinHandler = (lobby: Namespace) => () => {
+    const games = this.gameStateService.getSerializedGames();
+    lobby.emit('games:updated', games);
+  };
+
+  gameCreationHandler = (lobby: Namespace) => (gameId?: string) => {
+    const games = this.gameStateService.getSerializedGames();
+    lobby.emit('games:updated', games);
+    if (gameId) {
+      lobby.server
+        .of('game-room')
+        .to(gameId)
+        .emit(
+          'game-room:updated',
+          this.gameStateService.getSerializedGameRoom(gameId),
+        );
+    }
+  };
+
+  getUserStats = async (client: Socket) => {
+    const { userName } = client.data.user;
+    this.logger.log('Getting user stats:', userName);
+    const userStats = await this.gameStateService.getUserStats(userName);
+    client.emit('user-stats', userStats);
+  };
 }

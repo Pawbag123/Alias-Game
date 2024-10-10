@@ -11,10 +11,9 @@ import {
 import { Namespace, Socket } from 'socket.io';
 
 import { LobbyService } from './lobby.service';
-import { CreateGameDto } from './dto/create-game-dto';
-import { JoinGameDto } from './dto/join-game-dto';
-import { GameStateService } from 'src/game-state/game-state.service';
-import { Logger } from '@nestjs/common';
+import { Logger, UseGuards } from '@nestjs/common';
+import { JoinGameGuard } from './guards/join-game.guard';
+import { CreateGameGuard } from './guards/create-game.guard';
 
 /**
  * Gateway that handles connections in lobby, using lobby namespace
@@ -32,29 +31,15 @@ export class LobbyGateway implements OnGatewayConnection, OnGatewayDisconnect {
   @WebSocketServer()
   lobby: Namespace;
 
-  constructor(
-    private readonly lobbyService: LobbyService,
-    private readonly gameStateService: GameStateService,
-  ) {}
+  constructor(private readonly lobbyService: LobbyService) {}
 
   /**
    * On connection, emit games to client
    * @param client - socket client
    */
   handleConnection(client: Socket): void {
-    const { userId, userName } = client.data.user;
-
-    this.logger.log(`Client connected to lobby: ${userName}`);
-
-    const gameId = this.gameStateService.getGameOfUser(userId);
-    if (gameId) {
-      client.emit('game:joined', gameId);
-      return;
-    }
-
-    const games = this.gameStateService.getSerializedGames();
-    client.emit('games:updated', games);
-    this.logger.log(`Emitting games: to client: ${userName}`, games);
+    this.logger.log(`Client connected to lobby: ${client.id}`);
+    this.lobbyService.handleConnection(client);
   }
 
   handleDisconnect(client: Socket): void {
@@ -63,41 +48,26 @@ export class LobbyGateway implements OnGatewayConnection, OnGatewayDisconnect {
 
   @SubscribeMessage('user-stats:get')
   async handleUserStatsGet(@ConnectedSocket() client: Socket): Promise<void> {
-    const { userName } = client.data.user;
-    this.logger.log('Getting user stats:', userName);
-    const userStats = await this.gameStateService.getUserStats(userName);
-    client.emit('user-stats', userStats);
+    this.logger.log(`Getting user stats for ${client.data.user.userName}`);
+    this.lobbyService.getUserStats(client);
   }
 
   /**
    * Create game by calling lobby service,
    * then emit game:updated to redirect client and emit updated games to all clients
    * @param client - socket client
-   * @param createGameDto - data to create game (userId, userName, gameName)
+   * @param gameName - name of game to be created
    */
   @SubscribeMessage('game:create')
+  @UseGuards(CreateGameGuard)
   handleGameCreate(
     @ConnectedSocket() client: Socket,
     @MessageBody() { gameName }: { gameName: string },
   ): void {
-    const createGameDto: CreateGameDto = {
-      userId: client.data.user.userId,
-      userName: client.data.user.userName,
-      gameName,
-    };
-    this.logger.log('Creating game:', createGameDto);
+    this.logger.log(`Creating game:${gameName}`);
 
     try {
-      const gameId = this.lobbyService.createGame(
-        createGameDto,
-        this.gameCreationHandler,
-      );
-
-      const games = this.gameStateService.getSerializedGames();
-
-      client.emit('game:created', gameId);
-
-      client.broadcast.emit('games:updated', games);
+      this.lobbyService.createGame(gameName, client, this.lobby);
     } catch (error) {
       this.logger.error('Error creating game:', error);
       throw new WsException(error.message);
@@ -108,53 +78,21 @@ export class LobbyGateway implements OnGatewayConnection, OnGatewayDisconnect {
    * Handler for joining game
    * Calls lobby service to join game, then emits game:joined to client that redirects him and games:updated to all clients
    * @param client - socket client
-   * @param joinGameDto - data to join game (userId, userName, gameId)
+   * @param gameId - data to join game (gameId)
    */
   @SubscribeMessage('game:join')
+  @UseGuards(JoinGameGuard)
   handleGameJoin(
     @ConnectedSocket() client: Socket,
     @MessageBody() { gameId }: { gameId: string },
   ): void {
-    const joinGameDto: JoinGameDto = {
-      userId: client.data.user.userId,
-      userName: client.data.user.userName,
-      gameId,
-    };
-    this.logger.log(
-      `User ${joinGameDto.userName} Joining game:`,
-      joinGameDto.gameId,
-    );
+    this.logger.log(`Client ${client.id} Joining game:`, gameId);
 
     try {
-      this.lobbyService.joinGame(joinGameDto, this.gameJoinHandler);
-
-      const games = this.gameStateService.getSerializedGames();
-
-      client.emit('game:joined', joinGameDto.gameId);
-
-      client.broadcast.emit('games:updated', games);
+      this.lobbyService.joinGame(gameId, client, this.lobby);
     } catch (error) {
       this.logger.error('Error joining game:', error);
       throw new WsException(error.message);
     }
   }
-
-  gameCreationHandler = (gameId?: string) => {
-    const games = this.gameStateService.getSerializedGames();
-    this.lobby.emit('games:updated', games);
-    if (gameId) {
-      this.lobby.server
-        .of('game-room')
-        .to(gameId)
-        .emit(
-          'game-room:updated',
-          this.gameStateService.getSerializedGameRoom(gameId),
-        );
-    }
-  };
-
-  gameJoinHandler = () => {
-    const games = this.gameStateService.getSerializedGames();
-    this.lobby.emit('games:updated', games);
-  };
 }
