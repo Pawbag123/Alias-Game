@@ -43,14 +43,14 @@ The User schema defines the structure of user data for the Alias Game project. I
 
 #### Stats Object Fields:
 
-| Parameter | Type | Description | Required |
-| --- | --- | --- | --- |
-| `gamesPlayed` | Number | The total number of games the user has played. | Yes |
-| `wins` | Number | The number of games the user has won. | Yes |
-| `loses` | Number | The number of games the user has lost. | Yes |
-| `draw` | Number | The number of games that ended in a draw. | Yes |
-| `wordsGuessed	` | Number | The number of words the user has guessed. | Yes |
-| `wellDescribed` | Number | The number of times the user's descriptions were rated well. | Yes |
+| Parameter | Type | Description |
+| --- | --- | --- |
+| `gamesPlayed` | Number | The total number of games the user has played. |
+| `wins` | Number | The number of games the user has won. |
+| `loses` | Number | The number of games the user has lost. |
+| `draw` | Number | The number of games that ended in a draw. |
+| `wordsGuessed	` | Number | The number of words the user has guessed. |
+| `wellDescribed` | Number | The number of times the user's descriptions were rated well. |
 
 <br>
 
@@ -69,14 +69,14 @@ The Chat schema defines the structure of chat data for the Alias Game project. I
 - `Description:` An array of message objects. Each object contains the details of a message sent in the chat.
 #### Message Object Fields:
 
-| Parameter | Type | Description | Required |
-| --- | --- | --- | --- |
-| `_id` | ObjectId (auto-generated) | Unique identifier for the chat. | Yes |
-| `userIdMongo` | ObjectId (references User) | The MongoDB ObjectId of the user sending the message. | No |
-| `userId` | String | The ID of the user sending the message (custom identifier). | Yes |
-| `userName` | String | The display name of the user sending the message. | Yes |
-| `content` | String | The content of the message sent by the user. | Yes |
-| `timestamp` | Date (default: current time) | The time when the message was sent. | No |
+| Parameter | Type | Description |
+| --- | --- | --- |
+| `_id` | ObjectId (auto-generated) | Unique identifier for the chat. |
+| `userIdMongo` | ObjectId (references User) | The MongoDB ObjectId of the user sending the message. |
+| `userId` | String | The ID of the user sending the message (custom identifier). |
+| `userName` | String | The display name of the user sending the message. |
+| `content` | String | The content of the message sent by the user. |
+| `timestamp` | Date (default: current time) | The time when the message was sent. |
 
 
 <br>
@@ -102,29 +102,29 @@ The Games schema tracks data related to individual game instances, including pla
 
 #### Player Object Fields:
 
-| Parameter | Type | Description | Required |
-| --- | --- | --- | --- |
-| `userId` | String | The unique identifier for the player (custom ID). | Yes |
-| `name` | String | The player's name. | Yes |
-| `team` | String | The team the player belongs to (e.g., "red" or "blue"). | Yes |
-| `inGameStats` | Object | An object tracking the player's in-game performance. | Yes |
+| Parameter | Type | Description |
+| --- | --- | --- |
+| `userId` | String | The unique identifier for the player (custom ID). |
+| `name` | String | The player's name. |
+| `team` | String | The team the player belongs to (e.g., "red" or "blue"). |
+| `inGameStats` | Object | An object tracking the player's in-game performance. |
 
 #### inGameStats Object Fields:
 
-| Parameter | Type | Description | Required |
-| --- | --- | --- | --- |
-| `wordsGuessed` | Number | The number of words the player has guessed. | Yes |
-| `wellDescribed` | Number | The number of times the player's descriptions were rated well. | Yes |
+| Parameter | Type | Description |
+| --- | --- | --- |
+| `wordsGuessed` | Number | The number of words the player has guessed. |
+| `wellDescribed` | Number | The number of times the player's descriptions were rated well. |
 
 #### 4. score
 - `Type:` Object
 - `Required:` Yes (default: { red: 0, blue: 0 })
 - `Description:` The total score for each team.
 
-| Parameter | Type | Description | Required |
-| --- | --- | --- | --- |
-| `red` | Number | Score for the red team. | Yes |
-| `blue` | Number | Score for the red team. | Yes |
+| Parameter | Type | Description |
+| --- | --- | --- |
+| `red` | Number | Score for the red team. |
+| `blue` | Number | Score for the red team. |
 
 #### 5. wordsUsed
 - `Type:` Arrays of Strings
