@@ -26,11 +26,41 @@
 ## In this file
 
 1. [Lobby Gateway](#lobby-gateway)
-2. [Socket Events](#socket-events)
-   - [Connection Events](#connection-events)
-   - [User Stats Event](#user-stats-event)
-   - [Game Creation Event](#game-creation-event)
-   - [Game Joining Event](#game-joining-event)
+
+   - [Description](#description)
+   - [Connection Parameters](#connection-parameters)
+   - [Middlewares before connection](#middlewares-before-connection)
+   - [Events](#events)
+     <!-- - [Connection](#-connection)
+     - [user-stats:get](#-user-statsget)
+     - [game:create](#-gamecreate)
+     - [game:join](#-gamejoin)
+     - [game:created](#-gamecreated)
+     - [game:joined](#-gamejoined)
+     - [games:updated](#-gamesupdated)
+     - [user-stats](#-user-stats)
+     - [exception](#-exception) -->
+
+2. [Game Room Gateway](#game-room-gateway)
+   - [Description](#description-1)
+   - [Connection Parameters](#connection-parameters-1)
+   - [Middlewares before connection](#middlewares-before-connection-1)
+   - [Events](#events-1)
+     <!-- - [`Connection`](#-connection-1)
+     - [Disconnection](#-disconnection)
+     - [game-room:leave](#-game-roomleave)
+     - [game-room:join](#-game-roomjoin)
+     - [game-room:start](#-game-roomstart)
+     - [user-stats:get](#-user-statsget-1)
+     - [chat:message](#-chatmessage)
+     - [game-room:left](#-game-roomleft)
+     - [user-stats](#-user-stats-1)
+     - [game-room:updated](#-game-roomupdated)
+     - [game-started:updated](#-game-startedupdated)
+     - [chat:update](#-chatupdate)
+     - [game:end](#-gameend)
+     - [timer:update](#-timerupdate)
+     - [exception](#-exception-1) -->
 
 ---
 
@@ -46,17 +76,34 @@ The LobbyGateway handles WebSocket connections in the `"lobby"` namespace, manag
 
 ---
 
-## Socket Events
+### Connection Parameters
 
-### Connection Events
+```javascript
+socket = io('/lobby', {
+  // namespace
+  auth: { token: accessToken }, // auth token
+});
+```
 
-- **Event**: Connection
+---
 
-  - **Description**: Triggered when a client connects to the lobby.
-  - **Implementation**: The server logs the connection and checks whether user is already assigned to a game. If he is, client emit `"game:joined"`. Otherwise, client emit `"games:updated"` with current lobby games
+### Middlewares before connection
 
-  **Example Log**:
-  Client connected to lobby: client_id
+- #### Token Middleware
+
+  Prevents unauthorized connections, verifies access token, and assigns `userId` and `userName` to socket
+
+- #### Single User Middleware
+
+  Prevents connections when there's already `ActiveUser` using same credentials
+
+---
+
+### Events
+
+### - `Connection`
+
+- **Description**: Triggered when socket is connecting to `"lobby"` namespace. The server checks whether user is already assigned to a game. If he is, client emit `"game:joined"`. Otherwise, client emit `"games:updated"` with current lobby games
 
 ### - `"user-stats:get"`
 
@@ -65,26 +112,6 @@ The LobbyGateway handles WebSocket connections in the `"lobby"` namespace, manag
 - **Emit Description**: Requests the statistics for the connected user
 - **Handler Description**: Get statistics for connected user, send them through client emit `"user-stats"`
 - **Payload**: None
-  <!-- - **Response**: Emits user statistics back to the requesting client. -->
-
-    <!-- **Example Request**:
-  
-    ```json
-    {
-      "event": "user-stats:get"
-    }
-    ```
-  
-    **Example Response**:
-  
-    ```json
-    {
-      "userName": "exampleUser",
-      "gamesPlayed": 10,
-      "wins": 5,
-      "losses": 3
-    }
-    ``` -->
 
 ### - `"game:create"`
 
@@ -244,103 +271,327 @@ The LobbyGateway handles WebSocket connections in the `"lobby"` namespace, manag
 
 The GameRoomGateway manages WebSocket connections in the `"game-room"` namespace, handling events related to team assignments, game management, and chat functionality.
 
-### Socket Events
+---
+
+### Connection Parameters
+
+```javascript
+socket = io('/game-room', {
+  // namespace
+  query: { gameId: gameRoomId }, // id of game room
+  auth: {
+    serverOffset: 0, // last received message offset
+    token: accessToken, //auth token
+  },
+});
+```
+
+---
+
+### Middlewares before connection
+
+- #### Token Middleware
+
+  Prevents unauthorized connections, verifies access token, and assigns `userId` and `userName` to socket
+
+- #### Single User Middleware
+
+  Prevents connections when there's already `ActiveUser` using same credentials
+
+- #### Allowed to Game Middleware
+  Prevents connections on nonExistent games and games that user isn't allowed to join
+
+---
+
+### Events
+
+### - `Connection`
+
+- **Description**: Triggered when socket is connecting to `"game-room"` namespace.
+  - assign `"gameId"` passed in query to socket
+  - if game is started - validate if user can join, set his socket id appropriately, room emit `"game-started:updated"`, send reconnect info by room emit`"chat-update"`
+  - if game is not started - clear initialJoin timeout, set his socket id appropriately, room emit `"game-room:updated"`, send join info by room emit`"chat-update"`
+  - recover messages and client emit`"chat:update"` for each.
+
+### - `Disconnection`
+
+- **Description**: Triggered when socket is disconnecting from `"game-room"` namespace
+  - if game is started - remove active user socketId, as it allows for rejoin. room emit`"game-started:update"`, send disconnect info by room emit`"chat-update"`
+  - if game is not started (also triggered on `"game-room:left"` disconnection) - remove active user, remove player from game, eventually move host or remove game if empty. if game exists, room emit`"game-room:updated"`, send disconnect info by room emit`"chat-update"`, emit `"lobby/games:updated"`
 
 ### - `"game-room:leave"`
 
-- **Description**: Requests to leave the game room.
+- **Emitter**: Client
+- **Handler**: Server
+- **Emit Description**: Request to leave room
+- **Handler Description**: client emit`"game-room:left"`, disconnect client socket
 - **Payload**: None
-- **Response**: Emits game-room:left to the requesting client and disconnects them.
-
-  **Example Request**:
-
-  ```json
-  {
-    "event": "game-room:leave"
-  }
-  ```
-
-  **Example Response**:
-
-  ```json
-  {
-    "message": "You have left the game room."
-  }
-  ```
 
 ### - `"game-room:join"`
 
-- **Description**: Requests to join a specified team in the game.
+- **Emitter**: Client
+- **Handler**: Server
+- **Emit Description**: Request to join a certain team
+- **Handler Description**: Move player to team, room emit `"game-room:updated"`
 - **Payload**:
-  - team: Team - The team to join.
-- **Response**: Emits updated game room to all clients in the room.
+  - team: Team - team to join
 
-  **Example Request**:
+**Example Payload**:
 
-  ```json
-  {
-    "event": "game-room:join",
-    "data": {
-      "team": "redTeam"
-    }
-  }
-  ```
-
-  **Example Response**:
-
-  ```json
-  {
-    "message": "Successfully joined the red team."
-  }
-  ```
+```json
+{
+  "team": "redTeam"
+}
+```
 
 ### - `"game-room:start"`
 
-- **Description**: Requests to start the game.
+- **Emitter**: Client
+- **Handler**: Server
+- **Emit Description**: Request to start the game
+- **Validation**
+  - Client sending request is host of the game
+  - At least 2 players are in each team
+- **Handler Description**: Set game as started, emit `"lobby/games:updated"`, handle turns, timer and game mechanics. on each update, emit room`"game-started:updated"`.
 - **Payload**: None
-- **Response**: Emits game-started to all clients in the room.
 
-  **Example Request**:
+### - `"user-stats:get"`
 
-  ```json
-  {
-    "event": "game-room:start"
-  }
-  ```
+- **Emitter**: Client
+- **Handler**: Server
+- **Emit Description**: Request for statistics of clicked user
+- **Handler Description**: fetch statistics by name, emit client`"user-stats"` with data
+- **Payload**:
+  - userName: string - name of user
 
-  **Example Response**:
+**Example Payload**:
 
-  ```json
-  {
-    "message": "The game has started."
-  }
-  ```
+```json
+{
+  "userName": "Juann2"
+}
+```
 
 ### - `"chat:message"`
 
-- **Description**: Sends a chat message within the game room.
+- **Emitter**: Client
+- **Handler**: Server
+- **Emit Description**: Send a message through chat
+- **Validation**
+  - validate if user is in guessing team/describer (after game started)
+  - validate message sent by describer by similarity algorithm
+- **Handler Description**:
+  - game room before start - save message in chat in database, room emit`"chat:update"`
+  - send as describer - save message in chat in database, room emit`"chat:update"`
+  - send as guesser - save message in chat in database, room emit`"chat:update"`. If guessed, send info, update score and word, room emit`"game-started:updated"`
 - **Payload**:
-  - message: string - The chat message to be sent.
-- **Response**: Emits chat:update to all clients in the room.
 
-  **Example Request**:
+**Example Payload**:
+
+```json
+{
+  "message": "prairie"
+}
+```
+
+### - `"game-room:left"`
+
+- **Emitter**: Server
+- **Handler**: Client
+- **Emit Description**: Send info that room was properly left, client: `"disconnect"`
+- **Handler Description**: Redirect to `"lobby"`
+- **Payload**: None
+
+### - `"user-stats"`
+
+- **Emitter**: Server
+- **Handler**: Client
+- **Emit Description**: Fetch and send statistics of user with provided name
+- **Handler Description**: Display received data in modal
+- **Payload**:
+
+  - userName: string - The name of the connected user
+  - gamesPlayed: number - number of games played
+  - wins: number - numbers of games won
+  - loses: number - number of games lost
+  - draw: number - number of games resulted in draw
+  - wordsGuessed: number - number of words guessed in all games
+  - wellDescribed: number - number of words described by user that were correctly guessed
+
+  **Example Payload**:
 
   ```json
   {
-    "event": "chat:message",
-    "data": {
-      "message": "Hello everyone!"
-    }
+    "userName": "Juann1",
+    "gamesPlayed": 26,
+    "wins": 2,
+    "loses": 6,
+    "draw": 18,
+    "wordsGuessed": 2,
+    "wellDescribed": 13
   }
   ```
 
-  **Example Response**:
+### - `"game-room:updated"`
 
-  ```json
-  {
-    "message": "Chat message sent."
+- **Emitter**: Server
+- **Handler**: Client
+- **Emit Description**: Send information about updated game room (before game started)
+- **Handler Description**: Display updated game room state
+- **Payload**:
+  - GameRoomDto
+
+**Example Payload**:
+
+```json
+{
+  "id": "y1wm80g1r",
+  "name": "Juann4's Game",
+  "host": "6705c8f8e34928a78930d707",
+  "redTeam": ["Juann4"],
+  "blueTeam": ["pawbag1231", "Juann1"]
+}
+```
+
+### - `"game-started:updated"`
+
+- **Emitter**: Server
+- **Handler**: Client
+- **Emit Description**: Send information about updated game (after game started)
+- **Handler Description**: Display updated game state
+- **Payload**:
+  - GameStartedDto
+
+**Example Payload**:
+
+```json
+{
+  "id": "y1wm80g1r",
+  "name": "Juann4's Game",
+  "host": "6705c8f8e34928a78930d707",
+  "redTeam": [
+    ["Juann4", true],
+    ["Juann3", true]
+  ],
+  "blueTeam": [
+    ["pawbag1231", true],
+    ["Juann1", true]
+  ],
+  "turn": {
+    "alreadyDescribed": [
+      "67081944393329b9b14c18da",
+      "6705c8f8e34928a78930d707"
+    ],
+    "team": "blueTeam",
+    "describerId": "6705c7b8e34928a78930d6f7",
+    "describerName": "Juann1"
+  },
+  "currentWord": "truck",
+  "score": {
+    "red": 0,
+    "blue": 1
   }
-  ```
+}
+```
+
+### - `"chat:update"`
+
+- **Emitter**: Server
+- **Handler**: Client
+- **Emit Description**: Send a new message to game room
+- **Handler Description**: Display message in chat
+- **Payload**:
+  - userId? : string - id of user (absent if server sent message)
+  - userName : string - name of user
+  - gameId : string - id of game
+  - message : string - message to be sent
+  - time : string - Time of sending message
+  - messageId : string - Id of message (absent if server sent message)
+
+**Example Payload**:
+
+```json
+{
+  "userId": "6705c7b8e34928a78930d6f7",
+  "userName": "Juann1",
+  "gameId": "y1wm80g1r",
+  "message": "my message",
+  "time": "2024-10-10T21:37:13.762Z",
+  "messageId": "670849097eb27532805221ad"
+}
+```
+
+### - `"game:end"`
+
+- **Emitter**: Server
+- **Handler**: Client
+- **Emit Description**: Emitted to all sockets in game at end of the game. Saves data to database, cleans real-time data about game and users, disconnects sockets present in game room
+- **Handler Description**: Display result modal, redirect to `"lobby"`
+- **Payload**:
+  - GameStartedDto
+
+**Example Payload**:
+
+```json
+{
+  "id": "y1wm80g1r",
+  "name": "Juann4's Game",
+  "host": "6705c8f8e34928a78930d707",
+  "redTeam": [
+    ["Juann4", true],
+    ["Juann3", true]
+  ],
+  "blueTeam": [
+    ["pawbag1231", true],
+    ["Juann1", true]
+  ],
+  "turn": {
+    "alreadyDescribed": [
+      "67081944393329b9b14c18da",
+      "6705c8f8e34928a78930d707",
+      "6705c7b8e34928a78930d6f7"
+    ],
+    "team": "redTeam",
+    "describerId": "6705c8eee34928a78930d703",
+    "describerName": "Juann3"
+  },
+  "score": {
+    "red": 0,
+    "blue": 1
+  }
+}
+```
+
+### `timer:update`
+
+- **Emitter**: Server
+- **Handler**: Client
+- **Emit Description**: Send updated time remaining in turn
+- **Handler Description**: Display remaining time
+- **Payload**:
+  - remaining: number - remaining time (in seconds)
+
+**Example Payload**:
+
+```json
+{
+  "remaining": 16
+}
+```
+
+### `"exception"`
+
+- **Handler**: Client
+- **Handler Description**: Display received error message in modal
+
+**Example Payload**:
+
+```json
+{
+  "status": "error",
+  "message": "Message is not allowed"
+}
+```
 
 ## Conclusion
 
