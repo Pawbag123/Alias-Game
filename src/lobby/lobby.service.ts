@@ -1,7 +1,7 @@
 import { Injectable, Logger } from '@nestjs/common';
 
 import { JOIN_TIMEOUT, MAX_USERS } from '../types';
-import { GameStateService } from 'src/game-state/game-state.service';
+import { GameStateService } from '../game-state/game-state.service';
 import { Namespace, Socket } from 'socket.io';
 
 @Injectable()

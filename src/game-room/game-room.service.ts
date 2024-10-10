@@ -1,8 +1,8 @@
 import { Injectable, Logger } from '@nestjs/common';
-
-import { Team } from 'src/types';
-import { GameStateService } from 'src/game-state/game-state.service';
 import { Namespace, Socket } from 'socket.io';
+
+import { Team } from '../types';
+import { GameStateService } from '../game-state/game-state.service';
 
 @Injectable()
 export class GameRoomService {
