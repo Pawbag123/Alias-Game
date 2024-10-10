@@ -3,21 +3,21 @@
 ## Table of Contents
 
 ### General
-- [Game Description](#game-description)
-- [Rules](#objective)
-- [System Requirements](#system-requirements)
-- [Setup and Installation](#setup-and-installation)
-- [Troubleshooting](#troubleshooting)
+- [Game Description](../../README.md#game-description)
+- [Rules](../../README.md#objective)
+- [System Requirements](../../README.md#system-requirements)
+- [Setup and Installation](../../README.md#setup-and-installation)
+- [Troubleshooting](../../README.md#troubleshooting)
 
 ### Technical
-- [Project Structure (core modules)?](documentation/project-structure.md)
-- [Data Architecture](documentation/data-architecture.md)
-    - [Data Base Schemas](documentation/data-architecture.md#data-base-schemas)
-    - [Interfaces](documentation/data-architecture.md#Interfaces)
-    - [Dtos](documentation/data-architecture.md#Dtos)
-- [APis](documentation/apis.md)
-    - [Auth](documentation/apis.md#auth)
-    - [Socket events](documentation/apis.md#socket-events)
+- Project Structure (core modules)?
+- Data Architecture
+    - [Data Base Schemas](../data-architecture/database-schemas.md#structure)
+    - [Interfaces](../data-architecture/interfaces.md#game-interfaces-documentation)
+    - [Dtos](../data-architecture/dtos.md#dtos)
+- APIs
+    - [Auth](#authentication)
+    - [Socket events](socket-events.md#socket-events-documentation)
 
 ### Additional Information
 - [Security & Testing](documentation/security.md)
@@ -33,7 +33,7 @@
 4. [RefreshTokenDto](#refreshtokendto)
 
 ---
-# Authentication Module Documentation
+# Authentication
 
 ## Auth Controller
 

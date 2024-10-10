@@ -1,3 +1,7 @@
+# Node.js-Based Game "Alias"
+
+## Table of Contents
+
 ### General
 
 - [Game Description](../../README.md#game-description)
@@ -10,11 +14,11 @@
 
 - Project Structure (core modules)?
 - Data Architecture
-  - [Data Base Schemas](documentation/data-architecture.md#data-base-schemas)
-  - [Interfaces](documentation/data-architecture.md#Interfaces)
-  - [Dtos](documentation/data-architecture.md#Dtos)
+  - [Data Base Schemas](../data-architecture/database-schemas.md#structure)
+  - [Interfaces](../data-architecture/interfaces.md#game-interfaces-documentation)
+  - [Dtos](../data-architecture/dtos.md#dtos)
 - APIs
-  - [Auth](documentation/apis.md#auth)
+  - [Auth](./auth.md#authentication)
   - [Socket events](#socket-events-documentation)
 
 ### Additional Information
@@ -141,11 +145,11 @@ The LobbyGateway handles WebSocket connections in the `"lobby"` namespace, manag
 - **Payload**:
   - gameId: string
 
-**Example Request**:
+  **Example Request**:
 
-```json
-"f47ac10b-58cc-4372-a567-0e02b2c3d479"
-```
+  ```json
+  "f47ac10b-58cc-4372-a567-0e02b2c3d479"
+  ```
 
 ### - `"game:joined"`
 
@@ -156,11 +160,11 @@ The LobbyGateway handles WebSocket connections in the `"lobby"` namespace, manag
 - **Payload**:
   - gameId: string
 
-**Example Request**:
+  **Example Request**:
 
-```json
-"f47ac10b-58cc-4372-a567-0e02b2c3d479"
-```
+  ```json
+  "f47ac10b-58cc-4372-a567-0e02b2c3d479"
+  ```
 
 ### - `"games:updated"`
 
@@ -171,26 +175,26 @@ The LobbyGateway handles WebSocket connections in the `"lobby"` namespace, manag
 - **Payload**:
   - InLobbyGameDto[]
 
-**Example Payload**:
+  **Example Payload**:
 
-```json
-[
-  {
-    "id": "f47ac10b-58cc-4372-a567-0e02b2c3d479",
-    "name": "Juann3's Game",
-    "players": 3,
-    "maxPlayers": 6,
-    "started": false
-  },
-  {
-    "id": "9e107d9d-372d-4d28-9f39-2e335a9e6509",
-    "name": "Juann4's Game",
-    "players": 1,
-    "maxPlayers": 6,
-    "started": false
-  }
-]
-```
+  ```json
+  [
+    {
+      "id": "f47ac10b-58cc-4372-a567-0e02b2c3d479",
+      "name": "Juann3's Game",
+      "players": 3,
+      "maxPlayers": 6,
+      "started": false
+    },
+    {
+      "id": "9e107d9d-372d-4d28-9f39-2e335a9e6509",
+      "name": "Juann4's Game",
+      "players": 1,
+      "maxPlayers": 6,
+      "started": false
+    }
+  ]
+  ```
 
 ### - `"user-stats"`
 
@@ -227,14 +231,14 @@ The LobbyGateway handles WebSocket connections in the `"lobby"` namespace, manag
 - **Handler**: Client
 - **Handler Description**: Display received error message in modal
 
-**Example Payload**:
+  **Example Payload**:
 
-```json
-{
-  "status": "error",
-  "message": "Game already started"
-}
-```
+  ```json
+  {
+    "status": "error",
+    "message": "Game already started"
+  }
+  ```
 
 ---
 
