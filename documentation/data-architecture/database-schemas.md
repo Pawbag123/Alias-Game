@@ -1,5 +1,29 @@
 # Node.js-Based Game "Alias"
 
+## Table of Contents
+
+### General
+- [Game Description](../../README.md#game-description)
+- [Rules](../../README.md#rules)
+- [System Requirements](../../README.md#system-requirements)
+- [Setup and Installation](../../README.md#system-requirements#setup-and-installation)
+- [Troubleshooting](../../README.md#system-requirements#troubleshooting)
+
+### Technical
+- Project Structure (core modules)?
+- Data Architecture
+    - [Data Base Schemas](#structure)
+    - [Interfaces](./interfaces.md#game-interfaces-documentation)
+    - [Dtos](./dtos.md#dtos)
+- APIs
+    - [Auth](../APIs/auth.md#authentication)
+    - [Socket Events](../APIs/socket-events.md#socket-events-documentation)
+
+### Additional Information
+- [Security & Testing](documentation/security.md)
+- [Deployment & Future Enhancements](documentation/deployment.md)
+- [FAQ](documentation/faq.md)
+
 # Content
 
 

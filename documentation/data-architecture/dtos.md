@@ -1,8 +1,30 @@
+# Node.js-Based Game "Alias"
 
-## DTOs
-
-Data Transfer Objects (DTOs) are used in the Alias Game project to ensure the correct structure and validation of the data exchanged between the client and server, enforcing specific validation rules to maintain data integrity.
 ## Table of Contents
+
+### General
+- [Game Description](../../README.md#game-description)
+- [Rules](../../README.md#rules)
+- [System Requirements](../../README.md#system-requirements)
+- [Setup and Installation](../../README.md#system-requirements#setup-and-installation)
+- [Troubleshooting](../../README.md#system-requirements#troubleshooting)
+
+### Technical
+- Project Structure (core modules)?
+- Data Architecture
+    - [Data Base Schemas](./database-schemas.md#structure)
+    - [Interfaces](./interfaces.md#game-interfaces-documentation)
+    - [Dtos](#dtos)
+- APIs
+    - [Auth](../APIs/auth.md#authentication)
+    - [Socket Events](../APIs/socket-events.md#socket-events-documentation)
+
+### Additional Information
+- [Security & Testing](documentation/security.md)
+- [Deployment & Future Enhancements](documentation/deployment.md)
+- [FAQ](documentation/faq.md)
+
+## In this file:
 
 - [Auth DTOs](#auth-dtos)
   - [CreateUserDto](#createuserdto)
@@ -17,6 +39,11 @@ Data Transfer Objects (DTOs) are used in the Alias Game project to ensure the co
   - [CreateGameDto](#creategamedto)
   - [InLobbyGameDto](#inlobbygamedto)
   - [JoinGameDto](#joingamedto)
+
+## DTOs
+
+Data Transfer Objects (DTOs) are used in the Alias Game project to ensure the correct structure and validation of the data exchanged between the client and server, enforcing specific validation rules to maintain data integrity.
+
 
 ---
 
