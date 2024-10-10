@@ -38,14 +38,11 @@
     "mongoose": "^8.6.3",
     "passport": "^0.7.0",
     "passport-jwt": "^4.0.1",
-    "@nestjs/platform-socket.io": "^10.4.4",
-    "@nestjs/websockets": "^10.4.4",
-    "dotenv": "^16.4.5",
-    "handlebars": "^4.7.8",
     "reflect-metadata": "^0.2.0",
     "rxjs": "^7.8.1",
     "socket.io": "^4.8.0",
-    "socket.io-client": "^4.8.0"
+    "socket.io-client": "^4.8.0",
+    "uuid": "^10.0.0"
   },
   "devDependencies": {
     "@nestjs/cli": "^10.0.0",

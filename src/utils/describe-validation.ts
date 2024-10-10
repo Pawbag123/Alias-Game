@@ -1,6 +1,9 @@
 import { DESCRIBER_LEVENSHTEIN_THRESHOLD } from 'src/types';
 import { isDerivative } from './is-derivative';
-import { calculateLevenshteinDistance } from './levenshtein-distance';
+import {
+  calculateLevenshteinDistance,
+  calculateDamerauLevenshteinDistance,
+} from './levenshtein-distance';
 
 /**
  * Function that validates the message from the describer.
@@ -27,7 +30,8 @@ export const validateDescriberMessage = (
       return false; // Found a derivative
     }
     if (
-      calculateLevenshteinDistance(word, baseWord) <=
+      // testing Damerau-Levenshtein Distance
+      calculateDamerauLevenshteinDistance(word, baseWord) <=
       DESCRIBER_LEVENSHTEIN_THRESHOLD
     ) {
       // Threshold can be adjusted
