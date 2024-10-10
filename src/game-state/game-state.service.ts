@@ -10,6 +10,7 @@ import { GameStartedDto } from 'src/game-room/dto/game-started-dto';
 import { Games } from 'src/game-room/schema/game.schema';
 import { InLobbyGameDto } from 'src/lobby/dto/in-lobby-game-dto';
 import { ActiveUser, Game, Player, Team } from 'src/types';
+import { v4 as uuidv4 } from 'uuid';
 
 /**
  * Service that handles the state of the game,
@@ -154,7 +155,7 @@ export class GameStateService {
     };
 
     const newGame: Game = {
-      id: Math.random().toString(36).substr(2, 9),
+      id: uuidv4(),
       name: gameName,
       host: userId,
       isGameStarted: false,

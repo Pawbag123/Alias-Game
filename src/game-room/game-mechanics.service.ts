@@ -38,7 +38,11 @@ export class GameMechanicsService {
       this.logger.debug('current word', currentWord);
 
       await this.startTimer(gameId, TURN_TIME, gameRoom);
-
+      gameRoom.to(gameId).emit('chat:update', {
+        userName: 'Server',
+        message: `${turn.describerName} ran out of time. The word was "${currentWord}"`,
+        time: new Date(),
+      });
       rounds++;
     }
 

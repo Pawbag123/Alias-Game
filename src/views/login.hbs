@@ -73,16 +73,9 @@
         if (response.ok) {
           
           window.location.href = '/lobby';
-        //{{!-- } else {
-          
-          //const refreshed = await refreshToken();
-          
-         // if (refreshed) {
-           // await verifyTokenAndRedirect(); --}}
           } else {
             clearLocalStorage();
           }
-        //}
       } catch (error) {
         console.error('Error verifying token:', error);
         clearLocalStorage();
