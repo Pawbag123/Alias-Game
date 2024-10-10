@@ -233,6 +233,16 @@ export class GameStateService {
     });
   }
 
+  isDescriber(userId: string, gameId: string): boolean {
+    const game = this.getGameById(gameId);
+    return game.turn.describerId === userId;
+  }
+
+  getCurrentWord(gameId: string): string {
+    const game = this.getGameById(gameId);
+    return game.currentWord;
+  }
+
   movePlayerToTeam(userId: string, gameId: string, team: Team): void {
     const game = this.getGameById(gameId);
     const player = game.players.find((player) => player.userId === userId);

@@ -3,6 +3,9 @@ export const MAX_TURNS = 8;
 export const TURN_TIME = 60;
 export const JOIN_TIMEOUT = 5000;
 export const CLIENT_PORT = 3000;
+export const DESCRIBER_LEVENSHTEIN_THRESHOLD = 1;
+export const GUESSER_LEVENSHTEIN_THRESHOLD = 2;
+export const MIN_LEVENSHTEIN_WORD_LENGTH = 3;
 
 export const WORDS_TO_GUESS = [
   // Fruits
@@ -26,7 +29,7 @@ export const WORDS_TO_GUESS = [
   // Sports
   'soccer', 'tennis', 'basketball', 'baseball', 'golf', 'swimming', 'cycling', 'running', 'skiing', 'surfing', 'hockey', 'volleyball', 'boxing', 'skating', 'archery', 'climbing', 'diving',
   // Food
-  'bread', 'butter', 'cheese', 'milk', 'egg', 'yogurt', 'chocolate', 'honey', 'sugar', 'salt', 'pepper', 'pizza', 'burger', 'sandwich', 'pasta', 'rice', 'salad', 'soup', 'cake', 'cookie', 'pie', 'icecream', 'coffee', 'tea',
+  'bread', 'butter', 'cheese', 'milk', 'egg', 'yogurt', 'chocolate', 'honey', 'sugar', 'salt', 'pepper', 'pizza', 'burger', 'sandwich', 'pasta', 'rice', 'salad', 'soup', 'cake', 'cookie', 'pie', 'coffee', 'tea',
   // Colors
     'red', 'blue', 'green', 'yellow', 'orange', 'purple', 'pink', 'brown', 'black', 'white', 'gray', 'cyan', 'magenta', 'gold', 'silver', 'turquoise', 'beige', 'maroon', 'navy', 'teal',
   ];
@@ -54,6 +57,12 @@ export interface Game {
     blue: number;
   };
   turn: Turn | null;
+}
+
+export enum WordStatus {
+  GUESSED = 'guessed',
+  SIMILAR = 'similar',
+  NOT_GUESSED = 'notGuessed',
 }
 
 export interface Turn {

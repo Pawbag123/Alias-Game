@@ -1,4 +1,5 @@
 import { Injectable, Logger } from '@nestjs/common';
+import { Namespace } from 'socket.io';
 import { GameStateService } from 'src/game-state/game-state.service';
 
 import { Team, WORDS_TO_GUESS } from 'src/types';
@@ -149,96 +150,124 @@ export class GameMechanicsService {
     return game;
   }
 
-  validateWord(
-    userId: string,
-    gameId: string,
-    message: string,
-  ): [string, boolean] {
-    message = message.replace(/✅/g, '');
+  emitGameStartedUpdated(gameRoom: Namespace, gameId: string) {
+    const describerSocket = gameRoom.sockets.get(
+      this.gameStateService.getDescriberSocketId(gameId),
+    );
 
-    const game = this.gameStateService.getGameById(gameId);
-    const { turn, currentWord } = game;
-    if (game.isGameStarted && turn) {
-      // Find the player's team
-      const player = game.players.find((p) => p.userId === userId);
-      if (!player) {
-        this.logger.log('Player not found!');
-        return [message, false]; // Early return if player not found
-      }
-      if (player.team === turn.team) {
-        // Check if the current player is the describer
-        if (turn.describerId === userId) {
-          // Check if the message is the current word or a derivative
-          if (
-            message.toLowerCase() === currentWord.toLowerCase() ||
-            this.wordDerivatives(message, currentWord)
-          ) {
-            // throw error if the message is a derivative of the current word
-            throw new Error('You cannot use derivatives of described word');
-          } else {
-            return [message, false];
-          }
-        } else {
-          // The player is guessing
-          // Compare the guess with the current word
-          if (message.toLowerCase() === currentWord.toLowerCase()) {
-            this.playerGuessed(gameId, userId);
-            return [`${message} ✅`, true];
-          } else {
-            // Return the message normally if it's a wrong guess
-            return [message, false];
-          }
-        }
-      } else {
-        // It's not the player's team's turn
-        return [message, false];
-      }
-    } else {
-      // Game hasn't started or turn is null
-      return [message, false];
+    if (!describerSocket) {
+      gameRoom
+        .to(gameId)
+        .emit(
+          'game-started:updated',
+          this.gameStateService.getSerializedGameStarted(gameId),
+        );
+      return;
     }
+    gameRoom
+      .to(gameId)
+      .except(describerSocket.id)
+      .emit(
+        'game-started:updated',
+        this.gameStateService.getSerializedGameStarted(gameId),
+      );
+
+    describerSocket.emit(
+      'game-started:updated',
+      this.gameStateService.getSerializedGameStarted(gameId, true),
+    );
   }
 
-  wordDerivatives(message: string, currentWord: string): boolean {
-    const normalizedMessage = message.toLowerCase().replace(/[.,!?:;]/g, ''); // Remove punctuation
-    const words = normalizedMessage.split(/\s+/); // Split message into words
-    const baseWord = currentWord.toLowerCase();
-    // Check if any word in the message is the base word or a derivative
-    for (let word of words) {
-      if (word === baseWord) {
-        return true; // Exact match
-      }
-      if (this.isDerivative(word, baseWord)) {
-        return true; // Found a derivative
-      }
-    }
-    return false; // No match or derivative found
-  }
+  // validateWord(
+  //   userId: string,
+  //   gameId: string,
+  //   message: string,
+  // ): [string, boolean] {
+  //   message = message.replace(/✅/g, '');
 
-  // Helper function to check for simple derivatives
-  isDerivative(word: string, baseWord: string): boolean {
-    const suffixes = ['s', 'es', 'ed', 'ing', 'er', 'est', 'ly']; // Common suffixes
-    const prefixes = ['un', 're', 'in', 'im', 'dis', 'non']; // Common prefixes
+  //   const game = this.gameStateService.getGameById(gameId);
+  //   const { turn, currentWord } = game;
+  //   if (game.isGameStarted && turn) {
+  //     // Find the player's team
+  //     const player = game.players.find((p) => p.userId === userId);
+  //     if (!player) {
+  //       this.logger.log('Player not found!');
+  //       return [message, false]; // Early return if player not found
+  //     }
+  //     if (player.team === turn.team) {
+  //       // Check if the current player is the describer
+  //       if (turn.describerId === userId) {
+  //         // Check if the message is the current word or a derivative
+  //         if (
+  //           message.toLowerCase() === currentWord.toLowerCase() ||
+  //           this.wordDerivatives(message, currentWord)
+  //         ) {
+  //           // throw error if the message is a derivative of the current word
+  //           throw new Error('You cannot use derivatives of described word');
+  //         } else {
+  //           return [message, false];
+  //         }
+  //       } else {
+  //         // The player is guessing
+  //         // Compare the guess with the current word
+  //         if (message.toLowerCase() === currentWord.toLowerCase()) {
+  //           this.playerGuessed(gameId, userId);
+  //           return [`${message} ✅`, true];
+  //         } else {
+  //           // Return the message normally if it's a wrong guess
+  //           return [message, false];
+  //         }
+  //       }
+  //     } else {
+  //       // It's not the player's team's turn
+  //       return [message, false];
+  //     }
+  //   } else {
+  //     // Game hasn't started or turn is null
+  //     return [message, false];
+  //   }
+  // }
 
-    // Check if the word contains baseWord with a prefix or suffix
-    if (word.startsWith(baseWord) || word.endsWith(baseWord)) {
-      return true;
-    }
+  // wordDerivatives(message: string, currentWord: string): boolean {
+  //   const normalizedMessage = message.toLowerCase().replace(/[.,!?:;]/g, ''); // Remove punctuation
+  //   const words = normalizedMessage.split(/\s+/); // Split message into words
+  //   const baseWord = currentWord.toLowerCase();
+  //   // Check if any word in the message is the base word or a derivative
+  //   for (let word of words) {
+  //     if (word === baseWord) {
+  //       return true; // Exact match
+  //     }
+  //     if (this.isDerivative(word, baseWord)) {
+  //       return true; // Found a derivative
+  //     }
+  //   }
+  //   return false; // No match or derivative found
+  // }
 
-    // Check for simple pluralization or conjugation (additions to the end of the word)
-    for (let suffix of suffixes) {
-      if (word === baseWord + suffix || word === baseWord + 'e' + suffix) {
-        return true;
-      }
-    }
+  // // Helper function to check for simple derivatives
+  // isDerivative(word: string, baseWord: string): boolean {
+  //   const suffixes = ['s', 'es', 'ed', 'ing', 'er', 'est', 'ly']; // Common suffixes
+  //   const prefixes = ['un', 're', 'in', 'im', 'dis', 'non']; // Common prefixes
 
-    // Check for common prefixes (additions to the start of the word)
-    for (let prefix of prefixes) {
-      if (word === prefix + baseWord) {
-        return true;
-      }
-    }
+  //   // Check if the word contains baseWord with a prefix or suffix
+  //   if (word.startsWith(baseWord) || word.endsWith(baseWord)) {
+  //     return true;
+  //   }
 
-    return false;
-  }
+  //   // Check for simple pluralization or conjugation (additions to the end of the word)
+  //   for (let suffix of suffixes) {
+  //     if (word === baseWord + suffix || word === baseWord + 'e' + suffix) {
+  //       return true;
+  //     }
+  //   }
+
+  //   // Check for common prefixes (additions to the start of the word)
+  //   for (let prefix of prefixes) {
+  //     if (word === prefix + baseWord) {
+  //       return true;
+  //     }
+  //   }
+
+  //   return false;
+  // }
 }

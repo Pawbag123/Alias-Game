@@ -13,12 +13,14 @@ import { Namespace, Socket } from 'socket.io';
 import { GameRoomService } from './game-room.service';
 import { GameStateService } from 'src/game-state/game-state.service';
 import { GameMechanicsService } from './game-mechanics.service';
-import { MAX_TURNS, Team, TURN_TIME } from 'src/types';
+import { MAX_TURNS, Team, TURN_TIME, WordStatus } from 'src/types';
 import { Logger, UseGuards } from '@nestjs/common';
 import { ChatService } from 'src/chat/chat.service';
 import { HostGuard } from './guards/host.guard';
 import { TooFewPlayersGuard } from './guards/too-few-players.guard';
 import { GuessingTeamGuard } from './guards/guessing-team.guard';
+import { validateDescriberMessage } from 'src/utils/describe-validation';
+import { checkGuessedWord } from 'src/utils/guess-validation';
 
 /**
  * Gateway that handles connections in game room, using game-room namespace
@@ -105,7 +107,7 @@ export class GameRoomGateway
       try {
         this.gameMechanicsService.reconnectPlayer(userId, gameId, client.id);
         client.join(gameId);
-        this.emitGameStartedUpdated(gameId);
+        this.gameMechanicsService.emitGameStartedUpdated(this.gameRoom, gameId);
         client.broadcast.to(gameId).emit('chat:update', {
           userName: 'Server',
           message: `${userName} has reconnected`,
@@ -159,7 +161,7 @@ export class GameRoomGateway
       this.gameStateService.getGameById(gameId).isGameStarted
     ) {
       this.gameStateService.removePlayerSocketId(userId);
-      this.emitGameStartedUpdated(gameId);
+      this.gameMechanicsService.emitGameStartedUpdated(this.gameRoom, gameId);
       this.gameRoom.to(gameId).emit('chat:update', {
         userName: 'Server',
         message: `${client.data.user.userName} has disconnected`,
@@ -276,7 +278,7 @@ export class GameRoomGateway
       this.gameMechanicsService.nextTurn(gameId); // Handles both game initialization and next turn
       this.gameMechanicsService.newWord(gameId); // Generate a new word
 
-      this.emitGameStartedUpdated(gameId);
+      this.gameMechanicsService.emitGameStartedUpdated(this.gameRoom, gameId);
       const { turn, currentWord } = this.gameStateService.getGameById(gameId);
       this.logger.debug(`STATE NUMBER ${rounds}`, turn);
       this.logger.debug('current word', currentWord);
@@ -331,73 +333,136 @@ export class GameRoomGateway
     );
   } */
 
+  // @SubscribeMessage('chat:message')
+  // @UseGuards(GuessingTeamGuard)
+  // async handleChatMessage(
+  //   @ConnectedSocket() client: Socket,
+  //   @MessageBody() { message }: { message: string },
+  // ): Promise<void> {
+  //   const { userName, userId } = client.data.user;
+  //   const { gameId } = client.data;
+  //   this.logger.log(`Chat message received: ${message}`);
+
+  //   let validatedMessage;
+  //   let isGuessed;
+
+  //   try {
+  //     [validatedMessage, isGuessed] = this.gameMechanicsService.validateWord(
+  //       userId,
+  //       gameId,
+  //       message,
+  //     );
+  //   } catch (error) {
+  //     this.logger.error(error);
+  //     throw new WsException(error.message);
+  //   }
+
+  //   this.logger.debug('Validated message:', validatedMessage);
+  //   const chatResponse = await this.chatService.handleChatMessage(
+  //     userId,
+  //     userName,
+  //     gameId,
+  //     validatedMessage,
+  //   );
+
+  //   this.logger.debug('Chat response:', chatResponse);
+
+  //   this.gameRoom.to(gameId).emit('chat:update', chatResponse);
+
+  //   if (isGuessed) {
+  //     this.logger.debug('Word guessed');
+  //     this.emitGameStartedUpdated(gameId);
+  //   }
+  // }
+
   @SubscribeMessage('chat:message')
   @UseGuards(GuessingTeamGuard)
   async handleChatMessage(
     @ConnectedSocket() client: Socket,
-    @MessageBody() { message }: { message: string }, // Temporarily 'any'
+    @MessageBody() { message }: { message: string },
   ): Promise<void> {
     const { userName, userId } = client.data.user;
     const { gameId } = client.data;
     this.logger.log(`Chat message received: ${message}`);
+    const isDescriber = this.gameStateService.isDescriber(userId, gameId);
+    const currentWord = this.gameStateService.getCurrentWord(gameId);
 
-    let validatedMessage;
-    let isGuessed;
-
-    try {
-      [validatedMessage, isGuessed] = this.gameMechanicsService.validateWord(
-        userId,
-        gameId,
+    if (isDescriber) {
+      try {
+        const [validatedMessage, isAllowed] = validateDescriberMessage(
+          currentWord,
+          message,
+        );
+        if (!isAllowed) {
+          throw new Error('Message is not allowed');
+        }
+        const chatResponse = await this.chatService.handleChatMessage(
+          userId,
+          userName,
+          gameId,
+          validatedMessage,
+        );
+        this.gameRoom.to(gameId).emit('chat:update', chatResponse);
+      } catch (error) {
+        this.logger.error(error);
+        throw new WsException(error.message);
+      }
+    } else {
+      const [validatedMessage, wordStatus] = checkGuessedWord(
+        currentWord,
         message,
       );
-    } catch (error) {
-      this.logger.error(error);
-      throw new WsException(error.message);
-    }
-
-    this.logger.debug('Validated message:', validatedMessage);
-    const chatResponse = await this.chatService.handleChatMessage(
-      userId,
-      userName,
-      gameId,
-      validatedMessage,
-    );
-
-    this.logger.debug('Chat response:', chatResponse);
-
-    this.gameRoom.to(gameId).emit('chat:update', chatResponse);
-
-    if (isGuessed) {
-      this.logger.debug('Word guessed');
-      this.emitGameStartedUpdated(gameId);
-    }
-  }
-
-  emitGameStartedUpdated(gameId: string) {
-    const describerSocket = this.gameRoom.sockets.get(
-      this.gameStateService.getDescriberSocketId(gameId),
-    );
-
-    if (!describerSocket) {
-      this.gameRoom
-        .to(gameId)
-        .emit(
-          'game-started:updated',
-          this.gameStateService.getSerializedGameStarted(gameId),
-        );
-      return;
-    }
-    this.gameRoom
-      .to(gameId)
-      .except(describerSocket.id)
-      .emit(
-        'game-started:updated',
-        this.gameStateService.getSerializedGameStarted(gameId),
+      const chatResponse = await this.chatService.handleChatMessage(
+        userId,
+        userName,
+        gameId,
+        validatedMessage,
       );
-
-    describerSocket.emit(
-      'game-started:updated',
-      this.gameStateService.getSerializedGameStarted(gameId, true),
-    );
+      this.gameRoom.to(gameId).emit('chat:update', chatResponse);
+      if (wordStatus === WordStatus.SIMILAR) {
+        this.gameRoom.to(gameId).emit('chat:update', {
+          userName: 'Server',
+          message: `Your guess is close!`,
+          time: new Date(),
+        });
+      } else if (wordStatus === WordStatus.GUESSED) {
+        this.gameMechanicsService.playerGuessed(gameId, userId);
+        this.gameRoom.to(gameId).emit('chat:update', {
+          userName: 'Server',
+          message: `Word guessed!`,
+          time: new Date(),
+        });
+        this.logger.debug('Word guessed');
+        this.gameMechanicsService.emitGameStartedUpdated(this.gameRoom, gameId);
+      }
+    }
   }
+
+  //   emitGameStartedUpdated(gameId: string) {
+  //     const describerSocket = this.gameRoom.sockets.get(
+  //       this.gameStateService.getDescriberSocketId(gameId),
+  //     );
+
+  //     if (!describerSocket) {
+  //       this.gameRoom
+  //         .to(gameId)
+  //         .emit(
+  //           'game-started:updated',
+  //           this.gameStateService.getSerializedGameStarted(gameId),
+  //         );
+  //       return;
+  //     }
+  //     this.gameRoom
+  //       .to(gameId)
+  //       .except(describerSocket.id)
+  //       .emit(
+  //         'game-started:updated',
+  //         this.gameStateService.getSerializedGameStarted(gameId),
+  //       );
+
+  //     describerSocket.emit(
+  //       'game-started:updated',
+  //       this.gameStateService.getSerializedGameStarted(gameId, true),
+  //     );
+  //   }
 }
