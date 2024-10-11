@@ -3,6 +3,7 @@
 ## Table of Contents
 
 ### General
+
 - [Game Description](../../README.md#game-description)
 - [Rules](../../README.md#rules)
 - [System Requirements](../../README.md#system-requirements)
@@ -10,7 +11,10 @@
 - [Troubleshooting](../../README.md#system-requirements#troubleshooting)
 
 ### Technical
-- Project Structure (core modules)?
+
+- Project Structure
+    - [Files & Folders]
+    - [Modules]
 - Data Architecture
     - [Data Base Schemas](./database-schemas.md#structure)
     - [Interfaces](#game-interfaces-documentation)
@@ -18,14 +22,17 @@
 - APIs
     - [Auth](../APIs/auth.md#authentication)
     - [Socket Events](../APIs/socket-events.md#socket-events-documentation)
-
+- Guides
+    - [Testing]
+    - [Deployment]
 
 ### Additional Information
+
 - [Security & Testing](documentation/security.md)
 - [Deployment & Future Enhancements](documentation/deployment.md)
 - [FAQ](documentation/faq.md)
 
-## In this file
+## In this file:
 
 1. [Game Interface](#game-interface)
 2. [WordStatus Enum](#wordstatus-enum)

@@ -10,7 +10,9 @@
 - [Troubleshooting](#troubleshooting)
 
 ### Technical
-- Project Structure (core modules)?
+- Project Structure
+    - [Files & Folders](documentation/project-structure/files-and-folders.md#)
+    - [Modules](documentation/project-structure/core-modules.md#)
 - Data Architecture
     - [Data Base Schemas](documentation/data-architecture/database-schemas.md#structure)
     - [Interfaces](documentation/data-architecture/interfaces.md#game-interfaces-documentation)
@@ -18,10 +20,12 @@
 - APIs
     - [Auth](documentation/apis/auth.md#auth-controller)
     - [Socket Events](documentation/apis/socket-events#socket-events-documentation)
+- Guides
+    - [Testing](documentation/guides/testing.md)
+    - [Deployment](documentation/guides/deployment.md)
 
 ### Additional Information
-- [Security & Testing](documentation/security.md)
-- [Deployment & Future Enhancements](documentation/deployment.md)
+- [Future Enhancements](documentation/deployment.md)
 - [FAQ](documentation/faq.md)
 
 ## In this file:
@@ -123,7 +127,7 @@ Follow these instructions to set up and run the game:
 5. **Enviroment Variables**
    - Add .env file in root folder /Alias-Game
    ```bash
-   MONGO_URI = mongodb+srv://solvd-team-3:2prHVO2HGozJkXOh@solvd-project.e9zpm.mongodb.nealiasGame?retryWrites=true&w=majority&appName=solvd-project
+   MONGO_URI = mongodb://localhost/aliasGame
    JWT_SECRET = 9XEvn7G-Ip56QBVEo9cD4xC5BqtBTMyLGC5aj3Qcs1s=
    JWT_REFRESH_SECRET = AxI2tJ6FLVii9Ra9JDC7Wb0hydO9uAKUaDTrPgDrm4g
     ```

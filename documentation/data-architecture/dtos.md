@@ -12,14 +12,19 @@
 
 ### Technical
 
-- Project Structure (core modules)?
+- Project Structure
+    - [Files & Folders]
+    - [Modules]
 - Data Architecture
-  - [Data Base Schemas](./database-schemas.md#structure)
-  - [Interfaces](./interfaces.md#game-interfaces-documentation)
-  - [Dtos](#dtos)
+    - [Data Base Schemas](./database-schemas.md#structure)
+    - [Interfaces](./interfaces.md#game-interfaces-documentation)
+    - [Dtos](#dtos)
 - APIs
-  - [Auth](../APIs/auth.md#authentication)
-  - [Socket Events](../APIs/socket-events.md#socket-events-documentation)
+    - [Auth](../APIs/auth.md#authentication)
+    - [Socket Events](../APIs/socket-events.md#socket-events-documentation)
+- Guides
+    - [Testing]
+    - [Deployment]
 
 ### Additional Information
 
@@ -29,25 +34,24 @@
 
 ## In this file:
 
-- [Auth DTOs](#auth-dtos)
-  - [CreateUserDto](#createuserdto)
-  - [LoginUserDto](#loginuserdto)
-  - [RefreshTokenDto](#refreshtokendto)
-- [Game Room DTOs](#game-room-dtos)
+1.  [Auth DTOs](#auth-dtos)
+    - [CreateUserDto](#createuserdto)
+    - [LoginUserDto](#loginuserdto)
+    - [RefreshTokenDto](#refreshtokendto)
+2. [Game Room DTOs](#game-room-dtos)
+   - [GameRoomDto](#gameroomdto)
+   - [GameStartedDto](#gamestarteddto)
 
-  - [GameRoomDto](#gameroomdto)
-  - [GameStartedDto](#gamestarteddto)
-
-- [Lobby DTOs](#lobby-dtos)
-  - [CreateGameDto](#creategamedto)
-  - [InLobbyGameDto](#inlobbygamedto)
-  - [JoinGameDto](#joingamedto)
+3. [Lobby DTOs](#lobby-dtos)
+   - [CreateGameDto](#creategamedto)
+   - [InLobbyGameDto](#inlobbygamedto)
+   - [JoinGameDto](#joingamedto)
 
 ## DTOs
 
 Data Transfer Objects (DTOs) are used in the Alias Game project to ensure the correct structure and validation of the data exchanged between the client and server, enforcing specific validation rules to maintain data integrity.
 
-<br>
+
 
 ## Auth DTOs
 
