@@ -170,6 +170,7 @@ socket = io('/lobby', {
 - **Emit Description**: Send newly created game's id
 - **Handler Description**: Redirect to `"game/:gameId"`
 - **Payload**:
+
   - gameId: string
 
   **Example Request**:
@@ -185,6 +186,7 @@ socket = io('/lobby', {
 - **Emit Description**: Send joined game's id
 - **Handler Description**: Redirect to `"game/:gameId"`
 - **Payload**:
+
   - gameId: string
 
   **Example Request**:
@@ -200,6 +202,7 @@ socket = io('/lobby', {
 - **Emit Description**: Sends all lobby rooms info
 - **Handler Description**: Update displayed lobby data
 - **Payload**:
+
   - InLobbyGameDto[]
 
   **Example Payload**:
@@ -282,9 +285,11 @@ The GameRoomGateway manages WebSocket connections in the `"game-room"` namespace
 ```javascript
 socket = io('/game-room', {
   // namespace
-  query: { gameId: gameRoomId }, // id of game room
+  query: {
+    gameId: gameRoomId, // id of game room
+    serverOffset: 0,
+  }, // message offset
   auth: {
-    serverOffset: 0, // last received message offset
     token: accessToken, //auth token
   },
 });
