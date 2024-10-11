@@ -343,7 +343,7 @@
         socket.on('chat:update', (msg) => {
           console.log(`Message received: ${msg}, 'serverOffset: `, msg.messageId)
           const serverOffset = msg.messageId;
-          const item = msg.userName === "Server" ? `<li style="color: red;">
+          const item = msg.userName === "Server" ? `<li style="color: rgb(139, 0, 139);">
                 <p><small class="text-muted ms-auto">[${new Date(msg.time).toLocaleTimeString()}]</small> ${msg.userName}:  ${msg.message} </p>
               </li>`: `<li>
               <p><small class="text-muted ms-auto">[${new Date(msg.time).toLocaleTimeString()}]</small> ${msg.userName}:  ${msg.message} </p>
