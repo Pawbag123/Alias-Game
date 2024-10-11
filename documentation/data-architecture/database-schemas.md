@@ -13,8 +13,8 @@
 ### Technical
 
 - Project Structure
-    - [Files & Folders]
-    - [Modules]
+    - [Files & Folders](../project-structure/files-and-folders.md#directory-structure)
+    - [Modules](../project-structure/core-modules.md#core-modules)
 - Data Architecture
     - [Data Base Schemas](#structure)
     - [Interfaces](./interfaces.md#game-interfaces-documentation)
@@ -23,13 +23,13 @@
     - [Auth](../APIs/auth.md#authentication)
     - [Socket Events](../APIs/socket-events.md#socket-events-documentation)
 - Guides
-    - [Testing]
-    - [Deployment]
+    - [Testing](../guides/testing.md#running-tests-in-nestjs-with-jest)
+    - [Deployment](../guides/deployment.md#deploying-a-nestjs-application-to-heroku)
 
 ### Additional Information
 
-- [Deployment & Future Enhancements](documentation/deployment.md)
-- [FAQ](documentation/faq.md)
+- [Future Enhancements](../future-enhancements.md#future-enhancements)
+- [FAQ](../FAQ.md#faq)
 
 ## In this file:
 

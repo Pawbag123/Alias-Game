@@ -38,15 +38,15 @@ export class GameMechanicsService {
     const totalRounds = MAX_TURNS;
 
     while (rounds < totalRounds) {
-      this.nextTurn(gameId); // Handles both game initialization and next turn
       this.newWord(gameId); // Generate a new word
+      this.nextTurn(gameId); // Handles both game initialization and next turn
 
       this.emitGameStartedUpdated(gameRoom, gameId);
-      const { turn, currentWord } = this.gameStateService.getGameById(gameId);
-      this.logger.debug(`STATE NUMBER ${rounds}`, turn);
-      this.logger.debug('current word', currentWord);
+      // this.logger.debug(`STATE NUMBER ${rounds}`, turn);
+      // this.logger.debug('current word', currentWord);
 
       await this.startTimer(gameId, TURN_TIME, gameRoom);
+      const { turn, currentWord } = this.gameStateService.getGameById(gameId);
       gameRoom.to(gameId).emit('chat:update', {
         userName: 'Server',
         message: `${turn.describerName} ran out of time. The word was "${currentWord}"`,
@@ -107,7 +107,7 @@ export class GameMechanicsService {
       const wordIndex = this.getRandomNumber(0, words.length - 1);
       selectedWord = words[wordIndex];
     } while (wordsUsed.includes(selectedWord));
-
+    wordsUsed.push(selectedWord);
     return selectedWord;
   }
 
@@ -137,7 +137,7 @@ export class GameMechanicsService {
       };
 
       // Optionally set the first word
-      game.currentWord = this.generateWord(game.wordsUsed);
+      // game.currentWord = this.generateWord(game.wordsUsed);
     } else {
       // Existing turn logic for subsequent turns
       game.turn.alreadyDescribed.push(game.turn.describerId);
@@ -178,9 +178,10 @@ export class GameMechanicsService {
 
   newWord(gameId: string) {
     const game = this.gameStateService.getGameById(gameId);
-    if (game.currentWord) {
-      game.wordsUsed.push(game.currentWord);
-    }
+
+    // if (game.currentWord) {
+    //   game.wordsUsed.push(game.currentWord);
+    // }
     game.currentWord = this.generateWord(game.wordsUsed);
     this.logger.debug('new word : ', game.currentWord);
     this.gameStateService.saveCurrentState(game);
