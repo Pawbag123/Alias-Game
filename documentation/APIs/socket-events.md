@@ -7,36 +7,33 @@
 - [Game Description](../../README.md#game-description)
 - [Rules](../../README.md#rules)
 - [System Requirements](../../README.md#system-requirements)
-- [Setup and Installation](../../README.md#system-requirements#setup-and-installation)
-- [Troubleshooting](../../README.md#system-requirements#troubleshooting)
+- [Setup and Installation](../../README.md#setup-and-installation)
+- [Troubleshooting](../../README.md#troubleshooting)
 
 ### Technical
 
 - Project Structure
-    - [Files & Folders]
-    - [Modules]
+    - [Files & Folders](../project-structure/files-and-folders.md#directory-structure)
+    - [Modules](../project-structure/core-modules.md#core-modules)
 - Data Architecture
-  - [Data Base Schemas](../data-architecture/database-schemas.md#structure)
-  - [Interfaces](../data-architecture/interfaces.md#game-interfaces-documentation)
-  - [Dtos](../data-architecture/dtos.md#dtos)
+    - [Data Base Schemas](../data-architecture/database-schemas.md#structure)
+    - [Interfaces](../data-architecture/interfaces.md#game-interfaces-documentation)
+    - [Dtos](../data-architecture/dtos.md#dtos)
 - APIs
-  - [Auth](./auth.md#authentication)
-  - [Socket events](#socket-events-documentation)
+    - [Auth](auth.md#authentication)
+    - [Socket Events](#socket-events-documentation)
 - Guides
-    - [Testing]
-    - [Deployment]
-    
+    - [Testing](../guides/testing.md#running-tests-in-nestjs-with-jest)
+    - [Deployment](../guides/deployment.md#deploying-a-nestjs-application-to-heroku)
+
 ### Additional Information
 
-- [Security & Testing](documentation/security.md)
-- [Deployment & Future Enhancements](documentation/deployment.md)
-- [FAQ](documentation/faq.md)
-
+- [Future Enhancements](../future-enhancements.md#future-enhancements)
+- [FAQ](../FAQ.md#faq)
 
 ## In this file
 
 1. [Lobby Gateway](#lobby-gateway)
-
    - [Description](#description)
    - [Connection Parameters](#connection-parameters)
    - [Middlewares before connection](#middlewares-before-connection)
