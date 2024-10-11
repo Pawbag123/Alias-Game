@@ -1,28 +1,38 @@
-# Node.js-Based Game "Alias" with Chat and Word Checking
+# Node.js-Based Game "Alias"
 
 ## Table of Contents
 
 ### General
 - [Game Description](#game-description)
-- [Rules](#objective)
+- [Rules](#rules)
 - [System Requirements](#system-requirements)
 - [Setup and Installation](#setup-and-installation)
 - [Troubleshooting](#troubleshooting)
 
 ### Technical
-- [Project Structure (core modules)?](documentation/project-structure.md)
-- [Data Architecture](documentation/data-architecture.md)
+- Project Structure (core modules)?
+- Data Architecture
     - [Data Base Schemas](documentation/data-architecture.md#data-base-schemas)
-    - [Interfaces](documentation/data-architecture.md#Interfaces)
-    - [Dtos](documentation/data-architecture.md#Dtos)
-- [APis](documentation/apis.md)
-    - [Auth](documentation/apis.md#auth)
-    - [Socket events](documentation/apis.md#socket-events)
+    - [Interfaces](documentation/data-architecture/interfaces.md#game-interfaces-documentation)
+    - [Dtos](documentation/data-architecture.md#dtos)
+- APIs
+    - [Auth](documentation/apis/auth.md#auth-controller)
+    - [Socket Events](documentation/apis/socket-events#socket-events-documentation)
 
 ### Additional Information
 - [Security & Testing](documentation/security.md)
 - [Deployment & Future Enhancements](documentation/deployment.md)
 - [FAQ](documentation/faq.md)
+
+## In this file:
+
+1. [Game Description](#game-description)
+2. [Rules](#rules)
+3. [System Requirements](#system-requirements)
+4. [Setup and Installation](#setup-and-installation)
+5. [Troubleshooting](#troubleshooting)
+
+---
 
 ## Game Description
 Alias is a word-guessing game built with Node.js as final project for LABA Solvd training backend bootcamp. In the game, players form teams, each team takes turns where one member describes a word and others guess it. 
@@ -49,28 +59,32 @@ Points are awarded for each correct guess. Similar words are checked for validat
 The game concludes after a predetermined number of rounds, with the highest-scoring team winning. Also teams can draw.
 
 ## System Requirements
-**Backend**: Node.js<br>
+**Backend**: Node.js - Nest.js<br>
 
 **Database**: MongoDB<br>
 
 **Frontend**: Handlebars 
 
 <p>
-  <a href="https://skillicons.dev" title="NodeJs">
-    <img src="https://skillicons.dev/icons?i=nodejs" width="48" alt="NestJS">
-  </a>
   <a href="https://skillicons.dev" title="TypeScript">
     <img src="https://skillicons.dev/icons?i=typescript" width="48" alt="TypeScript">
+  </a>
+  <a href="https://skillicons.dev" title="NodeJs">
+    <img src="https://skillicons.dev/icons?i=nodejs" width="48" alt="NodeJS">
   </a>
   <a href="https://skillicons.dev" title="NestJS">
     <img src="https://skillicons.dev/icons?i=nestjs" width="48" alt="NestJS">
   </a>
   <a href="https://skillicons.dev" title="MongoDB">
-    <img src="https://skillicons.dev/icons?i=mongodb" width="48" alt="PostgreSQL">
+    <img src="https://skillicons.dev/icons?i=mongodb" width="48" alt="MongoDB">
   </a>
-  <a href="https://skillicons.dev" title="Docker">
-    <img src="https://skillicons.dev/icons?i=handlebars" width="48" alt="Docker">
+  <a>
+    <img src="![images](https://github.com/user-attachments/assets/6e698f3b-dcd6-4047-a881-2312a30b7411)" width="48" alt="Handlebars">
   </a>
+<!--   
+    <a href="https://skillicons.dev" title="MongoDB">
+    <img src="https://skillicons.dev/icons?i=heroku" width="48" alt="Heroku">
+  </a> -->
 </p>
 
 ## Setup and Installation
