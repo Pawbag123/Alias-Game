@@ -12,7 +12,9 @@
 
 ### Technical
 
-- Project Structure (core modules)?
+- Project Structure
+    - [Files & Folders]
+    - [Modules]
 - Data Architecture
   - [Data Base Schemas](../data-architecture/database-schemas.md#structure)
   - [Interfaces](../data-architecture/interfaces.md#game-interfaces-documentation)
@@ -20,12 +22,16 @@
 - APIs
   - [Auth](./auth.md#authentication)
   - [Socket events](#socket-events-documentation)
-
+- Guides
+    - [Testing]
+    - [Deployment]
+    
 ### Additional Information
 
 - [Security & Testing](documentation/security.md)
 - [Deployment & Future Enhancements](documentation/deployment.md)
 - [FAQ](documentation/faq.md)
+
 
 ## In this file
 

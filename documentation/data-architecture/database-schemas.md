@@ -28,7 +28,6 @@
 
 ### Additional Information
 
-- [Security & Testing](documentation/security.md)
 - [Deployment & Future Enhancements](documentation/deployment.md)
 - [FAQ](documentation/faq.md)
 
