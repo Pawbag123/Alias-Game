@@ -11,6 +11,10 @@ export class ChatService {
     private readonly chatModel: Model<Chat>,
   ) {}
 
+  private isValidObjectId(id: string): boolean {
+    return mongoose.Types.ObjectId.isValid(id);
+  }
+
   async handleChatMessage(
     userId: string,
     userName: string,
@@ -19,9 +23,16 @@ export class ChatService {
   ) {
     const timestamp = new Date();
 
-    //Create objec of new chat message
+    if (!this.isValidObjectId(userId)) {
+      throw new Error('Invalid userId');
+    }
+
+    // Convert userId string to ObjectId
+    const userIdObject = new mongoose.Types.ObjectId(userId);
+
+    // Create object for the new chat message
     const newMessage = {
-      userId,
+      userId: userIdObject,
       userName,
       content: message,
       timestamp,
@@ -47,7 +58,6 @@ export class ChatService {
     };
   }
 
-  //Don't work refreshing the game room, freezes the view, the rest of the players can see the messages typed tough
   async getMessagesAfter(
     lastMessageId: mongoose.Schema.Types.ObjectId,
     gameId: string,
@@ -63,7 +73,7 @@ export class ChatService {
       // Filter messages based on the lastMessageId
       const recoveredMessages = chatDocument.messages.map((message) => {
         return {
-          userId: message.userId,
+          userId: message.userId.toString(),
           userName: message.userName,
           gameId,
           message: message.content,

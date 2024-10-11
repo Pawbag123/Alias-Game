@@ -285,12 +285,19 @@ export class GameMechanicsService {
       currentWord,
       message,
     );
-    const chatResponse = await chatService.handleChatMessage(
-      userId,
-      userName,
-      gameId,
-      validatedMessage,
-    );
+    let chatResponse;
+
+    try {
+      chatResponse = await chatService.handleChatMessage(
+        userId,
+        userName,
+        gameId,
+        validatedMessage,
+      );
+    } catch (error) {
+      this.logger.error(error);
+      throw new Error(error.message);
+    }
     gameRoom.to(gameId).emit('chat:update', chatResponse);
     if (wordStatus === WordStatus.SIMILAR) {
       gameRoom.to(gameId).emit('chat:update', {
@@ -332,12 +339,19 @@ export class GameMechanicsService {
     if (!isAllowed) {
       throw new Error('Message is not allowed');
     }
-    const chatResponse = await chatService.handleChatMessage(
-      userId,
-      userName,
-      gameId,
-      message,
-    );
+    let chatResponse;
+
+    try {
+      chatResponse = await chatService.handleChatMessage(
+        userId,
+        userName,
+        gameId,
+        message,
+      );
+    } catch (error) {
+      this.logger.error(error);
+      throw new Error(error.message);
+    }
     gameRoom.to(gameId).emit('chat:update', chatResponse);
   }
 

@@ -188,12 +188,19 @@ export class GameRoomGateway
     this.logger.log(`Chat message received: ${message}`);
 
     if (!this.gameRoomService.isGameStarted(gameId)) {
-      const chatResponse = await this.chatService.handleChatMessage(
-        userId,
-        userName,
-        gameId,
-        message,
-      );
+      let chatResponse;
+
+      try {
+        chatResponse = await this.chatService.handleChatMessage(
+          userId,
+          userName,
+          gameId,
+          message,
+        );
+      } catch (error) {
+        this.logger.error(error);
+        throw new Error(error.message);
+      }
       this.gameRoom.to(gameId).emit('chat:update', chatResponse);
       return;
     }
