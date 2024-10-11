@@ -196,10 +196,9 @@
       const gameRoomId = window.location.pathname.split('/').pop();
 
       if(!socket) {
-        socket = io('/game-room', {
-          query: { gameId: gameRoomId },
+        socket = io('/game-room', { 
+          query: { gameId: gameRoomId, serverOffset: 0, },
           auth: {
-            serverOffset: 0,
             token: accessToken
           }
         });

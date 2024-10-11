@@ -1,28 +1,42 @@
-# Node.js-Based Game "Alias" with Chat and Word Checking
+# Node.js-Based Game "Alias"
 
 ## Table of Contents
 
 ### General
 - [Game Description](#game-description)
-- [Rules](#objective)
+- [Rules](#rules)
 - [System Requirements](#system-requirements)
 - [Setup and Installation](#setup-and-installation)
 - [Troubleshooting](#troubleshooting)
 
 ### Technical
-- [Project Structure (core modules)?](documentation/project-structure.md)
-- [Data Architecture](documentation/data-architecture.md)
-    - [Data Base Schemas](documentation/data-architecture.md#data-base-schemas)
-    - [Interfaces](documentation/data-architecture.md#Interfaces)
-    - [Dtos](documentation/data-architecture.md#Dtos)
-- [APis](documentation/apis.md)
-    - [Auth](documentation/apis.md#auth)
-    - [Socket events](documentation/apis.md#socket-events)
+- Project Structure
+    - [Files & Folders](documentation/project-structure/files-and-folders.md#)
+    - [Modules](documentation/project-structure/core-modules.md#)
+- Data Architecture
+    - [Data Base Schemas](documentation/data-architecture/database-schemas.md#structure)
+    - [Interfaces](documentation/data-architecture/interfaces.md#game-interfaces-documentation)
+    - [Dtos](documentation/data-architecture/dtos#dtos)
+- APIs
+    - [Auth](documentation/apis/auth.md#auth-controller)
+    - [Socket Events](documentation/apis/socket-events#socket-events-documentation)
+- Guides
+    - [Testing](documentation/guides/testing.md)
+    - [Deployment](documentation/guides/deployment.md)
 
 ### Additional Information
-- [Security & Testing](documentation/security.md)
-- [Deployment & Future Enhancements](documentation/deployment.md)
+- [Future Enhancements](documentation/deployment.md)
 - [FAQ](documentation/faq.md)
+
+## In this file:
+
+1. [Game Description](#game-description)
+2. [Rules](#rules)
+3. [System Requirements](#system-requirements)
+4. [Setup and Installation](#setup-and-installation)
+5. [Troubleshooting](#troubleshooting)
+
+---
 
 ## Game Description
 Alias is a word-guessing game built with Node.js as final project for LABA Solvd training backend bootcamp. In the game, players form teams, each team takes turns where one member describes a word and others guess it. 
@@ -49,28 +63,28 @@ Points are awarded for each correct guess. Similar words are checked for validat
 The game concludes after a predetermined number of rounds, with the highest-scoring team winning. Also teams can draw.
 
 ## System Requirements
-**Backend**: Node.js<br>
+**Backend**: Node.js - Nest.js<br>
 
 **Database**: MongoDB<br>
 
 **Frontend**: Handlebars 
 
 <p>
-  <a href="https://skillicons.dev" title="NodeJs">
+  <a title="NodeJs">
     <img src="https://skillicons.dev/icons?i=nodejs" width="48" alt="NestJS">
   </a>
-  <a href="https://skillicons.dev" title="TypeScript">
+  <a title="TypeScript">
     <img src="https://skillicons.dev/icons?i=typescript" width="48" alt="TypeScript">
   </a>
-  <a href="https://skillicons.dev" title="NestJS">
+  <a title="NestJS">
     <img src="https://skillicons.dev/icons?i=nestjs" width="48" alt="NestJS">
   </a>
-  <a href="https://skillicons.dev" title="MongoDB">
+  <a title="MongoDB">
     <img src="https://skillicons.dev/icons?i=mongodb" width="48" alt="PostgreSQL">
   </a>
-  <a href="https://skillicons.dev" title="Docker">
-    <img src="https://skillicons.dev/icons?i=handlebars" width="48" alt="Docker">
-  </a>
+<a title="Handlebars">
+  <img src="https://github.com/user-attachments/assets/06aef053-dd04-437f-a353-943e3d100215" width="48" alt="Handlebars">
+</a>
 </p>
 
 ## Setup and Installation
@@ -110,12 +124,20 @@ Follow these instructions to set up and run the game:
    ```bash
    npm install
     ```
-5. **Start the Development Server**
+5. **Enviroment Variables**
+   - Add .env file in root folder /Alias-Game
+   ```bash
+   MONGO_URI = mongodb://localhost/aliasGame
+   JWT_SECRET = 9XEvn7G-Ip56QBVEo9cD4xC5BqtBTMyLGC5aj3Qcs1s=
+   JWT_REFRESH_SECRET = AxI2tJ6FLVii9Ra9JDC7Wb0hydO9uAKUaDTrPgDrm4g
+    ```
+
+6. **Start the Development Server**
    - Launch the server using:
    ```bash
    npm run start:dev
     ```
-6. **Access the Game**
+7. **Access the Game**
    - Open your web browser and navigate to `http://localhost:3000` to start playing the game.
 
 ### Troubleshooting

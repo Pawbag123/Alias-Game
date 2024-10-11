@@ -47,7 +47,11 @@ export class GameMechanicsService {
       this.logger.debug('current word', currentWord);
 
       await this.startTimer(gameId, TURN_TIME, gameRoom);
-
+      gameRoom.to(gameId).emit('chat:update', {
+        userName: 'Server',
+        message: `${turn.describerName} ran out of time. The word was "${currentWord}"`,
+        time: new Date(),
+      });
       rounds++;
     }
 
@@ -281,12 +285,19 @@ export class GameMechanicsService {
       currentWord,
       message,
     );
-    const chatResponse = await chatService.handleChatMessage(
-      userId,
-      userName,
-      gameId,
-      validatedMessage,
-    );
+    let chatResponse;
+
+    try {
+      chatResponse = await chatService.handleChatMessage(
+        userId,
+        userName,
+        gameId,
+        validatedMessage,
+      );
+    } catch (error) {
+      this.logger.error(error);
+      throw new Error(error.message);
+    }
     gameRoom.to(gameId).emit('chat:update', chatResponse);
     if (wordStatus === WordStatus.SIMILAR) {
       gameRoom.to(gameId).emit('chat:update', {
@@ -328,12 +339,19 @@ export class GameMechanicsService {
     if (!isAllowed) {
       throw new Error('Message is not allowed');
     }
-    const chatResponse = await chatService.handleChatMessage(
-      userId,
-      userName,
-      gameId,
-      message,
-    );
+    let chatResponse;
+
+    try {
+      chatResponse = await chatService.handleChatMessage(
+        userId,
+        userName,
+        gameId,
+        message,
+      );
+    } catch (error) {
+      this.logger.error(error);
+      throw new Error(error.message);
+    }
     gameRoom.to(gameId).emit('chat:update', chatResponse);
   }
 

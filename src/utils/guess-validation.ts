@@ -3,7 +3,10 @@ import {
   MIN_LEVENSHTEIN_WORD_LENGTH,
   WordStatus,
 } from 'src/types';
-import { calculateLevenshteinDistance } from './levenshtein-distance';
+import {
+  calculateLevenshteinDistance,
+  calculateDamerauLevenshteinDistance,
+} from './levenshtein-distance';
 
 /**
  * Function that checks if the guessed word is correct, close, or incorrect.
@@ -20,25 +23,25 @@ export const checkGuessedWord = (
 
   // Ensure single-word guesses
   if (normalizedMessage.includes(' ')) {
-    return [message, WordStatus.NOT_GUESSED]; // Reject multi-word guesses
-  }
+    return [message, WordStatus.NOT_GUESSED];
+  } // Reject multi-word guesses
 
   // Exact match check
   if (normalizedMessage === currentWord.toLowerCase()) {
-    return [`${message} ✅`, WordStatus.GUESSED]; // Word guessed correctly
-  }
+    return [`${message} ✅`, WordStatus.GUESSED];
+  } // Word guessed correctly
 
   // Levenshtein Distance check (allowing some misspellings)
   // disable checking for short words to avoid false positives
   // check if the distance is less than the threshold
   if (
     normalizedMessage.length > MIN_LEVENSHTEIN_WORD_LENGTH &&
-    calculateLevenshteinDistance(
+    // Using DamerauLevenshtein instead LevenshteinDistance
+    calculateDamerauLevenshteinDistance(
       normalizedMessage,
       currentWord.toLowerCase(),
     ) <= GUESSER_LEVENSHTEIN_THRESHOLD
   ) {
-    // Threshold can be 1-2
     return [`${message} 🤏`, WordStatus.SIMILAR]; // Close
   }
 

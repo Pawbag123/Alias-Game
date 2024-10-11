@@ -24,7 +24,7 @@ async function bootstrap() {
   app.useStaticAssets(join(__dirname, '..', 'src', 'public'));
   app.useWebSocketAdapter(new SocketIOAdapter(app, configService));
 
-  await app.listen(3000);
+  await app.listen(process.env.PORT || 3000);
 
   logger.log(`Application is running on: ${await app.getUrl()}`);
 }

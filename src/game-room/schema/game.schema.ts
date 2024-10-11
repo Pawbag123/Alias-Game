@@ -10,7 +10,6 @@ export class Games extends Document {
   @Prop({ required: true })
   host: string;
 
-  // Add inGameStats here
   @Prop([
     {
       userId: { type: String, required: true },

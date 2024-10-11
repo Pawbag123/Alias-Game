@@ -3,7 +3,7 @@ export const MAX_TURNS = 8;
 export const TURN_TIME = 60;
 export const JOIN_TIMEOUT = 5000;
 export const CLIENT_PORT = 3000;
-export const DESCRIBER_LEVENSHTEIN_THRESHOLD = 1;
+export const DESCRIBER_LEVENSHTEIN_THRESHOLD = 2;
 export const GUESSER_LEVENSHTEIN_THRESHOLD = 2;
 export const MIN_LEVENSHTEIN_WORD_LENGTH = 3;
 
