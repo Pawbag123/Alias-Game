@@ -71,6 +71,7 @@ describe('LobbyService', () => {
     });
   });
 
+
   describe('joinGame', () => {
     it('should join a game and emit events correctly', () => {
       (gameStateService.getSerializedGames as jest.Mock).mockReturnValue([]);
@@ -93,6 +94,7 @@ describe('LobbyService', () => {
     });
   });
 
+  
   describe('handleConnection', () => {
     it('should handle client connection and emit game data', () => {
       (gameStateService.getGameOfUser as jest.Mock).mockReturnValue(null);

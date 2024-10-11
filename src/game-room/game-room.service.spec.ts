@@ -38,6 +38,7 @@ describe('GameRoomService', () => {
     expect(service).toBeDefined();
   });
 
+
   describe('addPlayerToGame', () => {
     it('should add player to game and set socketId', () => {
       const id = 'user1';
@@ -58,6 +59,7 @@ describe('GameRoomService', () => {
       expect(mockUser.socketId).toBe(socketId);
     });
   });
+
 
   describe('handleUserConnectToGameRoom', () => {
     it('should handle user connection and update game room', () => {
@@ -111,6 +113,7 @@ describe('GameRoomService', () => {
     });
   });
   
+
   describe('handleUserDisconnectFromGameRoom', () => {
     it('should handle user disconnection and update game room', () => {
       const mockClient = {
@@ -194,7 +197,7 @@ describe('GameRoomService', () => {
       expect(mockGameRoom.emit).toHaveBeenCalledWith('game-room:updated', expect.anything());
     });
   });
-  
+
 
   describe('isGameStarted', () => {
     it('should return true if the game is started', () => {
