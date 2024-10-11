@@ -13,8 +13,8 @@
 ### Technical
 
 - Project Structure
-    - [Files & Folders]
-    - [Modules]
+    - [Files & Folders](../project-structure/files-and-folders.md#directory-structure)
+    - [Modules](../project-structure/core-modules.md#core-modules)
 - Data Architecture
     - [Data Base Schemas](./database-schemas.md#structure)
     - [Interfaces](./interfaces.md#game-interfaces-documentation)
@@ -28,8 +28,8 @@
 
 ### Additional Information
 
-- [Future Enhancements](documentation/deployment.md)
-- [FAQ](documentation/faq.md)
+- [Future Enhancements](../future-enhancements.md#future-enhancements)
+- [FAQ](../FAQ.md#faq)
 
 ## In this file:
 
