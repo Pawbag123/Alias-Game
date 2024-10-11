@@ -3,6 +3,7 @@
 ## Table of Contents
 
 ### General
+
 - [Game Description](../../README.md#game-description)
 - [Rules](../../README.md#rules)
 - [System Requirements](../../README.md#system-requirements)
@@ -10,16 +11,18 @@
 - [Troubleshooting](../../README.md#system-requirements#troubleshooting)
 
 ### Technical
+
 - Project Structure (core modules)?
 - Data Architecture
-    - [Data Base Schemas](./database-schemas.md#structure)
-    - [Interfaces](./interfaces.md#game-interfaces-documentation)
-    - [Dtos](#dtos)
+  - [Data Base Schemas](./database-schemas.md#structure)
+  - [Interfaces](./interfaces.md#game-interfaces-documentation)
+  - [Dtos](#dtos)
 - APIs
-    - [Auth](../APIs/auth.md#authentication)
-    - [Socket Events](../APIs/socket-events.md#socket-events-documentation)
+  - [Auth](../APIs/auth.md#authentication)
+  - [Socket Events](../APIs/socket-events.md#socket-events-documentation)
 
 ### Additional Information
+
 - [Security & Testing](documentation/security.md)
 - [Deployment & Future Enhancements](documentation/deployment.md)
 - [FAQ](documentation/faq.md)
@@ -30,8 +33,8 @@
   - [CreateUserDto](#createuserdto)
   - [LoginUserDto](#loginuserdto)
   - [RefreshTokenDto](#refreshtokendto)
-  
 - [Game Room DTOs](#game-room-dtos)
+
   - [GameRoomDto](#gameroomdto)
   - [GameStartedDto](#gamestarteddto)
 
@@ -44,7 +47,6 @@
 
 Data Transfer Objects (DTOs) are used in the Alias Game project to ensure the correct structure and validation of the data exchanged between the client and server, enforcing specific validation rules to maintain data integrity.
 
-
 ---
 
 ### Auth DTOs
@@ -52,6 +54,7 @@ Data Transfer Objects (DTOs) are used in the Alias Game project to ensure the co
 #### CreateUserDto
 
 Validates the data required for user registration.
+
 ### Values
 
 - `username`: at least 6 characters, alphanumeric.
@@ -94,6 +97,7 @@ class RefreshTokenDto {
 Represents the structure of a game room. This DTO exposes:
 
 ### Values
+
 - `id`: Unique identifier of the game room.
 - `name`: The name of the room.
 - `host`: The user who created the room.
@@ -114,10 +118,11 @@ class GameRoomDto {
 Provides the structure for a game that has started.
 
 ### Values
+
 - `id`, `name`, `host`: Basic room details.
 - `redTeam`, `blueTeam`: Arrays containing player usernames and whether they are active.
 - `turn`: The current team’s turn.
-- `currentWord`: The word being guessed.
+- `currentWord`: The word being guessed, sent only to describer.
 - `score`: Current score for both teams.
 
 ```typescript
@@ -137,28 +142,12 @@ class GameStartedDto {
 
 ### Lobby DTOs
 
-#### CreateGameDto
-
-Used to validate the creation of a new game.
-
-### Values
-- `userId`: The ID of the player creating the game.
-- `userName`: The name of the player.
-- `gameName`: The name of the game room.
-
-```typescript
-class CreateGameDto {
-  userId: string;
-  userName: string;
-  gameName: string;
-}
-```
-
 #### InLobbyGameDto
 
 Represents a game that is visible in the lobby.
 
 ### Values
+
 - `id`: Game identifier.
 - `name`: The name of the game room.
 - `players`: Current number of players.
@@ -172,22 +161,5 @@ class InLobbyGameDto {
   players: number;
   maxPlayers: number;
   started: boolean;
-}
-```
-
-#### JoinGameDto
-
-Validates the data needed for a player to join a game.
-
-### Values
-- `userId`: ID of the player joining.
-- `userName`: The player's username.
-- `gameId`: ID of the game being joined.
-
-```typescript
-class JoinGameDto {
-  userId: string;
-  userName: string;
-  gameId: string;
 }
 ```
