@@ -12,9 +12,9 @@
 ### Technical
 - Project Structure (core modules)?
 - Data Architecture
-    - [Data Base Schemas](documentation/data-architecture.md#data-base-schemas)
+    - [Data Base Schemas](documentation/data-architecture/database-schemas.md#structure)
     - [Interfaces](documentation/data-architecture/interfaces.md#game-interfaces-documentation)
-    - [Dtos](documentation/data-architecture.md#dtos)
+    - [Dtos](documentation/data-architecture/dtos#dtos)
 - APIs
     - [Auth](documentation/apis/auth.md#auth-controller)
     - [Socket Events](documentation/apis/socket-events#socket-events-documentation)
@@ -66,25 +66,21 @@ The game concludes after a predetermined number of rounds, with the highest-scor
 **Frontend**: Handlebars 
 
 <p>
-  <a href="https://skillicons.dev" title="TypeScript">
+  <a title="NodeJs">
+    <img src="https://skillicons.dev/icons?i=nodejs" width="48" alt="NestJS">
+  </a>
+  <a title="TypeScript">
     <img src="https://skillicons.dev/icons?i=typescript" width="48" alt="TypeScript">
   </a>
-  <a href="https://skillicons.dev" title="NodeJs">
-    <img src="https://skillicons.dev/icons?i=nodejs" width="48" alt="NodeJS">
-  </a>
-  <a href="https://skillicons.dev" title="NestJS">
+  <a title="NestJS">
     <img src="https://skillicons.dev/icons?i=nestjs" width="48" alt="NestJS">
   </a>
-  <a href="https://skillicons.dev" title="MongoDB">
-    <img src="https://skillicons.dev/icons?i=mongodb" width="48" alt="MongoDB">
+  <a title="MongoDB">
+    <img src="https://skillicons.dev/icons?i=mongodb" width="48" alt="PostgreSQL">
   </a>
-  <a>
-    <img src="![images](https://github.com/user-attachments/assets/6e698f3b-dcd6-4047-a881-2312a30b7411)" width="48" alt="Handlebars">
-  </a>
-<!--   
-    <a href="https://skillicons.dev" title="MongoDB">
-    <img src="https://skillicons.dev/icons?i=heroku" width="48" alt="Heroku">
-  </a> -->
+<a title="Handlebars">
+  <img src="https://github.com/user-attachments/assets/06aef053-dd04-437f-a353-943e3d100215" width="48" alt="Handlebars">
+</a>
 </p>
 
 ## Setup and Installation
@@ -124,12 +120,20 @@ Follow these instructions to set up and run the game:
    ```bash
    npm install
     ```
-5. **Start the Development Server**
+5. **Enviroment Variables**
+   - Add .env file in root folder /Alias-Game
+   ```bash
+   MONGO_URI = mongodb+srv://solvd-team-3:2prHVO2HGozJkXOh@solvd-project.e9zpm.mongodb.nealiasGame?retryWrites=true&w=majority&appName=solvd-project
+   JWT_SECRET = 9XEvn7G-Ip56QBVEo9cD4xC5BqtBTMyLGC5aj3Qcs1s=
+   JWT_REFRESH_SECRET = AxI2tJ6FLVii9Ra9JDC7Wb0hydO9uAKUaDTrPgDrm4g
+    ```
+
+6. **Start the Development Server**
    - Launch the server using:
    ```bash
    npm run start:dev
     ```
-6. **Access the Game**
+7. **Access the Game**
    - Open your web browser and navigate to `http://localhost:3000` to start playing the game.
 
 ### Troubleshooting

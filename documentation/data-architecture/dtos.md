@@ -47,11 +47,11 @@
 
 Data Transfer Objects (DTOs) are used in the Alias Game project to ensure the correct structure and validation of the data exchanged between the client and server, enforcing specific validation rules to maintain data integrity.
 
----
+<br>
 
-### Auth DTOs
+## Auth DTOs
 
-#### CreateUserDto
+### CreateUserDto
 
 Validates the data required for user registration.
 
@@ -67,7 +67,7 @@ class CreateUserDto {
 }
 ```
 
-#### LoginUserDto
+### LoginUserDto
 
 Used for login, ensuring the presence of both `username` and `password`.
 
@@ -78,7 +78,7 @@ class LoginUserDto {
 }
 ```
 
-#### RefreshTokenDto
+### RefreshTokenDto
 
 Validates the presence of a valid `refreshToken` for refreshing the user's session.
 
@@ -90,9 +90,9 @@ class RefreshTokenDto {
 
 ---
 
-### Game Room DTOs
+## Game Room DTOs
 
-#### GameRoomDto
+### GameRoomDto
 
 Represents the structure of a game room. This DTO exposes:
 
@@ -113,7 +113,7 @@ class GameRoomDto {
 }
 ```
 
-#### GameStartedDto
+### GameStartedDto
 
 Provides the structure for a game that has started.
 
@@ -138,11 +138,11 @@ class GameStartedDto {
 }
 ```
 
----
 
-### Lobby DTOs
 
-#### InLobbyGameDto
+## Lobby DTOs
+
+### InLobbyGameDto
 
 Represents a game that is visible in the lobby.
 

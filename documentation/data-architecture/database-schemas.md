@@ -27,7 +27,7 @@
 - [Deployment & Future Enhancements](documentation/deployment.md)
 - [FAQ](documentation/faq.md)
 
-# Content
+# In this file:
 
 - [Structure](#structure)
 - [Schemas](#schemas)
