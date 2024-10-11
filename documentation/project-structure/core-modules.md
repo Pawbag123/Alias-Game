@@ -65,7 +65,7 @@ The service leverages the `GameStateService` to track and manipulate the state o
 
 ### Game Mechanics Service
 
-The 'GameMechanicsService' is responsible for managing all the logic required to make the game working properly. It includes logic for starting games, checking guessed words, handling turns and so on.
+The `GameMechanicsService` is responsible for managing all the logic required to make the game working properly. It includes logic for starting games, checking guessed words, handling turns and so on.
 
 #### Key Functions:
 
