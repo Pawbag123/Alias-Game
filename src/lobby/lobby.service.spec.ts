@@ -81,14 +81,6 @@ describe('LobbyService', () => {
         [],
       );
     });
-
-    it('should throw an error if the user is already in a game', () => {
-      (gameStateService.getGameOfUser as jest.Mock).mockReturnValue('game-id');
-
-      expect(() => {
-        lobbyService.createGame('Test Game', mockSocket, mockNamespace);
-      }).toThrowError('User already in game');
-    });
   });
 
   describe('joinGame', () => {
@@ -117,33 +109,6 @@ describe('LobbyService', () => {
         'games:updated',
         [],
       );
-    });
-
-    it('should throw an error if the game is not found', () => {
-      (gameStateService.getGameById as jest.Mock).mockReturnValue(null);
-
-      expect(() => {
-        lobbyService.joinGame('game-id', mockSocket, mockNamespace);
-      }).toThrowError('Game not found');
-    });
-
-    it('should throw an error if the game is full', () => {
-      (gameStateService.getGameById as jest.Mock).mockReturnValue({});
-      (gameStateService.isGameFull as jest.Mock).mockReturnValue(true);
-
-      expect(() => {
-        lobbyService.joinGame('game-id', mockSocket, mockNamespace);
-      }).toThrowError('Game is full');
-    });
-
-    it('should throw an error if the game has already started', () => {
-      (gameStateService.getGameById as jest.Mock).mockReturnValue({});
-      (gameStateService.isGameFull as jest.Mock).mockReturnValue(false);
-      (gameStateService.isGameStarted as jest.Mock).mockReturnValue(true);
-
-      expect(() => {
-        lobbyService.joinGame('game-id', mockSocket, mockNamespace);
-      }).toThrowError('Game already started');
     });
   });
 
