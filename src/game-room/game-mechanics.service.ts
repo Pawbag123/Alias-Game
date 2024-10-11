@@ -42,11 +42,11 @@ export class GameMechanicsService {
       this.nextTurn(gameId); // Handles both game initialization and next turn
 
       this.emitGameStartedUpdated(gameRoom, gameId);
-      const { turn, currentWord } = this.gameStateService.getGameById(gameId);
-      this.logger.debug(`STATE NUMBER ${rounds}`, turn);
-      this.logger.debug('current word', currentWord);
+      // this.logger.debug(`STATE NUMBER ${rounds}`, turn);
+      // this.logger.debug('current word', currentWord);
 
       await this.startTimer(gameId, TURN_TIME, gameRoom);
+      const { turn, currentWord } = this.gameStateService.getGameById(gameId);
       gameRoom.to(gameId).emit('chat:update', {
         userName: 'Server',
         message: `${turn.describerName} ran out of time. The word was "${currentWord}"`,
