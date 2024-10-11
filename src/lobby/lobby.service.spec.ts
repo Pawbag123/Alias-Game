@@ -1,18 +1,22 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { LobbyService } from './lobby.service';
 import { GameStateService } from '../game-state/game-state.service';
-import { CreateGameDto } from './dto/create-game-dto';
-import { JoinGameDto } from './dto/join-game-dto';
+import { Logger } from '@nestjs/common';
+import { Namespace, Socket } from 'socket.io';
+
 import { JOIN_TIMEOUT, MAX_USERS } from '../types';
 
 describe('LobbyService', () => {
   let lobbyService: LobbyService;
   let gameStateService: GameStateService;
+  let mockSocket: Socket;
+  let mockNamespace: Namespace;
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         LobbyService,
+        Logger,
         {
           provide: GameStateService,
           useValue: {
@@ -24,6 +28,10 @@ describe('LobbyService', () => {
             isGameStarted: jest.fn(),
             createJoinUser: jest.fn(),
             addUserToGame: jest.fn(),
+            getSerializedGames: jest.fn(),
+            getGameOfUser: jest.fn(),
+            getSerializedGameRoom: jest.fn(),
+            getUserStats: jest.fn(),
           },
         },
       ],
@@ -31,159 +39,130 @@ describe('LobbyService', () => {
 
     lobbyService = module.get<LobbyService>(LobbyService);
     gameStateService = module.get<GameStateService>(GameStateService);
+
+    // Mocking Socket and Namespace for the tests
+    mockSocket = {
+      data: { user: { userId: 'user-id', userName: 'Test User' } },
+      emit: jest.fn(),
+      broadcast: { emit: jest.fn() },
+    } as any as Socket;
+
+    mockNamespace = {
+      emit: jest.fn(),
+      server: {
+        of: jest.fn().mockReturnValue({
+          to: jest.fn().mockReturnValue({
+            emit: jest.fn(),
+          }),
+        }),
+      },
+    } as any as Namespace;
   });
 
   describe('createGame', () => {
     it('should create a game successfully', () => {
-      (gameStateService.isUserActive as jest.Mock).mockReturnValue(false);
-      (gameStateService.gameNameExists as jest.Mock).mockReturnValue(false);
       (gameStateService.createGame as jest.Mock).mockReturnValue('game-id');
+      (gameStateService.getSerializedGames as jest.Mock).mockReturnValue([]);
 
-      const createGameDto: CreateGameDto = {
-        gameName: 'Test Game',
-        userId: 'user-id',
-        userName: 'Test User',
-      };
-      const emitGamesUpdated = jest.fn();
+      lobbyService.createGame('Test Game', mockSocket, mockNamespace);
 
-      const result = lobbyService.createGame(createGameDto, emitGamesUpdated);
-
-      expect(result).toBe('game-id');
       expect(gameStateService.createGame).toHaveBeenCalledWith(
         'Test Game',
         'user-id',
         'Test User',
         MAX_USERS,
         JOIN_TIMEOUT,
-        emitGamesUpdated,
+        expect.any(Function),
+      );
+
+      expect(mockSocket.emit).toHaveBeenCalledWith('game:created', 'game-id');
+      expect(mockSocket.broadcast.emit).toHaveBeenCalledWith(
+        'games:updated',
+        [],
       );
     });
 
     it('should throw an error if the user is already in a game', () => {
-      (gameStateService.isUserActive as jest.Mock).mockReturnValue(true);
-
-      const createGameDto: CreateGameDto = {
-        gameName: 'Test Game',
-        userId: 'user-id',
-        userName: 'Test User',
-      };
-      const emitGamesUpdated = jest.fn();
+      (gameStateService.getGameOfUser as jest.Mock).mockReturnValue('game-id');
 
       expect(() => {
-        lobbyService.createGame(createGameDto, emitGamesUpdated);
+        lobbyService.createGame('Test Game', mockSocket, mockNamespace);
       }).toThrowError('User already in game');
-    });
-
-    it('should throw an error if the game name already exists', () => {
-      (gameStateService.isUserActive as jest.Mock).mockReturnValue(false);
-      (gameStateService.gameNameExists as jest.Mock).mockReturnValue(true);
-
-      const createGameDto: CreateGameDto = {
-        gameName: 'Test Game',
-        userId: 'user-id',
-        userName: 'Test User',
-      };
-      const emitGamesUpdated = jest.fn();
-
-      expect(() => {
-        lobbyService.createGame(createGameDto, emitGamesUpdated);
-      }).toThrowError('Game of specified name already exists');
     });
   });
 
   describe('joinGame', () => {
     it('should join a game successfully', () => {
-      (gameStateService.isUserActive as jest.Mock).mockReturnValue(false);
       (gameStateService.getGameById as jest.Mock).mockReturnValue({});
       (gameStateService.isGameFull as jest.Mock).mockReturnValue(false);
       (gameStateService.isGameStarted as jest.Mock).mockReturnValue(false);
+      (gameStateService.getSerializedGames as jest.Mock).mockReturnValue([]);
 
-      const joinGameDto: JoinGameDto = {
-        gameId: 'game-id',
-        userId: 'user-id',
-        userName: 'Test User',
-      };
-      const emitGamesUpdated = jest.fn();
-
-      lobbyService.joinGame(joinGameDto, emitGamesUpdated);
+      lobbyService.joinGame('game-id', mockSocket, mockNamespace);
 
       expect(gameStateService.createJoinUser).toHaveBeenCalledWith(
         'user-id',
         'game-id',
         JOIN_TIMEOUT,
-        emitGamesUpdated,
+        expect.any(Function),
       );
       expect(gameStateService.addUserToGame).toHaveBeenCalledWith(
         'user-id',
         'Test User',
         'game-id',
       );
-    });
 
-    it('should throw an error if the user is already in a game', () => {
-      (gameStateService.isUserActive as jest.Mock).mockReturnValue(true);
-
-      const joinGameDto: JoinGameDto = {
-        gameId: 'game-id',
-        userId: 'user-id',
-        userName: 'Test User',
-      };
-      const emitGamesUpdated = jest.fn();
-
-      expect(() => {
-        lobbyService.joinGame(joinGameDto, emitGamesUpdated);
-      }).toThrowError('User already in game');
+      expect(mockSocket.emit).toHaveBeenCalledWith('game:joined', 'game-id');
+      expect(mockSocket.broadcast.emit).toHaveBeenCalledWith(
+        'games:updated',
+        [],
+      );
     });
 
     it('should throw an error if the game is not found', () => {
-      (gameStateService.isUserActive as jest.Mock).mockReturnValue(false);
       (gameStateService.getGameById as jest.Mock).mockReturnValue(null);
 
-      const joinGameDto: JoinGameDto = {
-        gameId: 'game-id',
-        userId: 'user-id',
-        userName: 'Test User',
-      };
-      const emitGamesUpdated = jest.fn();
-
       expect(() => {
-        lobbyService.joinGame(joinGameDto, emitGamesUpdated);
+        lobbyService.joinGame('game-id', mockSocket, mockNamespace);
       }).toThrowError('Game not found');
     });
 
     it('should throw an error if the game is full', () => {
-      (gameStateService.isUserActive as jest.Mock).mockReturnValue(false);
       (gameStateService.getGameById as jest.Mock).mockReturnValue({});
       (gameStateService.isGameFull as jest.Mock).mockReturnValue(true);
 
-      const joinGameDto: JoinGameDto = {
-        gameId: 'game-id',
-        userId: 'user-id',
-        userName: 'Test User',
-      };
-      const emitGamesUpdated = jest.fn();
-
       expect(() => {
-        lobbyService.joinGame(joinGameDto, emitGamesUpdated);
+        lobbyService.joinGame('game-id', mockSocket, mockNamespace);
       }).toThrowError('Game is full');
     });
 
     it('should throw an error if the game has already started', () => {
-      (gameStateService.isUserActive as jest.Mock).mockReturnValue(false);
       (gameStateService.getGameById as jest.Mock).mockReturnValue({});
       (gameStateService.isGameFull as jest.Mock).mockReturnValue(false);
       (gameStateService.isGameStarted as jest.Mock).mockReturnValue(true);
 
-      const joinGameDto: JoinGameDto = {
-        gameId: 'game-id',
-        userId: 'user-id',
-        userName: 'Test User',
-      };
-      const emitGamesUpdated = jest.fn();
-
       expect(() => {
-        lobbyService.joinGame(joinGameDto, emitGamesUpdated);
+        lobbyService.joinGame('game-id', mockSocket, mockNamespace);
       }).toThrowError('Game already started');
+    });
+  });
+
+  describe('handleConnection', () => {
+    it('should emit joined game if user is already in a game', () => {
+      (gameStateService.getGameOfUser as jest.Mock).mockReturnValue('game-id');
+
+      lobbyService.handleConnection(mockSocket);
+
+      expect(mockSocket.emit).toHaveBeenCalledWith('game:joined', 'game-id');
+    });
+
+    it('should emit updated games if user is not in a game', () => {
+      (gameStateService.getGameOfUser as jest.Mock).mockReturnValue(null);
+      (gameStateService.getSerializedGames as jest.Mock).mockReturnValue([]);
+
+      lobbyService.handleConnection(mockSocket);
+
+      expect(mockSocket.emit).toHaveBeenCalledWith('games:updated', []);
     });
   });
 });
