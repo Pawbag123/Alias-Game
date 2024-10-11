@@ -14,6 +14,7 @@ import { LobbyService } from './lobby.service';
 import { Logger, UseGuards } from '@nestjs/common';
 import { JoinGameGuard } from './guards/join-game.guard';
 import { CreateGameGuard } from './guards/create-game.guard';
+import { GameSettingsDto } from './dto/game-settings.dto';
 
 /**
  * Gateway that handles connections in lobby, using lobby namespace
@@ -64,21 +65,20 @@ export class LobbyGateway implements OnGatewayConnection, OnGatewayDisconnect {
    * @param gameName - name of game to be created
    */
   @SubscribeMessage('game:create')
-  @UseGuards(CreateGameGuard)
-  handleGameCreate(
+  handleSettings(
     @ConnectedSocket() client: Socket,
-    @MessageBody() { gameName }: { gameName: string },
+    @MessageBody() gameSettings : GameSettingsDto,
   ): void {
-    this.logger.log(`Creating game:${gameName}`);
+
+    this.logger.log(`Creating game:${gameSettings.gameName}`);
 
     try {
-      this.lobbyService.createGame(gameName, client, this.lobby);
+      this.lobbyService.createGame(gameSettings, client, this.lobby);
     } catch (error) {
       this.logger.error('Error creating game:', error);
       throw new WsException(error.message);
     }
   }
-
   /**
    * Handler for joining game
    * Calls lobby service to join game, then emits game:joined to client that redirects him and games:updated to all clients

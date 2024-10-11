@@ -3,6 +3,7 @@ import { Injectable, Logger } from '@nestjs/common';
 import { JOIN_TIMEOUT, MAX_USERS } from '../types';
 import { GameStateService } from '../game-state/game-state.service';
 import { Namespace, Socket } from 'socket.io';
+import { GameSettingsDto } from './dto/game-settings.dto';
 
 @Injectable()
 export class LobbyService {
@@ -19,22 +20,21 @@ export class LobbyService {
    * - Set a timeout to remove the user from the game if they don't join from the lobby in a certain amount of time
    * @returns id of created games
    */
-  createGame(gameName: string, client: Socket, lobby: Namespace): void {
+  createGame(gameSettings: GameSettingsDto, client: Socket, lobby: Namespace): void {
     const { userId, userName } = client.data.user;
-    this.logger.log(`Creating game: ${gameName} by ${userName}`);
+    this.logger.log(`Creating game: ${gameSettings.gameName} by ${userName}`);
 
     //* Create a new game
     const gameId = this.gameStateService.createGame(
-      gameName,
+      gameSettings,
       userId,
       userName,
-      MAX_USERS,
       JOIN_TIMEOUT,
       this.gameCreateHandler(lobby),
     );
 
     const games = this.gameStateService.getSerializedGames();
-
+    console.log("ACA EL DTO CON LAS SETTINGS", gameSettings);
     client.emit('game:created', gameId);
 
     client.broadcast.emit('games:updated', games);

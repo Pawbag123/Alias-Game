@@ -154,12 +154,17 @@ export class GameRoomGateway
   @UseGuards(HostGuard, TooFewPlayersGuard)
   handleStartGame(@ConnectedSocket() client: Socket) {
     try {
+      //this.countDown();
       this.gameMechanicsService.startGame(client, this.gameRoom, this.lobby);
     } catch (error) {
       this.logger.error(error);
       throw new WsException(error.message);
     }
   }
+/* 
+  countDown(){
+
+  } */
 
   @SubscribeMessage('user-stats:get')
   async handleUserStatsGet(

@@ -10,6 +10,7 @@ import { Games } from '../game-room/schema/game.schema';
 import { InLobbyGameDto } from '../lobby/dto/in-lobby-game-dto';
 import { ActiveUser, Game, Player, Team } from '../types';
 import { v4 as uuidv4 } from 'uuid';
+import { GameSettingsDto } from 'src/lobby/dto/game-settings.dto';
 
 /**
  * Service that handles the state of the game,
@@ -115,7 +116,7 @@ export class GameStateService {
 
   isGameFull(gameId: string): boolean {
     const game = this.getGameById(gameId);
-    return game.players.length >= game.maxUsers;
+    return game.players.length >= game.settings.maxPlayers;
   }
 
   isGameStarted(gameId: string): boolean {
@@ -136,13 +137,14 @@ export class GameStateService {
   }
 
   createGame(
-    gameName: string,
+    gameSettings : GameSettingsDto,
     userId: string,
     userName: string,
-    maxUsers: number,
     timeout: number,
     timeoutCb: (gameId?: string) => void,
   ): string {
+
+
     const newPlayer: Player = {
       userId,
       name: userName,
@@ -155,11 +157,15 @@ export class GameStateService {
 
     const newGame: Game = {
       id: uuidv4(),
-      name: gameName,
+      name: gameSettings.gameName,
       host: userId,
       isGameStarted: false,
       players: [newPlayer],
-      maxUsers: maxUsers,
+      settings: {
+        maxPlayers: gameSettings.maxPlayers,
+        rounds: gameSettings.rounds,
+        time: gameSettings.time
+      },
       wordsUsed: [],
       currentWord: '',
       score: {
@@ -182,7 +188,7 @@ export class GameStateService {
         id: game.id,
         name: game.name,
         players: game.players.length,
-        maxPlayers: game.maxUsers,
+        maxPlayers: game.settings.maxPlayers,
         started: game.isGameStarted,
       }),
     );

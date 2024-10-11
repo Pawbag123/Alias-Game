@@ -34,10 +34,12 @@ export class GameMechanicsService {
     gameRoom: Namespace,
     lobby: Namespace,
   ) {
-    let rounds = 0;
-    const totalRounds = MAX_TURNS;
+    const game = this.gameStateService.getGameById(gameId)
+    const totalRounds = game.settings.rounds;
+    const time = game.settings.time;
+    let currentRound = 1;
 
-    while (rounds < totalRounds) {
+    while (currentRound < totalRounds) {
       this.newWord(gameId); // Generate a new word
       this.nextTurn(gameId); // Handles both game initialization and next turn
 
@@ -45,14 +47,14 @@ export class GameMechanicsService {
       // this.logger.debug(`STATE NUMBER ${rounds}`, turn);
       // this.logger.debug('current word', currentWord);
 
-      await this.startTimer(gameId, TURN_TIME, gameRoom);
+      await this.startTimer(gameId, time, gameRoom);
       const { turn, currentWord } = this.gameStateService.getGameById(gameId);
       gameRoom.to(gameId).emit('chat:update', {
         userName: 'Server',
         message: `${turn.describerName} ran out of time. The word was "${currentWord}"`,
         time: new Date(),
       });
-      rounds++;
+      currentRound++;
     }
 
     gameRoom

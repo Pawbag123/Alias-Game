@@ -49,9 +49,9 @@ export interface Game {
   host: string;
   isGameStarted: boolean;
   players: Player[];
-  maxUsers: number;
   wordsUsed: string[];
   currentWord: string;
+  settings: Settings;
   score: {
     red: number;
     blue: number;
@@ -63,6 +63,12 @@ export enum WordStatus {
   GUESSED = 'guessed',
   SIMILAR = 'similar',
   NOT_GUESSED = 'notGuessed',
+}
+
+export interface Settings {
+  maxPlayers: number,
+  rounds: number,
+  time: number
 }
 
 export interface Turn {
