@@ -5,7 +5,7 @@
 ### General
 
 - [Game Description](../../README.md#game-description)
-- [Rules](../../README.md#objective)
+- [Rules](../../README.md#rules)
 - [System Requirements](../../README.md#system-requirements)
 - [Setup and Installation](../../README.md#setup-and-installation)
 - [Troubleshooting](../../README.md#troubleshooting)
@@ -16,20 +16,19 @@
     - [Files & Folders]
     - [Modules]
 - Data Architecture
-  - [Data Base Schemas](../data-architecture/database-schemas.md#structure)
-  - [Interfaces](../data-architecture/interfaces.md#game-interfaces-documentation)
-  - [Dtos](../data-architecture/dtos.md#dtos)
+    - [Data Base Schemas](../data-architecture/database-schemas.md#structure)
+    - [Interfaces](../data-architecture/interfaces.md#game-interfaces-documentation)
+    - [Dtos](../data-architecture/dtos.md#dtos)
 - APIs
-  - [Auth](#authentication)
-  - [Socket events](socket-events.md#socket-events-documentation)
+    - [Auth](#authentication)
+    - [Socket Events](socket-events.md#socket-events-documentation)
 - Guides
-    - [Testing]
-    - [Deployment]
-    
+    - [Testing](../guides/testing.md#running-tests-in-nestjs-with-jest)
+    - [Deployment](../guides/deployment.md#deploying-a-nestjs-application-to-heroku)
+
 ### Additional Information
 
-- [Security & Testing](documentation/security.md)
-- [Deployment & Future Enhancements](documentation/deployment.md)
+- [Future Enhancements](documentation/deployment.md)
 - [FAQ](documentation/faq.md)
 
 ## In this file:

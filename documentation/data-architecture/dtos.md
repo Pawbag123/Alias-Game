@@ -23,12 +23,12 @@
     - [Auth](../APIs/auth.md#authentication)
     - [Socket Events](../APIs/socket-events.md#socket-events-documentation)
 - Guides
-    - [Testing]
-    - [Deployment]
+    - [Testing](../guides/testing.md#running-tests-in-nestjs-with-jest)
+    - [Deployment](../guides/deployment.md#deploying-a-nestjs-application-to-heroku)
 
 ### Additional Information
 
-- [Deployment & Future Enhancements](documentation/deployment.md)
+- [Future Enhancements](documentation/deployment.md)
 - [FAQ](documentation/faq.md)
 
 ## In this file:

@@ -28,11 +28,8 @@
 - [Future Enhancements](#future-enhancements)
 - [FAQ](FAQ.md)
 
-## In this file:
-
 # Future Enhancements
-## Overview
-This section outlines potential features and improvements that can be added in future releases to enhance the functionality and user experience of the application.
+
 
 ### Customizable Game Settings
 

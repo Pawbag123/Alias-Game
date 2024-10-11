@@ -28,7 +28,7 @@
 
 ### Additional Information
 
-- [Deployment & Future Enhancements](documentation/deployment.md)
+- [Future Enhancements](documentation/deployment.md)
 - [FAQ](documentation/faq.md)
 
 ## In this file:
