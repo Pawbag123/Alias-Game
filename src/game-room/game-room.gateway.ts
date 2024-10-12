@@ -161,10 +161,6 @@ export class GameRoomGateway
       throw new WsException(error.message);
     }
   }
-/* 
-  countDown(){
-
-  } */
 
   @SubscribeMessage('user-stats:get')
   async handleUserStatsGet(

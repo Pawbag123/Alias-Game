@@ -4,9 +4,7 @@ import { ChatService } from 'src/chat/chat.service';
 import { GameStateService } from 'src/game-state/game-state.service';
 
 import {
-  MAX_TURNS,
   Team,
-  TURN_TIME,
   WORDS_TO_GUESS,
   WordStatus,
 } from 'src/types';
@@ -23,10 +21,19 @@ export class GameMechanicsService {
 
   startGame(client: Socket, gameRoom: Namespace, lobby: Namespace): void {
     const { gameId } = client.data;
-    this.logger.log(`Starting game ${gameId}`);
-    this.gameStateService.setGameStarted(gameId);
-    lobby.emit('games:updated', this.gameStateService.getSerializedGames());
-    this.handleTurns(gameId, gameRoom, lobby);
+    this.countdown(gameId, gameRoom).then(() => {
+      this.logger.log(`Starting game ${gameId}`);
+      this.gameStateService.setGameStarted(gameId);
+      lobby.emit('games:updated', this.gameStateService.getSerializedGames());
+      this.handleTurns(gameId, gameRoom, lobby);
+    });
+  }
+
+  async countdown(gameId: string, gameRoom: Namespace): Promise<void> {
+    for (let i = 3; i > 0; i--) {
+      gameRoom.to(gameId).emit('coutndown', i);
+      await this.delay(1000); // Wait for 1 second before next update
+    }
   }
 
   private async handleTurns(
@@ -37,7 +44,7 @@ export class GameMechanicsService {
     const game = this.gameStateService.getGameById(gameId)
     const totalRounds = game.settings.rounds;
     const time = game.settings.time;
-    let currentRound = 1;
+    let currentRound = 0;
 
     while (currentRound < totalRounds) {
       this.newWord(gameId); // Generate a new word
@@ -107,7 +114,7 @@ export class GameMechanicsService {
 
     do {
       const wordIndex = this.getRandomNumber(0, words.length - 1);
-      selectedWord = words[wordIndex];
+      selectedWord = words[ wordIndex ];
     } while (wordsUsed.includes(selectedWord));
     wordsUsed.push(selectedWord);
     return selectedWord;
@@ -129,7 +136,7 @@ export class GameMechanicsService {
 
       // Randomly pick a player from the teamPlayers array
       const randomIndex = Math.floor(Math.random() * teamPlayers.length);
-      const randomPlayer = teamPlayers[randomIndex];
+      const randomPlayer = teamPlayers[ randomIndex ];
 
       game.turn = {
         alreadyDescribed: [],
@@ -284,7 +291,7 @@ export class GameMechanicsService {
       gameId,
       user: { userId, userName },
     } = client.data;
-    const [validatedMessage, wordStatus] = checkGuessedWord(
+    const [ validatedMessage, wordStatus ] = checkGuessedWord(
       currentWord,
       message,
     );

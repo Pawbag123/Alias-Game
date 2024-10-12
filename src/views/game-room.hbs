@@ -27,8 +27,7 @@
   </style>
 </head>
 
-<div class="modal fade" id="profileModal" tabindex="-1" role="dialog" aria-labelledby="profileModalLabel"
-  aria-hidden="true">
+<div class="modal fade" id="profileModal" tabindex="-1" role="dialog" aria-labelledby="profileModalLabel" aria-hidden="true">
   <div class="modal-dialog" role="document">
     <div class="modal-content">
       <div class="modal-header">
@@ -54,8 +53,7 @@
 </div>
 
 <body class="bg-light">
-  <div class="modal fade" id="errorModal" tabindex="-1" role="dialog" aria-labelledby="errorModalLabel"
-    aria-hidden="true">
+  <div class="modal fade" id="errorModal" tabindex="-1" role="dialog" aria-labelledby="errorModalLabel" aria-hidden="true">
     <div class="modal-dialog" role="document">
       <div class="modal-content">
         <div class="modal-header">
@@ -75,16 +73,16 @@
   </div>
   <div id="error-message" style="display: none; color: #dc3545;">
   </div>
-  <button id="logoutBtn" class="btn btn-light" style="display: none; border: 2px solid #ccc;">Log out</button>
+    <button id="logoutBtn" class="btn btn-light" style="display: none; border: 2px solid #ccc;">Log out</button>
   <div class="container mt-5">
 
     <h1 id="game-room-name" class="text-center mb-4"></h1>
 
-    <div class="d-flex justify-content-center">
-      <div id="countdown-timer" style="display: none;">
-        <h1><strong>Game is starting in <span id="countdown-remaining">3</span>...</strong></h1>
-      </div>
-    </div>
+{{!-- <div class="d-flex justify-content-center">
+  <div id="countdown-timer" style="display: none;">
+    <h1><strong>Game is starting in <span id="countdown-remaining">3</span>...</strong></h1>
+  </div>
+</div> --}}
 
     <div class="d-flex justify-content-center">
       <div id="game-info2" class="card mb-4" style="width: 60%; display: none;">
@@ -92,7 +90,7 @@
           <!-- Team turn message centered -->
           <p style="font-size: 26px;"><strong><span id="team-turn-new"></span></strong></p>
         </div>
-
+        
         <!-- Grid layout for scores and timer -->
         <div class="row mb-4">
           <!-- Red team score on the left -->
@@ -108,13 +106,13 @@
             <p><strong></strong> <span id="score-team-blue-new" style="color: #007bff; font-size: 2rem;">0</span></p>
           </div>
         </div>
-
+        
         <!-- Describer name and word centered and stacked -->
         <div class="text-center">
           <p><strong><span id="describer-name-new" style="font-size: 1.3rem;"></span></strong></p>
           <p><strong></strong> <span id="word-for-teammates-new" style="font-size: 1.5rem;"></span></p>
         </div>
-
+        
       </div>
     </div>
 
@@ -149,13 +147,7 @@
         </ul>
       </div>
 
-      {{!-- <div class="text-center">
-        <h2>No Team</h2>
-        <ul id="no-team" class="list-group">
-          <!-- No team members will be updated here dynamically -->
-        </ul>
-      </div>--}}
-    </div>
+    </div> 
 
 
     <div class="d-flex justify-content-center">
@@ -169,16 +161,23 @@
   <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.5.2/dist/js/bootstrap.bundle.min.js"></script>
 
+  <script src="../public/media/countdown.mp3">
+
+  </script> 
+
   <script>
     let socket;
+      // Audios loaded here
+      const countDownSound = new Audio('/media/countdown.mp3');
+      
 
     window.onload = function () {
       const { userId, userName } = getUserInfo();
       const accessToken = localStorage.getItem('accessToken');
       const gameRoomId = window.location.pathname.split('/').pop();
 
-      if (!socket) {
-        socket = io('/game-room', {
+      if(!socket) {
+        socket = io('/game-room', { 
           query: { gameId: gameRoomId, serverOffset: 0, },
           auth: {
             token: accessToken
@@ -209,26 +208,35 @@
           showUserStats(userInfo);
         });
 
-        socket.on('exception', (error) => {
+          socket.on('exception', (error) => {
           console.error('Server exception:', error.message);
           renderErrorMessage(error.message);
         });
 
+        socket.on('coutndown', (i) => {
+          console.log(i)
+          console.log(countDownSound.src);
+          countDownSound.play().catch(error => {
+            console.error('Error playing sound', error)
+            
+          })
+        })
+        
         socket.on('game-room:left', () => {
           console.log('Left game room');
           // Redirect to the lobby
           window.location.href = '/lobby';
         });
 
-
-        // MODULARIZ THIS ONE
-        socket.on('game-started:updated', (gameRoom) => {
+          // MODULARIZ THIS ONE
+          socket.on('game-started:updated', (gameRoom) => {
           console.log('Current game state: ', gameRoom);
 
           let userState;
-          if (gameRoom.currentWord) {
+          if (gameRoom.currentWord)
+          {
             userState = 'describer'
-          } else if (gameRoom.turn.team === 'redTeam' && gameRoom.redTeam.some(player => player[ 0 ] === userName) || gameRoom.turn.team === 'blueTeam' && gameRoom.blueTeam.some(player => player[ 0 ] === userName)) {
+          } else if (gameRoom.turn.team === 'redTeam' && gameRoom.redTeam.some(player => player[0] === userName) || gameRoom.turn.team === 'blueTeam' && gameRoom.blueTeam.some(player => player[0] === userName)) {
             userState = 'guesser'
           } else {
             userState = 'enemy'
@@ -266,8 +274,8 @@
           redTeamList.innerHTML = '';  // Clear the list
           gameRoom.redTeam.forEach(player => {
             const li = document.createElement('li');
-            li.textContent = player[ 0 ];
-            if (!player[ 1 ]) {
+            li.textContent = player[0];
+            if (!player[1]) {
               li.style.color = 'red';
             }
             redTeamList.appendChild(li);
@@ -278,8 +286,8 @@
           blueTeamList.innerHTML = '';
           gameRoom.blueTeam.forEach(player => {
             const li = document.createElement('li');
-            li.textContent = player[ 0 ];
-            if (!player[ 1 ]) {
+            li.textContent = player[0];
+            if (!player[1]) {
               li.style.color = 'red';
             }
             blueTeamList.appendChild(li);
@@ -304,7 +312,7 @@
           //document.getElementById('described-word').style.display = gameRoom.currentWord ? 'block' : 'none';
 
           // Update game state details - game-info2
-          console.log('condition: ', gameRoom.turn.describerName !== userName)
+          console.log('condition: ', gameRoom.turn.describerName !== userName )
           console.log('if true: ', `${gameRoom.turn.describerName} is describing`)
           console.log('if false: ', 'You have to describe the word!')
           document.getElementById('team-turn-new').textContent = gameRoom.turn.team === 'redTeam' ? 'Red team plays!' : 'Blue team plays!';
@@ -313,7 +321,7 @@
           document.getElementById('describer-name-new').textContent = gameRoom.turn.describerName !== userName ? `${gameRoom.turn.describerName} is describing` : 'You have to describe the word!';
           document.getElementById('word-for-teammates-new').textContent = gameRoom.currentWord ? gameRoom.currentWord : '';
           document.getElementById('described-word').style.display = gameRoom.currentWord ? 'block' : 'none';
-
+          
         });
 
         socket.on('timer:update', (data) => {
@@ -348,9 +356,9 @@
           let message = '';
 
           // Determine the result
-          if (redTeamScore > blueTeamScore) {
+          if(redTeamScore > blueTeamScore) {
             message = `Red Team Wins! Score: ${redTeamScore} - ${blueTeamScore}`;
-          } else if (blueTeamScore > redTeamScore) {
+          } else if(blueTeamScore > redTeamScore) {
             message = `Blue Team Wins! Score: ${blueTeamScore} - ${redTeamScore}`;
           } else {
             message = `It's a Tie! Score: ${redTeamScore} - ${blueTeamScore}`;
@@ -358,7 +366,7 @@
 
           // Display the result in the modal
           document.getElementById('gameEndMessage').innerHTML = message;
-
+          
           // Show the modal
           const gameEndModal = new bootstrap.Modal(document.getElementById('gameEndModal'), {
             backdrop: 'static',
@@ -379,9 +387,9 @@
         const { userId, userName } = getUserInfo();
 
         if (message && userName) {
-          { { !-- const data = { userId, userName, gameId: gameRoomId, message } -- } }
+          {{!-- const data = { userId, userName, gameId: gameRoomId, message } --}}
           console.log('sending message:', message);
-          socket.emit('chat:message', { message });
+          socket.emit('chat:message', {message});
           messageInput.value = '';
         }
       });
@@ -401,22 +409,17 @@
         window.location.href = '/login';
       });
       const errorDiv = document.getElementById('error-message');
-      const container = document.getElementsByClassName('container mt-5')[ 0 ];
+      const container = document.getElementsByClassName('container mt-5')[0];
       container.style.display = 'none';
       errorDiv.innerHTML = `Error: ${error}`;
       errorDiv.style.display = 'block';
       logoutBtn.style.display = 'block';
     }
 
-    const renderGameStarted = (gameStarted) => {
-
-    }
-
     const renderGameRoom = (gameRoom) => {
 
       const h1Name = document.getElementById('game-room-name');
       h1Name.textContent = `Game Room: ${gameRoom.name}`;
-
 
       // Update Red Team
       const redTeamList = document.getElementById('red-team');
@@ -465,10 +468,10 @@
       $('#gamesPlayed').text(userInfo.gamesPlayed);
       $('#wins').text(userInfo.wins);
       $('#loses').text(userInfo.loses);
-      $('#draw').text(userInfo.draw);
+      $('#draw').text(userInfo.draw); 
       $('#wordsGuessed').text(userInfo.wordsGuessed);
       $('#wellDescribed').text(userInfo.wellDescribed);
-
+      
       // Show the modal
       $('#profileModal').modal('show');
     }
@@ -494,12 +497,13 @@
 
       $('#errorModal').modal('show');
 
-      {
-        {
-          !--setTimeout(() => {
-            $('#errorModal').modal('hide');
-          }, 3000); --}
-      }
+      {{!-- setTimeout(() => {
+        $('#errorModal').modal('hide');
+      }, 3000);  --}}
+    }
+
+    function renderCountDown(i){
+      
     }
 
     function startGame() {
