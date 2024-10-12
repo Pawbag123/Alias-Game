@@ -31,8 +31,9 @@ export class GameMechanicsService {
 
   async countdown(gameId: string, gameRoom: Namespace): Promise<void> {
     for (let i = 3; i > 0; i--) {
-      gameRoom.to(gameId).emit('coutndown', i);
+      gameRoom.to(gameId).emit('countdown', i);
       await this.delay(1000); // Wait for 1 second before next update
+      if(i === 1) gameRoom.to(gameId).emit('end:countdown');
     }
   }
 

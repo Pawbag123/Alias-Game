@@ -24,6 +24,17 @@
       overflow-y: scroll;
       scroll-behavior: smooth;
     }
+
+    .modal-full-width {
+      max-width: 100%;
+      margin: 0;
+      padding: 0;
+    }
+
+    .modal-countdown {
+      width: 100%;
+    }
+
   </style>
 </head>
 
@@ -71,19 +82,19 @@
       </div>
     </div>
   </div>
-  <div id="error-message" style="display: none; color: #dc3545;">
-  </div>
-    <button id="logoutBtn" class="btn btn-light" style="display: none; border: 2px solid #ccc;">Log out</button>
+
+  <div id="error-message" style="display: none; color: #dc3545;"></div>
+  <button id="logoutBtn" class="btn btn-light" style="display: none; border: 2px solid #ccc;">Log out</button>
   <div class="container mt-5">
 
     <h1 id="game-room-name" class="text-center mb-4"></h1>
-
-{{!-- <div class="d-flex justify-content-center">
-  <div id="countdown-timer" style="display: none;">
-    <h1><strong>Game is starting in <span id="countdown-remaining">3</span>...</strong></h1>
-  </div>
-</div> --}}
-
+<!--
+    <div class="d-flex justify-content-center">
+      <div id="countdown-timer" style="display: none;">
+        <h1><strong>Game is starting in <span id="countdown-remaining"></span>...</strong></h1>
+      </div>
+    </div>
+-->
     <div class="d-flex justify-content-center">
       <div id="game-info2" class="card mb-4" style="width: 60%; display: none;">
         <div class="text-center mb-4">
@@ -212,16 +223,53 @@
           console.error('Server exception:', error.message);
           renderErrorMessage(error.message);
         });
+/*
+        const countdownDiv = document.getElementById('countdown-timer')
 
-        socket.on('coutndown', (i) => {
+        socket.on('countdown', (i) => {
           console.log(i)
           console.log(countDownSound.src);
+          const countdownText = document.getElementById('countdown-remaining')
+          countdownDiv.style.display = 'block'
+          countdownText.textContent = i;
+
           countDownSound.play().catch(error => {
             console.error('Error playing sound', error)
-            
           })
         })
-        
+
+        socket.on('end:countdown', () => {
+          countdownDiv.style.display = 'none'
+        })
+*/        
+
+        const countdownModal = new bootstrap.Modal(document.getElementById('countdownModal'), {
+          backdrop: 'static', // Prevent closing by clicking outside the modal
+          keyboard: false     // Prevent closing with Esc key
+        });
+
+        const countdownText = document.getElementById('countdown-remaining');
+
+        // Listen for the countdown event
+        socket.on('countdown', (i) => {
+          console.log(countDownSound.src);
+          countdownText.textContent = i;
+
+          // Show the modal
+          countdownModal.show();
+
+          // Play the countdown sound
+          countDownSound.play().catch(error => {
+            console.error('Error playing sound', error);
+          });
+        });
+
+        // Listen for the end of the countdown event
+        socket.on('end:countdown', () => {
+          // Hide the modal
+          countdownModal.hide();
+        });
+
         socket.on('game-room:left', () => {
           console.log('Left game room');
           // Redirect to the lobby
@@ -535,6 +583,19 @@
       </div>
     </div>
   </div>
+
+  <!-- Countdown Modal -->
+  <div class="modal fade" id="countdownModal" tabindex="-1" aria-labelledby="countdownModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-full-width">
+      <div class="modal-content modal-countdown">
+        <div class="modal-body text-center">
+          <h1><strong>Game is starting in <span id="countdown-remaining"></span>...</strong></h1>
+        </div>
+      </div>
+    </div>
+  </div>
+
+
 
 </body>
 
