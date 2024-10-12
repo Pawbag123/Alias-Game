@@ -71,7 +71,7 @@ export class GameMechanicsService {
     duration: number,
     gameRoom: Namespace,
   ) {
-    for (let remaining = duration; remaining > 0; remaining--) {
+    for (let remaining = duration; remaining >= 0; remaining--) {
       gameRoom.to(gameId).emit('timer:update', { remaining });
       await this.delay(1000); // Wait for 1 second before next update
     }

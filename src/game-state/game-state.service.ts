@@ -197,10 +197,18 @@ export class GameStateService {
       host: game.host,
       redTeam: game.players
         .filter((player) => player.team === Team.RED)
-        .map((player) => player.name),
+        .map((player) => {
+          return {
+            name: player.name, userId: player.userId
+          }
+        }),
       blueTeam: game.players
         .filter((player) => player.team === Team.BLUE)
-        .map((player) => player.name),
+        .map((player) => {
+          return {
+            name: player.name, userId: player.userId
+          }
+        }),
     });
   }
 
@@ -216,10 +224,10 @@ export class GameStateService {
       host: game.host,
       redTeam: game.players
         .filter((player) => player.team === Team.RED)
-        .map((player) => [player.name, this.hasUserSocketId(player.userId)]),
+        .map((player) => [player.name, this.hasUserSocketId(player.userId), player.userId]),
       blueTeam: game.players
         .filter((player) => player.team === Team.BLUE)
-        .map((player) => [player.name, this.hasUserSocketId(player.userId)]),
+        .map((player) => [player.name, this.hasUserSocketId(player.userId), player.userId]),
       turn: game.turn
         ? {
             alreadyDescribed: game.turn.alreadyDescribed,
