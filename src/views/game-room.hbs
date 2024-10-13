@@ -25,16 +25,37 @@
       scroll-behavior: smooth;
     }
 
-    .modal-full-width {
-      max-width: 100%;
-      margin: 0;
-      padding: 0;
+    ul#blue-team li::marker, ul#red-team li::marker {
+      content: '';
     }
 
-    .modal-countdown {
-      width: 100%;
+    ul#red-team li, ul#blue-team li {
+      font-weight: bold;
     }
 
+    ul#blue-team li {
+      list-style-type: none; /* Ensure there's no bullet point */
+      background-color: #628ee0; /* Add background color */
+      padding: 5px; /* Padding inside the list item */
+      margin-bottom: 5px; /* Space between list items */
+      transition: transform 0.3s ease, background-color 0.3s ease;
+      border-radius: 5px; 
+      color: black;
+    }
+
+    ul#red-team li {
+      list-style-type: none; /* Ensure there's no bullet point */
+      background-color: #f1645f; /* Add background color */
+      padding: 5px; /* Padding inside the list item */
+      margin-bottom: 5px; /* Space between list items */
+      transition: transform 0.3s ease, background-color 0.3s ease;
+      border-radius: 5px; 
+      color: black;
+    }
+
+    ul#red-team li:hover, ul#blue-team li:hover {
+      transform: scale(1.1); /* Slightly grow the element */
+    }
   </style>
 </head>
 
@@ -262,8 +283,8 @@
           window.location.href = '/lobby';
         });
 
-          // MODULARIZ THIS ONE
-          socket.on('game-started:updated', (gameRoom) => {
+        // MODULARIZ THIS ONE
+        socket.on('game-started:updated', (gameRoom) => {
           console.log('Current game state: ', gameRoom);
 
           let userState;
@@ -308,7 +329,14 @@
           redTeamList.innerHTML = '';  // Clear the list
           gameRoom.redTeam.forEach(player => {
             const li = document.createElement('li');
-            li.textContent = player[0];
+            li.textContent = `${player[0]}`; // Just display the player name
+
+            // If the player is the host, append the SVG
+            if(gameRoom.host === player[2]) {
+              assignHostSvg(li);
+            }
+
+            // If the player is inactive, change the text color
             if (!player[1]) {
               li.style.color = 'red';
             }
@@ -320,7 +348,14 @@
           blueTeamList.innerHTML = '';
           gameRoom.blueTeam.forEach(player => {
             const li = document.createElement('li');
-            li.textContent = player[0];
+            li.textContent = `${player[0]}`; // Just display the player name
+
+            // If the player is the host, append the SVG
+            if (gameRoom.host === player[2]) {
+              assignHostSvg(li);
+            }
+
+            // If the player is inactive, change the text color
             if (!player[1]) {
               li.style.color = 'red';
             }
@@ -346,9 +381,6 @@
           //document.getElementById('described-word').style.display = gameRoom.currentWord ? 'block' : 'none';
 
           // Update game state details - game-info2
-          console.log('condition: ', gameRoom.turn.describerName !== userName )
-          console.log('if true: ', `${gameRoom.turn.describerName} is describing`)
-          console.log('if false: ', 'You have to describe the word!')
           document.getElementById('team-turn-new').textContent = gameRoom.turn.team === 'redTeam' ? 'Red team plays!' : 'Blue team plays!';
           document.getElementById('score-team-red-new').textContent = gameRoom.score.red;
           document.getElementById('score-team-blue-new').textContent = gameRoom.score.blue;
@@ -468,12 +500,15 @@
       redTeamList.innerHTML = '';  // Clear the list
       gameRoom.redTeam.forEach(player => {
         const li = document.createElement('li');
-        li.textContent = player;
+        li.textContent = player.name;
+        if (gameRoom.host === player.userId) {
+          assignHostSvg(li);
+        }
         li.style.cursor = 'pointer';
-        li.style.color = 'blue';
-        li.style.textDecoration = 'underline';
+        li.style.color = 'black';
+        //li.style.textDecoration = 'underline';
         li.addEventListener('click', () => {
-          fetchUserStats(player);
+          fetchUserStats(player.name);
         });
         redTeamList.appendChild(li);
       });
@@ -483,12 +518,15 @@
       blueTeamList.innerHTML = '';
       gameRoom.blueTeam.forEach(player => {
         const li = document.createElement('li');
-        li.textContent = player;
+        li.textContent = player.name;
+        if (gameRoom.host === player.userId) {
+          assignHostSvg(li);
+        }
         li.style.cursor = 'pointer';
-        li.style.color = 'blue';
-        li.style.textDecoration = 'underline';
+        li.style.color = 'black';
+        //li.style.textDecoration = 'underline';
         li.addEventListener('click', () => {
-          fetchUserStats(player);
+          fetchUserStats(player.name);
         });
         blueTeamList.appendChild(li);
       });
@@ -552,6 +590,22 @@
     //extra functions
     function myTeam(userName, gameData) {
       return gameData[ gameData.turn.team ].find(player => player[ 0 ] === userName);
+    }
+
+    // Function to append the SVG to host
+    function assignHostSvg(li) {
+      const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+      svg.setAttribute('version', '1.1');
+      svg.setAttribute('viewBox', '0 0 512 512');
+      svg.setAttribute('style', 'enable-background:new 0 0 512 512; width: 20px; height: 20px; margin-left: 10px;');
+
+      const polygon = document.createElementNS('http://www.w3.org/2000/svg', 'polygon');
+      polygon.setAttribute('class', 'st1');
+      polygon.setAttribute('points', '352.31,276.28 256,151.9 159.69,276.28 50,193.36 91.46,360.1 201.15,360.1 310.85,360.1 420.54,360.1 462,193.36');
+      polygon.setAttribute('style', 'fill:#F2BE22;stroke:#231F20;stroke-width:15;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:10;');
+      
+      svg.appendChild(polygon);
+      li.appendChild(svg); // Append the SVG to the list item
     }
 
   </script>
