@@ -172,15 +172,18 @@
   <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.5.2/dist/js/bootstrap.bundle.min.js"></script>
 
-  <script src="../public/media/countdown.mp3">
+  <script src="../public/media/scorePoint.mp3">
 
   </script> 
 
   <script>
     let socket;
       // Audios loaded here
-      const countDownSound = new Audio('/media/countdown.mp3');
-      
+      const countDownSound = new Audio('/media/countDown2.mp3');
+      const startingGameSound = new Audio('/media/startingGame.mp3');
+      const turnEndingSound = new Audio('/media/turnEnding.mp3');
+      const scorePointSound = new Audio('/media/scorePoint2.mp3');
+      const youLoseSound = new Audio('/media/youlose.mp3');
 
     window.onload = function () {
       const { userId, userName } = getUserInfo();
@@ -223,25 +226,6 @@
           console.error('Server exception:', error.message);
           renderErrorMessage(error.message);
         });
-/*
-        const countdownDiv = document.getElementById('countdown-timer')
-
-        socket.on('countdown', (i) => {
-          console.log(i)
-          console.log(countDownSound.src);
-          const countdownText = document.getElementById('countdown-remaining')
-          countdownDiv.style.display = 'block'
-          countdownText.textContent = i;
-
-          countDownSound.play().catch(error => {
-            console.error('Error playing sound', error)
-          })
-        })
-
-        socket.on('end:countdown', () => {
-          countdownDiv.style.display = 'none'
-        })
-*/        
 
         const countdownModal = new bootstrap.Modal(document.getElementById('countdownModal'), {
           backdrop: 'static', // Prevent closing by clicking outside the modal
@@ -252,22 +236,24 @@
 
         // Listen for the countdown event
         socket.on('countdown', (i) => {
-          console.log(countDownSound.src);
           countdownText.textContent = i;
+
+          if(i === 3){
+            countDownSound.play().catch(error => {
+            console.error('Error playing sound', error);
+          });
+          }
 
           // Show the modal
           countdownModal.show();
 
-          // Play the countdown sound
-          countDownSound.play().catch(error => {
-            console.error('Error playing sound', error);
-          });
         });
 
         // Listen for the end of the countdown event
         socket.on('end:countdown', () => {
           // Hide the modal
           countdownModal.hide();
+          startingGameSound.play();
         });
 
         socket.on('game-room:left', () => {
@@ -374,10 +360,17 @@
 
         socket.on('timer:update', (data) => {
           document.getElementById('time-remaining-new').textContent = data.remaining;
+         //if(data.remaining === 4){
+         //   turnEndingSound.play();
+         // }
         });
 
         //chat message events 
         socket.on('chat:update', (msg) => {
+          if(msg.message === `Word guessed!` && msg.userName === 'Server'){
+            scorePointSound.play();
+          }
+
           console.log(`Message received: ${msg}, 'serverOffset: `, msg.messageId)
           const serverOffset = msg.messageId;
           const item = msg.userName === "Server" ? `<li style="color: rgb(139, 0, 139);">
@@ -398,7 +391,7 @@
 
         //End of the game
         socket.on('game:end', (gameRoom) => {
-          const { score } = gameRoom;
+          const { score, redTeam, blueTeam } = gameRoom;
           const redTeamScore = score.red;
           const blueTeamScore = score.blue;
           let message = '';
@@ -406,6 +399,7 @@
           // Determine the result
           if(redTeamScore > blueTeamScore) {
             message = `Red Team Wins! Score: ${redTeamScore} - ${blueTeamScore}`;
+            
           } else if(blueTeamScore > redTeamScore) {
             message = `Blue Team Wins! Score: ${blueTeamScore} - ${redTeamScore}`;
           } else {
@@ -548,10 +542,6 @@
       {{!-- setTimeout(() => {
         $('#errorModal').modal('hide');
       }, 3000);  --}}
-    }
-
-    function renderCountDown(i){
-      
     }
 
     function startGame() {
