@@ -24,6 +24,69 @@
       overflow-y: scroll;
       scroll-behavior: smooth;
     }
+
+    .custom-navbar {
+      background-color: #2e2e2e;
+      padding: 1.5rem;
+      position: fixed;
+      top: 0px;
+      width: 100%;
+
+      transition: top 0.5s ease;
+      z-index: 1000;
+    }
+
+    .custom-navbar.hidden {
+    top: -130px; 
+    }
+
+    .content {
+      margin-top: 100px;
+    }
+
+    .title {
+      margin-top: 150px;
+      transition: top 0.5s ease;
+    }
+
+    .navbar-brand {
+      font-size: 3rem;
+      color: white;
+    }
+
+    .btn-primary {
+      font-size: 1rem;
+    }
+
+    .logo {
+      top: 20px;
+      left: 20px;
+      width: 80px;
+      height: 80px;
+    }
+
+    ul#messages li,
+    ul#red-team li,
+    ul#blue-team li {
+      padding: 5px;
+      margin-bottom: 5px;
+      background-color: #f8f9fa;
+      list-style: none;
+      text-decoration: none !important;
+      color: inherit !important;
+      border-radius: 8px;
+      transition: transform 0.3s ease;
+      font-weight: normal;
+    }
+
+    ul#messages li:hover,
+    ul#red-team li:hover,
+    ul#blue-team li:hover {
+      transform: scale(1.05);
+      color: #28a745 !important;
+      font-weight: bold;
+    }
+
   </style>
 </head>
 
@@ -71,12 +134,25 @@
       </div>
     </div>
   </div>
+
+  {{!-- Navbar --}}
+  <nav class="navbar navbar-expand-lg custom-navbar">
+    <div class="container-fluid">
+      {{!-- <a class="navbar-brand" href="#">Alias</a> --}}
+      <img src="https://alias.eu/wp-content/uploads/2020/07/alias-logo-1.png" alt="Alias Logo" class="logo">
+      <div class="ms-auto">
+        <button id="leave-game-button" class="btn btn-secondary mx-2" onclick="leaveRoom()">Leave Game</button>
+        <button id="logoutBtn" class="btn btn-light">Log out</button>
+      </div>
+    </div>
+  </nav>
+
   <div id="error-message" style="display: none; color: red;">
   </div>
     <button id="logoutBtn" class="btn btn-light" style="display: none; border: 2px solid #ccc;">Log out</button>
   <div class="container mt-5">
 
-    <h1 id="game-room-name" class="text-center mb-4"></h1>
+    <h1 id="game-room-name" class="text-center mb-4 title"></h1>
 
     <div id="game-info" class="card mb-4" style="display: none;">
       <div class="card-body">
@@ -94,7 +170,6 @@
         </div>
       </div>
     </div>
-
 
     <div class="d-flex justify-content-center">
       <div id="game-info2" class="card mb-4" style="width: 60%; display: none;">
@@ -149,6 +224,9 @@
       </div>
     </div>
 
+    <div class="d-flex justify-content-center">
+      <button id="start-game-button" class="btn btn-success mx-2" onclick="startGame()">Start Game</button>
+    </div>
 
     <div class="d-flex justify-content-around mb-4">
       <div class="text-center">
@@ -174,12 +252,6 @@
         </ul>
       </div>--}}
     </div> 
-
-
-    <div class="d-flex justify-content-center">
-      <button id="leave-game-button" class="btn btn-secondary mx-2" onclick="leaveRoom()">Leave Game</button>
-      <button id="start-game-button" class="btn btn-success mx-2" onclick="startGame()">Start Game</button>
-    </div>
 
   </div>
 
@@ -238,10 +310,10 @@
           window.location.href = '/lobby';
         });
 
-
           // MODULARIZ THIS ONE
           socket.on('game-started:updated', (gameRoom) => {
           console.log('Current game state: ', gameRoom);
+          hideNavbar();
 
           let userState;
           if (gameRoom.currentWord)
@@ -365,6 +437,8 @@
           const redTeamScore = score.red;
           const blueTeamScore = score.blue;
           let message = '';
+
+          showNavbar();
 
           // Determine the result
           if(redTeamScore > blueTeamScore) {
@@ -527,6 +601,21 @@
     function myTeam(userName, gameData) {
       return gameData[ gameData.turn.team ].find(player => player[ 0 ] === userName);
     }
+
+    const navbar = document.querySelector('.custom-navbar');
+    const mainTitle = document.querySelector('#game-room-name')
+
+    // Function to hide/show navbar when the game starts/ends
+    function hideNavbar() {
+        navbar.classList.add('hidden');
+        mainTitle.classList.remove('title')
+    }
+
+    function showNavbar() {
+        navbar.classList.remove('hidden');
+        mainTitle.classList.add('title')
+    }
+
 
   </script>
 
