@@ -23,12 +23,38 @@
     .btn-primary {
       font-size: 1rem;
     }
+    .logo {
+      top: 20px;
+      left: 20px;
+      width: 80px;
+      height: 80px;
+    }
+
+    .container h1, .container h2, .container button {
+      margin-top: 15px;
+    }
+
+    .card {
+      box-shadow: 5px 5px 15px rgba(0, 0, 0, 0.2);
+      border-radius: 10px;
+    }
+
+    .btn-success {
+      width: 80%;
+      margin-top: 10px;
+      margin-bottom: 10px;
+    }
+
+    .card {
+      margin: 15px 0;
+    }
   </style>
 
   <!-- Navbar -->
   <nav class="navbar navbar-expand-lg custom-navbar">
     <div class="container-fluid">
-      <a class="navbar-brand" href="#">Alias</a>
+      {{!-- <a class="navbar-brand" href="#">Alias</a> --}}
+      <img src="https://alias.eu/wp-content/uploads/2020/07/alias-logo-1.png" alt="Alias Logo" class="logo">
       <div class="ms-auto">
         <button id="profileBtn" class="btn btn-light me-2" onclick="fetchUserStats()" data-target="#profileModal">Profile</button>
         <button id="logoutBtn" class="btn btn-light">Log out</button>
@@ -83,7 +109,8 @@
   </div>
 
   <div id="error-message" style="display: none; color: red;"></div>
-  <div class="container">
+
+  {{!-- <div class="container">
     <h1>Game Lobby</h1>
     <button id="createGameBtn" class="btn btn-primary">Create new room</button>
     <div id="available-games">
@@ -92,6 +119,18 @@
         <!-- The list of games will be rendered here -->
       </ul>
     </div>
+  </div> --}}
+
+  <div class="container text-center">
+  <h1>Game Lobby</h1>
+  <button id="createGameBtn" class="btn btn-primary">Create new room</button>
+    <div id="available-games" class="game-card-container">
+      <h2 id="available-games-title"></h2>
+      <div id="game-list">
+        <!-- The list of games will be rendered here -->
+      </div>
+  </div>
+
   </div>
 
   <!-- Bootstrap and JavaScript dependencies -->
@@ -186,8 +225,8 @@
       $('#errorModal').modal('show');
     }
 
-    function renderLobby(games) {
-      const gameList = document.getElementById('game-list');
+    {{!-- function renderLobby(games) {
+      const gameList = document.getElementById('available-games-title');
       gameList.innerHTML = ''; // Clear the list
 
       if (games.length > 0) {
@@ -196,6 +235,7 @@
           li.innerHTML = `
             <span>${game.name}, Players: ${game.players}/${game.maxPlayers}</span>
             <button 
+              class="btn btn-success btn-sm float-end" 
               ${game.started ? 'disabled' : ''} 
               ${game.players >= game.maxPlayers ? 'disabled' : ''} 
               onclick="joinGame('${game.id}')">
@@ -205,7 +245,38 @@
           gameList.appendChild(li);
         });
       } else {
-        gameList.innerHTML = '<li>No rooms created</li>';
+        gameList.innerHTML = '<h2>No rooms created</h2>';
+      }
+    } --}}
+
+    function renderLobby(games) {
+      const gameList = document.getElementById('game-list');
+      gameList.innerHTML = '';
+
+      if (games.length > 0) {
+        gameList.innerHTML = '<h2>Available games</h2>';
+        games.forEach(game => {
+          const div = document.createElement('div');
+          div.classList.add('col-md-4', 'd-flex', 'justify-content-center');
+          div.innerHTML = `
+            <div class="card text-center" style="width: 18rem;">
+              <div class="card-body">
+                <h5 class="card-title">${game.name}</h5>
+                <p class="card-text">Players: ${game.players}/${game.maxPlayers}</p>
+                <button 
+                  class="btn btn-success btn-sm" 
+                  ${game.started ? 'disabled' : ''} 
+                  ${game.players >= game.maxPlayers ? 'disabled' : ''} 
+                  onclick="joinGame('${game.id}')">
+                  Join
+                </button>
+              </div>
+            </div>
+          `;
+          gameList.appendChild(div);
+        });
+      } else {
+        gameList.innerHTML = '<h2>No rooms created</h2>';
       }
     }
 

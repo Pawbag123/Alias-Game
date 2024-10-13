@@ -6,8 +6,27 @@
   <title>Login</title>
   <!-- Bootstrap CSS CDN -->
   <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
+  <style>
+    .logo {
+      top: 20px;
+      left: 20px;
+      width: 80px;
+      height: 80px;
+    }
+    .custom-navbar {
+      background-color: #2e2e2e;
+      padding: 1.5rem;
+    }
+  </style>
 </head>
 <body class="bg-light">
+  <!-- Logo -->
+  <nav class="navbar navbar-expand-lg custom-navbar">
+    <div class="container-fluid">
+      <img src="https://alias.eu/wp-content/uploads/2020/07/alias-logo-1.png" alt="Alias Logo" class="logo">
+    </div>
+  </nav>
+
   <div class="container">
     <div class="row justify-content-center">
       <div class="col-md-6">
@@ -34,97 +53,96 @@
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.5.2/dist/js/bootstrap.bundle.min.js"></script>
 
   <script>
-
     async function refreshToken() {
-    const refreshToken = localStorage.getItem('refreshToken');
-    
-    if (!refreshToken) return false; // No refresh token available, return false
-    
-    try {
-      const response = await fetch('/auth/refresh', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ refreshToken })
-      });
+      const refreshToken = localStorage.getItem('refreshToken');
       
-      if (response.ok) {
-        const data = await response.json();
-        localStorage.setItem('accessToken', data.accessToken); // Update the access token
-        return true; // Token refresh was successful
-      } else {
-        return false; // Token refresh failed
-      }
-    } catch (error) {
-      console.error('Error refreshing token:', error);
-      return false;
-    }
-  }
-
-  async function verifyTokenAndRedirect() {
-    const accessToken = localStorage.getItem('accessToken');
-    
-    if (accessToken) {
+      if (!refreshToken) return false; // No refresh token available, return false
+      
       try {
-        const response = await fetch('/auth/verify-token', {
-          method: 'GET',
-          headers: { 'Authorization': `Bearer ${accessToken}` },
+        const response = await fetch('/auth/refresh', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ refreshToken })
         });
-
+        
         if (response.ok) {
-          
-          window.location.href = '/lobby';
-          } else {
-            clearLocalStorage();
-          }
+          const data = await response.json();
+          localStorage.setItem('accessToken', data.accessToken); // Update the access token
+          return true; // Token refresh was successful
+        } else {
+          return false; // Token refresh failed
+        }
       } catch (error) {
-        console.error('Error verifying token:', error);
-        clearLocalStorage();
+        console.error('Error refreshing token:', error);
+        return false;
       }
     }
-  }
 
-  function clearLocalStorage() {
-    localStorage.removeItem('accessToken');
-    localStorage.removeItem('refreshToken');
-    localStorage.removeItem('userName');
-    localStorage.removeItem('userId');
-  }
+    async function verifyTokenAndRedirect() {
+      const accessToken = localStorage.getItem('accessToken');
+      
+      if (accessToken) {
+        try {
+          const response = await fetch('/auth/verify-token', {
+            method: 'GET',
+            headers: { 'Authorization': `Bearer ${accessToken}` },
+          });
+
+          if (response.ok) {
+            
+            window.location.href = '/lobby';
+            } else {
+              clearLocalStorage();
+            }
+        } catch (error) {
+          console.error('Error verifying token:', error);
+          clearLocalStorage();
+        }
+      }
+    }
+
+    function clearLocalStorage() {
+      localStorage.removeItem('accessToken');
+      localStorage.removeItem('refreshToken');
+      localStorage.removeItem('userName');
+      localStorage.removeItem('userId');
+    }
 
     window.onload = async () => {
-    await verifyTokenAndRedirect();
-  };
+      await verifyTokenAndRedirect();
+    };
 
-  document.getElementById('loginForm').addEventListener('submit', async (e) => {
-    e.preventDefault();
-    const userName = document.getElementById('userName').value;
-    const password = document.getElementById('password').value;
+    document.getElementById('loginForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const userName = document.getElementById('userName').value;
+      const password = document.getElementById('password').value;
 
-    try {
-      const response = await fetch('/auth/login', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ username: userName, password })
-      });
-      const data = await response.json();
+      try {
+        const response = await fetch('/auth/login', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ username: userName, password })
+        });
+        const data = await response.json();
 
-      if (response.ok) {
-        document.getElementById('message').style.display = 'block';
-        localStorage.setItem('accessToken', data.accessToken);
-        localStorage.setItem('refreshToken', data.refreshToken);
-        localStorage.setItem('userName', data.user.username);
-        localStorage.setItem('userId', data.user.id);
+        if (response.ok) {
+          document.getElementById('message').style.display = 'block';
+          localStorage.setItem('accessToken', data.accessToken);
+          localStorage.setItem('refreshToken', data.refreshToken);
+          localStorage.setItem('userName', data.user.username);
+          localStorage.setItem('userId', data.user.id);
 
-        setTimeout(() => {
-          window.location.href = '/lobby';
-        }, 1000);
-      } else {
-        alert('Wrong credentials: ' + data.message);
+          setTimeout(() => {
+            window.location.href = '/lobby';
+          }, 1000);
+        } else {
+          alert('Wrong credentials: ' + data.message);
+        }
+      } catch (error) {
+        console.error('Error logging in:', error);
+        alert('An error occurred while logging in');
       }
-    } catch (error) {
-      console.error('Error logging in:', error);
-      alert('An error occurred while logging in');
-    }
-  });
+    });
   </script>
 </body>
 </html>

@@ -59,10 +59,19 @@
         welcomeMessage.textContent = 'Welcome!';
         // Add "Go to Lobby" button if token is valid
         const lobbyButton = document.createElement('a');
-        lobbyButton.href = '/lobby';
+        {{!-- lobbyButton.href = '/lobby';
         lobbyButton.className = 'btn btn-success btn-lg';
         lobbyButton.textContent = 'Go to Lobby';
-        buttonContainer.appendChild(lobbyButton);
+        buttonContainer.appendChild(lobbyButton); --}}
+
+        const paragraph = document.createElement('p');
+        paragraph.innerHTML = 'You will be redirected in a few seconds';
+        buttonContainer.appendChild(paragraph);
+
+        setTimeout(() => {
+            window.location.href = '/lobby'
+        }, 2000);
+
       } else {
         welcomeMessage.textContent = 'Welcome!';
         // Add "Login" and "Register" buttons if no valid token is found
