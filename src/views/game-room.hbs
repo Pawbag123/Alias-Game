@@ -56,8 +56,59 @@
     ul#red-team li:hover, ul#blue-team li:hover {
       transform: scale(1.1); /* Slightly grow the element */
     }
+
+    .custom-navbar {
+      background-color: #2e2e2e;
+      padding: 1.5rem;
+      position: fixed;
+      top: 0px;
+      width: 100%;
+
+      transition: top 0.5s ease;
+      z-index: 1000;
+    }
+
+    .custom-navbar.hidden {
+    top: -130px; 
+    }
+
+    .content {
+      margin-top: 100px;
+    }
+
+    .title {
+      margin-top: 150px;
+      transition: top 0.5s ease;
+    }
+
+    .navbar-brand {
+      font-size: 3rem;
+      color: white;
+    }
+
+    .btn-primary {
+      font-size: 1rem;
+    }
+
+    .logo {
+      top: 20px;
+      left: 20px;
+      width: 80px;
+      height: 80px;
+    }
   </style>
 </head>
+<!-- NavBar -->
+<nav class="navbar navbar-expand-lg custom-navbar">
+    <div class="container-fluid">
+      {{!-- <a class="navbar-brand" href="#">Alias</a> --}}
+      <img src="https://alias.eu/wp-content/uploads/2020/07/alias-logo-1.png" alt="Alias Logo" class="logo">
+      <div class="ms-auto">
+        <button id="leave-game-button" class="btn btn-secondary mx-2" onclick="leaveRoom()">Leave Game</button>
+        <button id="logoutBtn" class="btn btn-light">Log out</button>
+      </div>
+    </div>
+  </nav>
 
 <div class="modal fade" id="profileModal" tabindex="-1" role="dialog" aria-labelledby="profileModalLabel" aria-hidden="true">
   <div class="modal-dialog" role="document">
@@ -108,7 +159,7 @@
   <button id="logoutBtn" class="btn btn-light" style="display: none; border: 2px solid #ccc;">Log out</button>
   <div class="container mt-5">
 
-    <h1 id="game-room-name" class="text-center mb-4"></h1>
+    <h1 id="game-room-name" class="text-center mb-4 title"></h1>
 <!--
     <div class="d-flex justify-content-center">
       <div id="countdown-timer" style="display: none;">
@@ -289,6 +340,8 @@
         socket.on('game-started:updated', (gameRoom) => {
           console.log('Current game state: ', gameRoom);
 
+          hideNavbar();
+
           let userState;
           if (gameRoom.currentWord)
           {
@@ -430,6 +483,8 @@
           const blueTeamScore = score.blue;
           let message = '';
 
+          showNavbar();
+
           // Determine the result
           if(redTeamScore > blueTeamScore) {
             message = `Red Team Wins! Score: ${redTeamScore} - ${blueTeamScore}`;
@@ -561,6 +616,7 @@
     function leaveRoom() {
       socket.emit('game-room:leave');
       console.log('leaving room');
+      window.alert('helloo')
     }
 
     function joinRedTeam() {
@@ -608,6 +664,16 @@
       
       svg.appendChild(polygon);
       li.appendChild(svg); // Append the SVG to the list item
+    }
+
+    function hideNavbar() {
+        navbar.classList.add('hidden');
+        mainTitle.classList.remove('title')
+    }
+
+    function showNavbar() {
+        navbar.classList.remove('hidden');
+        mainTitle.classList.add('title')
     }
 
   </script>

@@ -25,13 +25,52 @@
     .btn-primary {
       font-size: 1rem;
     }
-    
+
+  .custom-navbar {
+      background-color: #2e2e2e;
+      padding: 1.5rem;
+    }
+
+    .navbar-brand {
+      font-size: 3rem;
+      color: white;
+    }
+
+    .btn-primary {
+      font-size: 1rem;
+    }
+    .logo {
+      top: 20px;
+      left: 20px;
+      width: 80px;
+      height: 80px;
+    }
+
+    .container h1, .container h2, .container button {
+      margin-top: 15px;
+    }
+
+    .card {
+      box-shadow: 5px 5px 15px rgba(0, 0, 0, 0.2);
+      border-radius: 10px;
+    }
+
+    .btn-success {
+      width: 80%;
+      margin-top: 10px;
+      margin-bottom: 10px;
+    }
+
+    .card {
+      margin: 15px 0;
+    }
   </style>
 
   <!-- Navbar -->
   <nav class="navbar navbar-expand-lg custom-navbar">
     <div class="container-fluid">
-      <a class="navbar-brand" href="#">Alias</a>
+      {{!-- <a class="navbar-brand" href="#">Alias</a> --}}
+      <img src="https://alias.eu/wp-content/uploads/2020/07/alias-logo-1.png" alt="Alias Logo" class="logo">
       <div class="ms-auto">
         <button id="profileBtn" class="btn btn-light me-2" onclick="fetchUserStats()"
           data-target="#profileModal">Profile</button>
@@ -39,7 +78,7 @@
       </div>
     </div>
   </nav>
-  
+
 
   <!-- Profile Modal -->
   <div class="modal fade" id="profileModal" tabindex="-1" role="dialog" aria-labelledby="profileModalLabel"
