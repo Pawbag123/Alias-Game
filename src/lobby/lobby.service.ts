@@ -21,7 +21,11 @@ export class LobbyService {
    * - Set a timeout to remove the user from the game if they don't join from the lobby in a certain amount of time
    * @returns id of created games
    */
-  createGame(gameSettings: CreateGameDto, client: Socket, lobby: Namespace): void {
+  createGame(
+    gameSettings: CreateGameDto,
+    client: Socket,
+    lobby: Namespace,
+  ): void {
     const { userId, userName } = client.data.user;
     this.logger.log(`Creating game: ${gameSettings.gameName} by ${userName}`);
 
@@ -35,7 +39,6 @@ export class LobbyService {
     );
 
     const games = this.gameStateService.getSerializedGames();
-    console.log("ACA EL DTO CON LAS SETTINGS", gameSettings);
     client.emit('game:created', gameId);
 
     client.broadcast.emit('games:updated', games);

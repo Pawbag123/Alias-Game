@@ -16,6 +16,7 @@ import { InLobbyGameDto } from '../lobby/dto/in-lobby-game-dto';
 import { ActiveUser, Game, Player, Team } from '../types';
 import { v4 as uuidv4 } from 'uuid';
 import { GameSettingsDto } from 'src/lobby/dto/game-settings.dto';
+import { CreateGameDto } from 'src/lobby/dto/create-game-dto';
 
 /**
  * Service that handles the state of the game,
@@ -142,14 +143,12 @@ export class GameStateService {
   }
 
   createGame(
-    gameSettings : GameSettingsDto,
+    gameSettings: CreateGameDto,
     userId: string,
     userName: string,
     timeout: number,
     timeoutCb: (gameId?: string) => void,
   ): string {
-
-
     const newPlayer: Player = {
       userId,
       name: userName,
@@ -169,7 +168,7 @@ export class GameStateService {
       settings: {
         maxPlayers: gameSettings.maxPlayers,
         rounds: gameSettings.rounds,
-        time: gameSettings.time
+        time: gameSettings.time,
       },
       wordsUsed: [],
       currentWord: '',
@@ -210,15 +209,17 @@ export class GameStateService {
         .filter((player) => player.team === Team.RED)
         .map((player) => {
           return {
-            name: player.name, userId: player.userId
-          }
+            name: player.name,
+            userId: player.userId,
+          };
         }),
       blueTeam: game.players
         .filter((player) => player.team === Team.BLUE)
         .map((player) => {
           return {
-            name: player.name, userId: player.userId
-          }
+            name: player.name,
+            userId: player.userId,
+          };
         }),
     });
   }
@@ -235,10 +236,18 @@ export class GameStateService {
       host: game.host,
       redTeam: game.players
         .filter((player) => player.team === Team.RED)
-        .map((player) => [player.name, this.hasUserSocketId(player.userId), player.userId]),
+        .map((player) => [
+          player.name,
+          this.hasUserSocketId(player.userId),
+          player.userId,
+        ]),
       blueTeam: game.players
         .filter((player) => player.team === Team.BLUE)
-        .map((player) => [player.name, this.hasUserSocketId(player.userId), player.userId]),
+        .map((player) => [
+          player.name,
+          this.hasUserSocketId(player.userId),
+          player.userId,
+        ]),
       turn: game.turn
         ? {
             alreadyDescribed: game.turn.alreadyDescribed,

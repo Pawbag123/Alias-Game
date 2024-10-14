@@ -29,7 +29,6 @@ export class WsAllExceptionsFilter implements ExceptionFilter {
     this.logger.error(`Exception caught: ${exception.message}`);
 
     let wsException;
-    console.log(exception);
     switch (true) {
       case exception instanceof BadRequestException:
         const exceptionData = exception.getResponse();

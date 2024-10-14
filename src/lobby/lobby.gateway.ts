@@ -73,10 +73,9 @@ export class LobbyGateway implements OnGatewayConnection, OnGatewayDisconnect {
     @ConnectedSocket() client: Socket,
     @MessageBody() gameDto: CreateGameDto,
   ): void {
-    console.log("GAME SETTINGS", gameDto);
     this.logger.log(`Creating game:${gameDto.gameName}`);
     this.logger.debug('game settings');
-    this.logger.debug(gameDto);
+    this.logger.debug(JSON.stringify(gameDto));
     this.lobbyService.createGame(gameDto, client, this.lobby);
   }
   /**
