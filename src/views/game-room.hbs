@@ -155,7 +155,7 @@
     </div>
   </div>
 
-  <div id="error-message" style="display: none; color: #dc3545;"></div>
+  <div id="error-message" style="display: none; color: red; margin-top: 700px;"></div>
   <button id="logoutBtn" class="btn btn-light" style="display: none; border: 2px solid #ccc;">Log out</button>
   <div class="container mt-5">
 
@@ -615,7 +615,6 @@
     function leaveRoom() {
       socket.emit('game-room:leave');
       console.log('leaving room');
-      window.alert('helloo')
     }
 
     function joinRedTeam() {
