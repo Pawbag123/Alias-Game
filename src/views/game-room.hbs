@@ -269,6 +269,7 @@
     const turnEndingSound = new Audio('/media/turnEnding.mp3');
     const scorePointSound = new Audio('/media/scorePoint2.mp3');
     const youLoseSound = new Audio('/media/youlose.mp3');
+    const winSound = new Audio('/media/win.mp3');
 
     window.onload = function () {
       const { userId, userName } = getUserInfo();
@@ -431,14 +432,6 @@
             gameInfoDiv.classList.add('blue-team-border');
           }
 
-          // Update game state details - game-info
-          //document.getElementById('team-turn').textContent = gameRoom.turn.team === 'redTeam' ? 'Red' : 'Blue';
-          //document.getElementById('score-team-red').textContent = gameRoom.score.red;
-          //document.getElementById('score-team-blue').textContent = gameRoom.score.blue;
-          //document.getElementById('describer-name').textContent = gameRoom.turn.describerName;
-          //document.getElementById('word-for-teammates').textContent = gameRoom.currentWord ? gameRoom.currentWord : '';
-          //document.getElementById('described-word').style.display = gameRoom.currentWord ? 'block' : 'none';
-
           // Update game state details - game-info2
           document.getElementById('team-turn-new').textContent = gameRoom.turn.team === 'redTeam' ? 'Red team plays!' : 'Blue team plays!';
           document.getElementById('score-team-red-new').textContent = gameRoom.score.red;
@@ -483,35 +476,56 @@
         //End of the game
         socket.on('game:end', (gameRoom) => {
           const { score, redTeam, blueTeam } = gameRoom;
-          console.log("ACA EL SCORE: ", score);
-          console.log("ACA REDTEAM: ", redTeam);
           let message = '';
           let winner;
 
           if (score.red > score.blue) {
-            winner = redTeam
-            message = `<h1>RedTeam Win!</h1>`
-          }
-          if (score.blue > score.red) {
-            winner = blueTeam
-            message = `<h1>Blue Win!</h1>`
-          }
-          else {
-            winner = 'Tie';
-            message = `<h1> it's a tie</h1>'`
-          }
-          // showNavbar();
+            winner = 'red';
+          } else if (score.blue > score.red) {
+            winner = 'blue'
+          } else winner = 'tie';
 
-          console.log("Here is the winner", winner);
-          // Display the result in the modal
-          document.getElementById('gameEndMessage').innerHTML = message;
+          console.log("SCORES: ", score.blue, score.red);
 
-          // Show the modal
+          console.log("WINENR:", winner);
+
+          const userTeam = checkUserInTeam(userId, redTeam, blueTeam);
+          console.log("USER TEAM", userTeam);
+
           const gameEndModal = new bootstrap.Modal(document.getElementById('gameEndModal'), {
             backdrop: 'static',
             keyboard: false
           });
-          gameEndModal.show();
+
+          if (userTeam === winner) {
+            document.getElementById('gameEndMessage').innerHTML = `
+            <h1 style="text-align: center;">You Win!</h1>
+            <br>
+            <p style="font-weight: normal; text-align: center;">Red Team ${score.red} - ${score.blue} Blue Team</p>
+            `;
+            winSound.play();
+            gameEndModal.show();
+          } else if (userTeam === 'tie') {
+            document.getElementById('gameEndMessage').innerHTML = `
+            <h1 style="text-align: center;">It's a Tie'!</h1>
+            <br>
+            <p style="font-weight: normal; text-align: center;">Red Team ${score.red} - ${score.blue} Blue Team</p>
+            `;
+            youLoseSound.play();
+            gameEndModal.show();
+          } else {
+            document.getElementById('gameEndMessage').innerHTML = `
+            <h1 style="text-align: center;">You Lose!</h1>
+            <br>
+            <p style="font-weight: normal; text-align: center;">Red Team ${score.red} - ${score.blue} Blue Team</p>
+            `;
+            youLoseSound.play();
+            gameEndModal.show();
+          }
+
+          // showNavbar();
+
+          // Show the modal
 
           // Handle the lobby redirection
           document.getElementById('redirectLobby').addEventListener('click', () => {
@@ -654,10 +668,9 @@
       $('#errorModal').modal('show');
 
       {
-        {
-          !--setTimeout(() => {
-            $('#errorModal').modal('hide');
-          }, 3000); --}
+        setTimeout(() => {
+          $('#errorModal').modal('hide');
+        }, 3000);
       }
     }
 
@@ -687,6 +700,12 @@
       li.appendChild(svg); // Append the SVG to the list item
     }
 
+    function checkUserInTeam(userId, redTeam, blueTeam) {
+      return redTeam.some(player => player[ 2 ] === userId) ? 'red' :
+        blueTeam.some(player => player[ 2 ] === userId) ? 'blue' :
+          'none';
+    }
+
     function hideNavbar() {
       navbar.classList.add('hidden');
       mainTitle.classList.remove('title')
@@ -703,7 +722,7 @@
   <div class="modal fade" id="gameEndModal" tabindex="-1" aria-labelledby="gameEndModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
       <div class="modal-content">
-        <div class="modal-header">
+        <div class="modal-header bg-dark text-white">
           <h5 class="modal-title" id="gameEndModalLabel">Game Over</h5>
         </div>
         <div class="modal-body" id="gameEndMessage">
