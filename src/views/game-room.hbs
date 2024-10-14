@@ -341,7 +341,7 @@
         socket.on('game-started:updated', (gameRoom) => {
           console.log('Current game state: ', gameRoom);
 
-          {{!-- hideNavbar(); --}}
+          hideNavbar();
 
           let userState;
           if (gameRoom.currentWord)
@@ -484,7 +484,7 @@
           const blueTeamScore = score.blue;
           let message = '';
 
-          {{!-- showNavbar(); --}}
+          showNavbar();
 
           // Determine the result
           if(redTeamScore > blueTeamScore) {
@@ -536,12 +536,11 @@
       const logoutBtn = document.getElementById('logoutBtn');
       const leaveBtn = document.getElementById('leave-game-button');
       leaveBtn.innerHTML = 'Go back to lobby';
-      leaveBtn.style.display = 'block';
       const [type,message] = errMessage.split(':');
       switch (type) {
         case 'Unauthorized':
           logoutBtn.innerHTML = 'Go to login';
-          logoutBtn.style.display = 'block';
+          leaveBtn.style.display = 'none';
           break;
         case 'NotFound':
         case 'Forbidden':
@@ -676,6 +675,9 @@
       svg.appendChild(polygon);
       li.appendChild(svg); // Append the SVG to the list item
     }
+
+    const navbar = document.querySelector('.custom-navbar');
+    const mainTitle = document.querySelector('#game-room-name');
 
     function hideNavbar() {
         navbar.classList.add('hidden');
