@@ -254,6 +254,14 @@
       const turnEndingSound = new Audio('/media/turnEnding.mp3');
       const scorePointSound = new Audio('/media/scorePoint2.mp3');
       const youLoseSound = new Audio('/media/youlose.mp3');
+      const describerError = new Audio('/media/describerError.mp3');
+
+
+      document.getElementById('logoutBtn').addEventListener('click', (e) => {
+        e.preventDefault();
+        localStorage.clear();
+        window.location.href = '/login';
+      });
 
     window.onload = function () {
       const { userId, userName } = getUserInfo();
@@ -333,7 +341,7 @@
         socket.on('game-started:updated', (gameRoom) => {
           console.log('Current game state: ', gameRoom);
 
-          hideNavbar();
+          {{!-- hideNavbar(); --}}
 
           let userState;
           if (gameRoom.currentWord)
@@ -476,7 +484,7 @@
           const blueTeamScore = score.blue;
           let message = '';
 
-          showNavbar();
+          {{!-- showNavbar(); --}}
 
           // Determine the result
           if(redTeamScore > blueTeamScore) {
@@ -632,8 +640,9 @@
     }
 
     function renderErrorMessage(message) {
+      describerError.play();
       const errorModalBody = document.getElementById('errorModalBody');
-      errorModalBody.innerHTML = `Error: ${message}`;
+      errorModalBody.innerHTML = `${message}`;
 
       $('#errorModal').modal('show');
 
