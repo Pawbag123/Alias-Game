@@ -1,727 +1,530 @@
-<!DOCTYPE html>
-<html lang="en">
+<html lang='en'>
 
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <script src='/socket.io/socket.io.js'></script>
-  <title>Game Room</title>
-  <!-- Bootstrap CSS CDN -->
-  <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
+  <head>
+    <meta charset='UTF-8' />
+    <meta name='viewport' content='width=device-width, initial-scale=1.0' />
+    <script src='/socket.io/socket.io.js'></script>
+    <title>Game Room</title>
+    <!-- Bootstrap CSS CDN -->
+    <link
+      href='https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css'
+      rel='stylesheet'
+    />
 
-  <style>
-    .red-team-border {
-      border: 4px solid #dc3545;
-      box-shadow: 0px 4px 10px #a3a3a3;
-    }
-
-    .blue-team-border {
-      border: 4px solid #007bff;
-      box-shadow: 0px 4px 10px #a3a3a3;
-    }
-
-    #messages {
-      overflow-y: scroll;
-      scroll-behavior: smooth;
-    }
-
-    ul#blue-team li::marker, ul#red-team li::marker {
-      content: '';
-    }
-
-    ul#red-team li, ul#blue-team li {
-      font-weight: bold;
-    }
-
-    ul#blue-team li {
+    <style>
+      .red-team-border { border: 4px solid #dc3545; box-shadow: 0px 4px 10px
+      #a3a3a3; } .blue-team-border { border: 4px solid #007bff; box-shadow: 0px
+      4px 10px #a3a3a3; } #messages { overflow-y: scroll; scroll-behavior:
+      smooth; } ul#blue-team li::marker, ul#red-team li::marker { content: ''; }
+      ul#red-team li, ul#blue-team li { font-weight: bold; } ul#blue-team li {
       list-style-type: none; /* Ensure there's no bullet point */
-      background-color: #628ee0; /* Add background color */
-      padding: 5px; /* Padding inside the list item */
-      margin-bottom: 5px; /* Space between list items */
-      transition: transform 0.3s ease, background-color 0.3s ease;
-      border-radius: 5px; 
-      color: black;
-    }
-
-    ul#red-team li {
-      list-style-type: none; /* Ensure there's no bullet point */
-      background-color: #f1645f; /* Add background color */
-      padding: 5px; /* Padding inside the list item */
-      margin-bottom: 5px; /* Space between list items */
-      transition: transform 0.3s ease, background-color 0.3s ease;
-      border-radius: 5px; 
-      color: black;
-    }
-
-    ul#red-team li:hover, ul#blue-team li:hover {
-      transform: scale(1.1); /* Slightly grow the element */
-    }
-
-    .custom-navbar {
-      background-color: #2e2e2e;
-      padding: 1.5rem;
-      position: fixed;
-      top: 0px;
-      width: 100%;
-
-      transition: top 0.5s ease;
-      z-index: 1000;
-    }
-
-    .custom-navbar.hidden {
-    top: -130px; 
-    }
-
-    .content {
-      margin-top: 100px;
-    }
-
-    .title {
-      margin-top: 150px;
-      transition: top 0.5s ease;
-    }
-
-    .navbar-brand {
-      font-size: 3rem;
-      color: white;
-    }
-
-    .btn-primary {
-      font-size: 1rem;
-    }
-
-    .logo {
-      top: 20px;
-      left: 20px;
-      width: 80px;
-      height: 80px;
-    }
-  </style>
-</head>
-<!-- NavBar -->
-<nav class="navbar navbar-expand-lg custom-navbar">
-    <div class="container-fluid">
-      {{!-- <a class="navbar-brand" href="#">Alias</a> --}}
-      <img src="https://alias.eu/wp-content/uploads/2020/07/alias-logo-1.png" alt="Alias Logo" class="logo">
-      <div class="ms-auto">
-        <button id="leave-game-button" class="btn btn-secondary mx-2" onclick="leaveRoom()">Leave Game</button>
-        <button id="logoutBtn" class="btn btn-light">Log out</button>
+      background-color: #628ee0; /* Add background color */ padding: 5px; /*
+      Padding inside the list item */ margin-bottom: 5px; /* Space between list
+      items */ transition: transform 0.3s ease, background-color 0.3s ease;
+      border-radius: 5px; color: black; } ul#red-team li { list-style-type:
+      none; /* Ensure there's no bullet point */ background-color: #f1645f; /*
+      Add background color */ padding: 5px; /* Padding inside the list item */
+      margin-bottom: 5px; /* Space between list items */ transition: transform
+      0.3s ease, background-color 0.3s ease; border-radius: 5px; color: black; }
+      ul#red-team li:hover, ul#blue-team li:hover { transform: scale(1.1); /*
+      Slightly grow the element */ } .custom-navbar { background-color: #2e2e2e;
+      padding: 1.5rem; position: fixed; top: 0px; width: 100%; transition: top
+      0.5s ease; z-index: 1000; } .custom-navbar.hidden { top: -130px; }
+      .content { margin-top: 100px; } .title { margin-top: 150px; transition:
+      top 0.5s ease; } .navbar-brand { font-size: 3rem; color: white; }
+      .btn-primary { font-size: 1rem; } .logo { top: 20px; left: 20px; width:
+      80px; height: 80px; }
+    </style>
+  </head>
+  <!-- NavBar -->
+  <nav class='navbar navbar-expand-lg custom-navbar'>
+    <div class='container-fluid'>
+      {{! <a class="navbar-brand" href="#">Alias</a> }}
+      <img
+        src='https://alias.eu/wp-content/uploads/2020/07/alias-logo-1.png'
+        alt='Alias Logo'
+        class='logo'
+      />
+      <div class='ms-auto'>
+        <button
+          id='leave-game-button'
+          class='btn btn-secondary mx-2'
+          onclick='leaveRoom()'
+        >Leave Game</button>
+        <button id='logoutBtn' class='btn btn-light'>Log out</button>
       </div>
     </div>
   </nav>
 
-<div class="modal fade" id="profileModal" tabindex="-1" role="dialog" aria-labelledby="profileModalLabel" aria-hidden="true">
-  <div class="modal-dialog" role="document">
-    <div class="modal-content">
-      <div class="modal-header">
-        <h5 class="modal-title" id="profileModalLabel">Profile</h5>
-        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-          <span aria-hidden="true">&times;</span>
-        </button>
-      </div>
-      <div class="modal-body">
-        <p><strong>User Name:</strong> <span id="userName"></span></p>
-        <p><strong>Games Played:</strong> <span id="gamesPlayed"></span></p>
-        <p><strong>Won:</strong> <span id="wins"></span></p>
-        <p><strong>Lose:</strong> <span id="loses"></span></p>
-        <p><strong>Draws:</strong> <span id="draw"></span></p>
-        <p><strong>Words Guessed:</strong> <span id="wordsGuessed"></span></p>
-        <p><strong>Words Well Described:</strong> <span id="wellDescribed"></span></p>
-      </div>
-      <div class="modal-footer">
-        <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
-      </div>
-    </div>
-  </div>
-</div>
-
-<body class="bg-light">
-  <div class="modal fade" id="errorModal" tabindex="-1" role="dialog" aria-labelledby="errorModalLabel" aria-hidden="true">
-    <div class="modal-dialog" role="document">
-      <div class="modal-content">
-        <div class="modal-header">
-          <h5 class="modal-title" id="errorModalLabel">Error</h5>
-          <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-            <span aria-hidden="true">&times;</span>
+  <div
+    class='modal fade'
+    id='profileModal'
+    tabindex='-1'
+    role='dialog'
+    aria-labelledby='profileModalLabel'
+    aria-hidden='true'
+  >
+    <div class='modal-dialog' role='document'>
+      <div class='modal-content'>
+        <div class='modal-header'>
+          <h5 class='modal-title' id='profileModalLabel'>Profile</h5>
+          <button
+            type='button'
+            class='close'
+            data-dismiss='modal'
+            aria-label='Close'
+          >
+            <span aria-hidden='true'>&times;</span>
           </button>
         </div>
-        <div class="modal-body" id="errorModalBody" style="color: #dc3545;">
-          <!-- Error message will be rendered here -->
+        <div class='modal-body'>
+          <p><strong>User Name:</strong> <span id='userName'></span></p>
+          <p><strong>Games Played:</strong> <span id='gamesPlayed'></span></p>
+          <p><strong>Won:</strong> <span id='wins'></span></p>
+          <p><strong>Lose:</strong> <span id='loses'></span></p>
+          <p><strong>Draws:</strong> <span id='draw'></span></p>
+          <p><strong>Words Guessed:</strong> <span id='wordsGuessed'></span></p>
+          <p><strong>Words Well Described:</strong>
+            <span id='wellDescribed'></span></p>
         </div>
-        <div class="modal-footer">
-          <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+        <div class='modal-footer'>
+          <button
+            type='button'
+            class='btn btn-secondary'
+            data-dismiss='modal'
+          >Close</button>
         </div>
       </div>
     </div>
   </div>
 
-  <div id="error-message" style="display: none; color: #dc3545; text-align: center; font-size: 1.2rem; margin-top: 300px;"></div>
-  <div class="container mt-5">
+  <body class='bg-light'>
+    <div
+      class='modal fade'
+      id='errorModal'
+      tabindex='-1'
+      role='dialog'
+      aria-labelledby='errorModalLabel'
+      aria-hidden='true'
+    >
+      <div class='modal-dialog' role='document'>
+        <div class='modal-content'>
+          <div class='modal-header'>
+            <h5 class='modal-title' id='errorModalLabel'>Error</h5>
+            <button
+              type='button'
+              class='close'
+              data-dismiss='modal'
+              aria-label='Close'
+            >
+              <span aria-hidden='true'>&times;</span>
+            </button>
+          </div>
+          <div class='modal-body' id='errorModalBody' style='color: #dc3545;'>
+            <!-- Error message will be rendered here -->
+          </div>
+          <div class='modal-footer'>
+            <button
+              type='button'
+              class='btn btn-secondary'
+              data-dismiss='modal'
+            >Close</button>
+          </div>
+        </div>
+      </div>
+    </div>
 
-    <h1 id="game-room-name" class="text-center mb-4 title"></h1>
-<!--
+    <div
+      id='error-message'
+      style='display: none; color: #dc3545; text-align: center; font-size: 1.2rem; margin-top: 300px;'
+    ></div>
+    <div class='container mt-5'>
+
+      <h1 id='game-room-name' class='text-center mb-4 title'></h1>
+      <!--
     <div class="d-flex justify-content-center">
       <div id="countdown-timer" style="display: none;">
         <h1><strong>Game is starting in <span id="countdown-remaining"></span>...</strong></h1>
       </div>
     </div>
 -->
-    <div class="d-flex justify-content-center">
-      <div id="game-info2" class="card mb-4" style="width: 60%; display: none;">
-        <div class="text-center mb-4">
-          <!-- Team turn message centered -->
-          <p style="font-size: 26px;"><strong><span id="team-turn-new"></span></strong></p>
-        </div>
-        
-        <!-- Grid layout for scores and timer -->
-        <div class="row mb-4">
-          <!-- Red team score on the left -->
-          <div class="col-4 text-center">
-            <p><strong></strong><span id="score-team-red-new" style="color: #dc3545; font-size: 2rem;">0</span></p>
+      <div class='d-flex justify-content-center'>
+        <div
+          id='game-info2'
+          class='card mb-4'
+          style='width: 60%; display: none;'
+        >
+          <div class='text-center mb-4'>
+            <!-- Team turn message centered -->
+            <p style='font-size: 26px;'><strong><span
+                  id='team-turn-new'
+                ></span></strong></p>
           </div>
-          <!-- Timer in the center -->
-          <div class="col-4 text-center">
-            <span id="time-remaining-new" style="font-size: 2rem;">0</span>
+
+          <!-- Grid layout for scores and timer -->
+          <div class='row mb-4'>
+            <!-- Red team score on the left -->
+            <div class='col-4 text-center'>
+              <p><strong></strong><span
+                  id='score-team-red-new'
+                  style='color: #dc3545; font-size: 2rem;'
+                >0</span></p>
+            </div>
+            <!-- Timer in the center -->
+            <div class='col-4 text-center'>
+              <span id='time-remaining-new' style='font-size: 2rem;'>0</span>
+            </div>
+            <!-- Blue team score on the right -->
+            <div class='col-4 text-center'>
+              <p><strong></strong>
+                <span
+                  id='score-team-blue-new'
+                  style='color: #007bff; font-size: 2rem;'
+                >0</span></p>
+            </div>
           </div>
-          <!-- Blue team score on the right -->
-          <div class="col-4 text-center">
-            <p><strong></strong> <span id="score-team-blue-new" style="color: #007bff; font-size: 2rem;">0</span></p>
+
+          <!-- Describer name and word centered and stacked -->
+          <div class='text-center'>
+            <p><strong><span
+                  id='describer-name-new'
+                  style='font-size: 1.3rem;'
+                ></span></strong></p>
+            <p><strong></strong>
+              <span
+                id='word-for-teammates-new'
+                style='font-size: 1.5rem;'
+              ></span></p>
           </div>
+
         </div>
-        
-        <!-- Describer name and word centered and stacked -->
-        <div class="text-center">
-          <p><strong><span id="describer-name-new" style="font-size: 1.3rem;"></span></strong></p>
-          <p><strong></strong> <span id="word-for-teammates-new" style="font-size: 1.5rem;"></span></p>
-        </div>
-        
       </div>
+
+      <div class='card shadow-sm mb-4'>
+        <div class='card-body'>
+          <ul
+            id='messages'
+            class='list-group mb-4'
+            style='height: 300px; overflow-y: auto;'
+          >
+            <!-- Messages will appear here -->
+          </ul>
+
+          <form id='chat-form' class='input-group mb-3'>
+            <input
+              type='text'
+              class='form-control'
+              id='message'
+              placeholder='Type a message...'
+              required
+            />
+            <button type='submit' class='btn btn-primary'>Send</button>
+          </form>
+        </div>
+      </div>
+
+      <div class='d-flex justify-content-around mb-4'>
+        <div class='text-center'>
+          <h2>Red Team</h2>
+          <button
+            id='join-red-team-button'
+            class='btn btn-danger mb-3'
+            onclick='joinRedTeam()'
+          >Join Red Team</button>
+          <ul id='red-team' class='list-group'>
+            <!-- Red team members will be updated here dynamically -->
+          </ul>
+        </div>
+
+        <div class='text-center'>
+          <h2>Blue Team</h2>
+          <button
+            id='join-blue-team-button'
+            class='btn btn-primary mb-3'
+            onclick='joinBlueTeam()'
+          >Join Blue Team</button>
+          <ul id='blue-team' class='list-group'>
+            <!-- Blue team members will be updated here dynamically -->
+          </ul>
+        </div>
+
+      </div>
+
+      <div class='d-flex justify-content-center'>
+        <button
+          id='start-game-button'
+          class='btn btn-success mx-2'
+          onclick='startGame()'
+        >Start Game</button>
+      </div>
+
     </div>
 
-    <div class="card shadow-sm mb-4">
-      <div class="card-body">
-        <ul id="messages" class="list-group mb-4" style="height: 300px; overflow-y: auto;">
-          <!-- Messages will appear here -->
-        </ul>
+    <!-- Bootstrap and JavaScript dependencies -->
+    <script src='https://code.jquery.com/jquery-3.5.1.slim.min.js'></script>
+    <script
+      src='https://cdn.jsdelivr.net/npm/bootstrap@4.5.2/dist/js/bootstrap.bundle.min.js'
+    ></script>
 
-        <form id="chat-form" class="input-group mb-3">
-          <input type="text" class="form-control" id="message" placeholder="Type a message..." required>
-          <button type="submit" class="btn btn-primary">Send</button>
-        </form>
-      </div>
-    </div>
+    <script src='../public/media/scorePoint.mp3'>
 
+    </script>
 
-    <div class="d-flex justify-content-around mb-4">
-      <div class="text-center">
-        <h2>Red Team</h2>
-        <button id="join-red-team-button" class="btn btn-danger mb-3" onclick="joinRedTeam()">Join Red Team</button>
-        <ul id="red-team" class="list-group">
-          <!-- Red team members will be updated here dynamically -->
-        </ul>
-      </div>
-
-      <div class="text-center">
-        <h2>Blue Team</h2>
-        <button id="join-blue-team-button" class="btn btn-primary mb-3" onclick="joinBlueTeam()">Join Blue Team</button>
-        <ul id="blue-team" class="list-group">
-          <!-- Blue team members will be updated here dynamically -->
-        </ul>
-      </div>
-
-    </div> 
-
-
-    <div class="d-flex justify-content-center">
-      <button id="start-game-button" class="btn btn-success mx-2" onclick="startGame()">Start Game</button>
-    </div>
-
-  </div>
-
-  <!-- Bootstrap and JavaScript dependencies -->
-  <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.5.2/dist/js/bootstrap.bundle.min.js"></script>
-
-  <script src="../public/media/scorePoint.mp3">
-
-  </script> 
-
-  <script>
-    let socket;
-      // Audios loaded here
-      const countDownSound = new Audio('/media/countDown2.mp3');
-      const startingGameSound = new Audio('/media/startingGame.mp3');
-      const turnEndingSound = new Audio('/media/turnEnding.mp3');
-      const scorePointSound = new Audio('/media/scorePoint2.mp3');
-      const youLoseSound = new Audio('/media/youlose.mp3');
+    <script>
+      let socket; // Audios loaded here const countDownSound = new
+      Audio('/media/countDown2.mp3'); const startingGameSound = new
+      Audio('/media/startingGame.mp3'); const turnEndingSound = new
+      Audio('/media/turnEnding.mp3'); const scorePointSound = new
+      Audio('/media/scorePoint2.mp3'); const youLoseSound = new
+      Audio('/media/youlose.mp3'); const winSound = new Audio('/media/win.mp3');
       const describerError = new Audio('/media/describerError.mp3');
-
-
       document.getElementById('logoutBtn').addEventListener('click', (e) => {
-        e.preventDefault();
-        localStorage.clear();
-        window.location.href = '/login';
-      });
-
-    window.onload = function () {
-      const { userId, userName } = getUserInfo();
-      const accessToken = localStorage.getItem('accessToken');
-      const gameRoomId = window.location.pathname.split('/').pop();
-
-      if(!socket) {
-        socket = io('/game-room', { 
-          query: { gameId: gameRoomId, serverOffset: 0, },
-          auth: {
-            token: accessToken
-          }
-        });
-      }
-
-      //chat messages elements
-      const form = document.getElementById('chat-form');
-      const messageInput = document.getElementById('message');
-      const messageList = document.getElementById('messages');
-
-      socket.on('connect_error', (error) => {
-        console.error('Connection error:', error);
-        renderError(error.message);
-      });
-
-      socket.on('connect', () => {
-        console.log(`Connected as ${userName} (ID: ${userId})`);
-
-        socket.on('game-room:updated', (gameRoom) => {
-          console.log('Game Room updated:', gameRoom);
-          renderGameRoom(gameRoom);
-        });
-
-        socket.on('user-stats', (userInfo) => {
-          console.log('User stats:', userInfo);
-          showUserStats(userInfo);
-        });
-
-          socket.on('exception', (error) => {
-          error = error.error || error;
-          console.error('Server exception:', error.message);
-          console.error(error);
-          renderErrorMessage(error.message);
-        });
-
-        const countdownModal = new bootstrap.Modal(document.getElementById('countdownModal'), {
-          backdrop: 'static', // Prevent closing by clicking outside the modal
-          keyboard: false     // Prevent closing with Esc key
-        });
-
-        const countdownText = document.getElementById('countdown-remaining');
-
-        // Listen for the countdown event
-        socket.on('countdown', (i) => {
-          countdownText.textContent = i;
-
-          if(i === 3){
-            countDownSound.play().catch(error => {
-            console.error('Error playing sound', error);
-          });
-          }
-
-          // Show the modal
-          countdownModal.show();
-
-        });
-
-        // Listen for the end of the countdown event
-        socket.on('end:countdown', () => {
-          // Hide the modal
-          countdownModal.hide();
-          startingGameSound.play();
-        });
-
-
-        // MODULARIZ THIS ONE
-        socket.on('game-started:updated', (gameRoom) => {
-          console.log('Current game state: ', gameRoom);
-
-          hideNavbar();
-
-          let userState;
-          if (gameRoom.currentWord)
-          {
-            userState = 'describer'
-          } else if (gameRoom.turn.team === 'redTeam' && gameRoom.redTeam.some(player => player[0] === userName) || gameRoom.turn.team === 'blueTeam' && gameRoom.blueTeam.some(player => player[0] === userName)) {
-            userState = 'guesser'
-          } else {
-            userState = 'enemy'
-          }
-
-          const h1Name = document.getElementById('game-room-name');
-          let text;
-          if (userState === 'describer') {
-            text = `Your turn to describe!`;
-          } else if (userState === 'guesser') {
-            text = `Your turn to guess!`;
-          } else if (userState === 'enemy') {
-            text = `Enemy turn!`;
-          }
-          if (userState === 'enemy') {
-            document.getElementById('message').disabled = true;
-            document.querySelector('#chat-form button').disabled = true;
-          } else {
-            document.getElementById('message').disabled = false;
-            document.querySelector('#chat-form button').disabled = false;
-          }
-          h1Name.textContent = text;
-          //!
-          //document.getElementById('timer').style.display = 'block';
-          document.getElementById('join-red-team-button').style.display = 'none';
-          document.getElementById('join-blue-team-button').style.display = 'none';
-          document.getElementById('start-game-button').style.display = 'none';
-          document.getElementById('leave-game-button').style.display = 'none';
-
-          // Display the game info div
-          const gameInfoDiv = document.getElementById('game-info2');
-          gameInfoDiv.style.display = 'block';
-
-          const redTeamList = document.getElementById('red-team');
-          redTeamList.innerHTML = '';  // Clear the list
-          gameRoom.redTeam.forEach(player => {
-            const li = document.createElement('li');
-            li.textContent = `${player[0]}`; // Just display the player name
-
-            // If the player is the host, append the SVG
-            if(gameRoom.host === player[2]) {
-              assignHostSvg(li);
-            }
-
-            // If the player is inactive, change the text color
-            if (!player[1]) {
-              li.style.color = 'red';
-            }
-            redTeamList.appendChild(li);
-          });
-
-          // Update Blue Team
-          const blueTeamList = document.getElementById('blue-team');
-          blueTeamList.innerHTML = '';
-          gameRoom.blueTeam.forEach(player => {
-            const li = document.createElement('li');
-            li.textContent = `${player[0]}`; // Just display the player name
-
-            // If the player is the host, append the SVG
-            if (gameRoom.host === player[2]) {
-              assignHostSvg(li);
-            }
-
-            // If the player is inactive, change the text color
-            if (!player[1]) {
-              li.style.color = 'red';
-            }
-            blueTeamList.appendChild(li);
-          });
-
-          // Remove existing border class first
-          gameInfoDiv.classList.remove('red-team-border', 'blue-team-border');
-
-          // Add a border based on the current team's turn
-          if (gameRoom.turn.team === 'redTeam') {
-            gameInfoDiv.classList.add('red-team-border');
-          } else if (gameRoom.turn.team === 'blueTeam') {
-            gameInfoDiv.classList.add('blue-team-border');
-          }
-
-          // Update game state details - game-info
-          //document.getElementById('team-turn').textContent = gameRoom.turn.team === 'redTeam' ? 'Red' : 'Blue';
-          //document.getElementById('score-team-red').textContent = gameRoom.score.red;
-          //document.getElementById('score-team-blue').textContent = gameRoom.score.blue;
-          //document.getElementById('describer-name').textContent = gameRoom.turn.describerName;
-          //document.getElementById('word-for-teammates').textContent = gameRoom.currentWord ? gameRoom.currentWord : '';
-          //document.getElementById('described-word').style.display = gameRoom.currentWord ? 'block' : 'none';
-
-          // Update game state details - game-info2
-          document.getElementById('team-turn-new').textContent = gameRoom.turn.team === 'redTeam' ? 'Red team plays!' : 'Blue team plays!';
-          document.getElementById('score-team-red-new').textContent = gameRoom.score.red;
-          document.getElementById('score-team-blue-new').textContent = gameRoom.score.blue;
-          document.getElementById('describer-name-new').textContent = gameRoom.turn.describerName !== userName ? `${gameRoom.turn.describerName} is describing` : 'You have to describe the word!';
-          document.getElementById('word-for-teammates-new').textContent = gameRoom.currentWord ? gameRoom.currentWord : '';
-          document.getElementById('described-word').style.display = gameRoom.currentWord ? 'block' : 'none';
-          
-        });
-
-        socket.on('timer:update', (data) => {
-          document.getElementById('time-remaining-new').textContent = data.remaining;
-         //if(data.remaining === 4){
-         //   turnEndingSound.play();
-         // }
-        });
-
-        //chat message events 
-        socket.on('chat:update', (msg) => {
-          if(msg.message === `Word guessed!` && msg.userName === 'Server'){
-            scorePointSound.play();
-          }
-
-          console.log(`Message received: ${msg}, 'serverOffset: `, msg.messageId)
-          const serverOffset = msg.messageId;
-          const item = msg.userName === "Server" ? `<li style="color: rgb(139, 0, 139);">
-                <p><small class="text-muted ms-auto">[${new Date(msg.time).toLocaleTimeString()}]</small> ${msg.userName}:  ${msg.message} </p>
-              </li>`: `<li>
-              <p><small class="text-muted ms-auto">[${new Date(msg.time).toLocaleTimeString()}]</small> ${msg.userName}:  ${msg.message} </p>
-            </li>`
-
-          messageList.insertAdjacentHTML('beforeend', item)
-          /*
-          const li = document.createElement('li');
-          li.textContent = `${msg.userName}: ${msg.message} <small>[${new Date(msg.time).toLocaleTimeString()}]</small>`;
-          messageList.appendChild(li);*/
-          socket.auth.serverOffset = serverOffset
-
-          messageList.scrollTop = messages.scrollHeight
-        });
-
-        //End of the game
-        socket.on('game:end', (gameRoom) => {
-          const { score, redTeam, blueTeam } = gameRoom;
-          const redTeamScore = score.red;
-          const blueTeamScore = score.blue;
-          let message = '';
-
-          showNavbar();
-
-          // Determine the result
-          if(redTeamScore > blueTeamScore) {
-            message = `Red Team Wins! Score: ${redTeamScore} - ${blueTeamScore}`;
-            
-          } else if(blueTeamScore > redTeamScore) {
-            message = `Blue Team Wins! Score: ${blueTeamScore} - ${redTeamScore}`;
-          } else {
-            message = `It's a Tie! Score: ${redTeamScore} - ${blueTeamScore}`;
-          }
-
-          // Display the result in the modal
-          document.getElementById('gameEndMessage').innerHTML = message;
-          
-          // Show the modal
-          const gameEndModal = new bootstrap.Modal(document.getElementById('gameEndModal'), {
-            backdrop: 'static',
-            keyboard: false
-          });
-          gameEndModal.show();
-
-          // Handle the lobby redirection
-          document.getElementById('redirectLobby').addEventListener('click', () => {
-            window.location.href = '/lobby';
-          });
-        })
-      });
-
-      form.addEventListener('submit', (e) => {
-        e.preventDefault();
-        const message = messageInput.value;
-        const { userId, userName } = getUserInfo();
-
-        if (message && userName) {
-          console.log('sending message:', message);
-          socket.emit('chat:message', {message});
-          messageInput.value = '';
-        }
-      });
-    }
-
-    function getUserInfo() {
-      const userId = localStorage.getItem('userId');
-      const userName = localStorage.getItem('userName');
-      return { userId, userName };
-    }
-
-    const renderError = (errMessage) => {
-      const logoutBtn = document.getElementById('logoutBtn');
-      const leaveBtn = document.getElementById('leave-game-button');
-      leaveBtn.innerHTML = 'Go back to lobby';
-      const [type,message] = errMessage.split(':');
-      switch (type) {
-        case 'Unauthorized':
-          logoutBtn.innerHTML = 'Go to login';
-          leaveBtn.style.display = 'none';
-          break;
-        case 'NotFound':
-        case 'Forbidden':
-        break;
-        case 'Conflict':
-        leaveBtn.style.display = 'none';
-        default:
-          break;
-      }
-      const errorDiv = document.getElementById('error-message');
-      const container = document.getElementsByClassName('container mt-5')[0];
-      container.style.display = 'none';
-      errorDiv.innerHTML = `Error: ${message}`;
-      errorDiv.style.display = 'block';
-    }
-
-    const renderGameRoom = (gameRoom) => {
-
-      const h1Name = document.getElementById('game-room-name');
-      h1Name.textContent = `Game Room: ${gameRoom.name}`;
-
-      // Update Red Team
+      e.preventDefault(); localStorage.clear(); window.location.href = '/login';
+      }); window.onload = function () { const { userId, userName } =
+      getUserInfo(); const accessToken = localStorage.getItem('accessToken');
+      const gameRoomId = window.location.pathname.split('/').pop(); if (!socket)
+      { socket = io('/game-room', { query: { gameId: gameRoomId, serverOffset:
+      0, }, auth: { token: accessToken } }); } //chat messages elements const
+      form = document.getElementById('chat-form'); const messageInput =
+      document.getElementById('message'); const messageList =
+      document.getElementById('messages'); socket.on('connect_error', (error) =>
+      { console.error('Connection error:', error); renderError(error.message);
+      }); socket.on('connect', () => { console.log(`Connected as ${userName}
+      (ID: ${userId})`); socket.on('game-room:updated', (gameRoom) => {
+      console.log('Game Room updated:', gameRoom); renderGameRoom(gameRoom); });
+      socket.on('user-stats', (userInfo) => { console.log('User stats:',
+      userInfo); showUserStats(userInfo); }); socket.on('exception', (error) =>
+      { error = error.error || error; console.error('Server exception:',
+      error.message); console.error(error); renderErrorMessage(error.message);
+      }); const countdownModal = new
+      bootstrap.Modal(document.getElementById('countdownModal'), { backdrop:
+      'static', // Prevent closing by clicking outside the modal keyboard: false
+      // Prevent closing with Esc key }); const countdownText =
+      document.getElementById('countdown-remaining'); // Listen for the
+      countdown event socket.on('countdown', (i) => { countdownText.textContent
+      = i; if (i === 3) { countDownSound.play().catch(error => {
+      console.error('Error playing sound', error); }); } // Show the modal
+      countdownModal.show(); }); // Listen for the end of the countdown event
+      socket.on('end:countdown', () => { countdownModal.hide();
+      window.scrollTo(0, 0); startingGameSound.play(); });
+      socket.on('game-started:updated', (gameRoom) => { //hideNavbar(); let
+      userState; if (gameRoom.currentWord) { userState = 'describer' } else if
+      (gameRoom.turn.team === 'redTeam' && gameRoom.redTeam.some(player =>
+      player[ 0 ] === userName) || gameRoom.turn.team === 'blueTeam' &&
+      gameRoom.blueTeam.some(player => player[ 0 ] === userName)) { userState =
+      'guesser' } else { userState = 'enemy' } const h1Name =
+      document.getElementById('game-room-name'); let text; if (userState ===
+      'describer') { text = `Your turn to describe!`; } else if (userState ===
+      'guesser') { text = `Your turn to guess!`; } else if (userState ===
+      'enemy') { text = `Enemy turn!`; } if (userState === 'enemy') {
+      document.getElementById('message').disabled = true;
+      document.querySelector('#chat-form button').disabled = true; } else {
+      document.getElementById('message').disabled = false;
+      document.querySelector('#chat-form button').disabled = false; }
+      h1Name.textContent = text;
+      document.getElementById('join-red-team-button').style.display = 'none';
+      document.getElementById('join-blue-team-button').style.display = 'none';
+      document.getElementById('start-game-button').style.display = 'none';
+      document.getElementById('leave-game-button').style.display = 'none'; //
+      Display the game info div const gameInfoDiv =
+      document.getElementById('game-info2'); gameInfoDiv.style.display =
+      'block'; const redTeamList = document.getElementById('red-team');
+      redTeamList.innerHTML = ''; // Clear the list
+      gameRoom.redTeam.forEach(player => { const li =
+      document.createElement('li'); li.textContent = `${player[ 0 ]}`; // Just
+      display the player name // If the player is the host, append the SVG if
+      (gameRoom.host === player[ 2 ]) { assignHostSvg(li); } // If the player is
+      inactive, change the text color if (!player[ 1 ]) { li.style.color =
+      'red'; } redTeamList.appendChild(li); }); // Update Blue Team const
+      blueTeamList = document.getElementById('blue-team');
+      blueTeamList.innerHTML = ''; gameRoom.blueTeam.forEach(player => { const
+      li = document.createElement('li'); li.textContent = `${player[ 0 ]}`; //
+      Just display the player name // If the player is the host, append the SVG
+      if (gameRoom.host === player[ 2 ]) { assignHostSvg(li); } // If the player
+      is inactive, change the text color if (!player[ 1 ]) { li.style.color =
+      'red'; } blueTeamList.appendChild(li); }); // Remove existing border class
+      first gameInfoDiv.classList.remove('red-team-border', 'blue-team-border');
+      // Add a border based on the current team's turn if (gameRoom.turn.team
+      === 'redTeam') { gameInfoDiv.classList.add('red-team-border'); } else if
+      (gameRoom.turn.team === 'blueTeam') {
+      gameInfoDiv.classList.add('blue-team-border'); } // Update game state
+      details - game-info2 document.getElementById('team-turn-new').textContent
+      = gameRoom.turn.team === 'redTeam' ? 'Red team plays!' : 'Blue team
+      plays!'; document.getElementById('score-team-red-new').textContent =
+      gameRoom.score.red;
+      document.getElementById('score-team-blue-new').textContent =
+      gameRoom.score.blue;
+      document.getElementById('describer-name-new').textContent =
+      gameRoom.turn.describerName !== userName ? `${gameRoom.turn.describerName}
+      is describing` : 'You have to describe the word!';
+      document.getElementById('word-for-teammates-new').textContent =
+      gameRoom.currentWord ? gameRoom.currentWord : '';
+      document.getElementById('described-word').style.display =
+      gameRoom.currentWord ? 'block' : 'none'; }); socket.on('timer:update',
+      (data) => { document.getElementById('time-remaining-new').textContent =
+      data.remaining; //if(data.remaining === 4){ // turnEndingSound.play(); //
+      } }); //chat message events socket.on('chat:update', (msg) => { if
+      (msg.message === `Word guessed!` && msg.userName === 'Server') {
+      scorePointSound.play(); } console.log(`Message received: ${msg},
+      'serverOffset: `, msg.messageId) const serverOffset = msg.messageId; const
+      item = msg.userName === "Server" ? `<li style="color: rgb(139, 0, 139);">
+      <p><small class="text-muted ms-auto">[${new
+      Date(msg.time).toLocaleTimeString()}]</small> ${msg.userName}:
+      ${msg.message} </p> </li>`: `<li> <p><small class="text-muted
+      ms-auto">[${new Date(msg.time).toLocaleTimeString()}]</small>
+      ${msg.userName}: ${msg.message} </p> </li>`
+      messageList.insertAdjacentHTML('beforeend', item) /* const li =
+      document.createElement('li'); li.textContent = `${msg.userName}:
+      ${msg.message} <small>[${new
+      Date(msg.time).toLocaleTimeString()}]</small>`;
+      messageList.appendChild(li);*/ socket.auth.serverOffset = serverOffset
+      messageList.scrollTop = messages.scrollHeight }); //End of the game
+      socket.on('game:end', (gameRoom) => { const { score, redTeam, blueTeam } =
+      gameRoom; let message = ''; let winner; if (score.red > score.blue) {
+      winner = 'red'; } else if (score.blue > score.red) { winner = 'blue' }
+      else winner = 'tie'; console.log("SCORES: ", score.blue, score.red);
+      console.log("WINENR:", winner); const userTeam = checkUserInTeam(userId,
+      redTeam, blueTeam); console.log("USER TEAM", userTeam); const gameEndModal
+      = new bootstrap.Modal(document.getElementById('gameEndModal'), { backdrop:
+      'static', keyboard: false }); if (userTeam === winner) {
+      document.getElementById('gameEndMessage').innerHTML = ` <h1
+      style="text-align: center;">You Win!</h1> <br> <p style="font-weight:
+      normal; text-align: center;">Red Team ${score.red} - ${score.blue} Blue
+      Team</p> `; winSound.play(); gameEndModal.show(); } else if (userTeam ===
+      'tie') { document.getElementById('gameEndMessage').innerHTML = ` <h1
+      style="text-align: center;">It's a Tie'!</h1> <br> <p style="font-weight:
+      normal; text-align: center;">Red Team ${score.red} - ${score.blue} Blue
+      Team</p> `; youLoseSound.play(); gameEndModal.show(); } else {
+      document.getElementById('gameEndMessage').innerHTML = ` <h1
+      style="text-align: center;">You Lose!</h1> <br> <p style="font-weight:
+      normal; text-align: center;">Red Team ${score.red} - ${score.blue} Blue
+      Team</p> `; youLoseSound.play(); gameEndModal.show(); } // showNavbar();
+      // Show the modal // Handle the lobby redirection
+      document.getElementById('redirectLobby').addEventListener('click', () => {
+      window.location.href = '/lobby'; }); }) });
+      form.addEventListener('submit', (e) => { e.preventDefault(); const message
+      = messageInput.value; const { userId, userName } = getUserInfo(); if
+      (message && userName) { console.log('sending message:', message);
+      socket.emit('chat:message', { message }); messageInput.value = ''; } }); }
+      function getUserInfo() { const userId = localStorage.getItem('userId');
+      const userName = localStorage.getItem('userName'); return { userId,
+      userName }; } const renderError = (errMessage) => { const logoutBtn =
+      document.getElementById('logoutBtn'); const leaveBtn =
+      document.getElementById('leave-game-button'); leaveBtn.innerHTML = 'Go
+      back to lobby'; const [type,message] = errMessage.split(':'); switch
+      (type) { case 'Unauthorized': logoutBtn.innerHTML = 'Go to login';
+      leaveBtn.style.display = 'none'; break; case 'NotFound': case 'Forbidden':
+      break; case 'Conflict': leaveBtn.style.display = 'none'; default: break; }
+      const errorDiv = document.getElementById('error-message'); const container
+      = document.getElementsByClassName('container mt-5')[ 0 ];
+      container.style.display = 'none'; errorDiv.innerHTML = `Error:
+      ${message}`; errorDiv.style.display = 'block'; } const renderGameRoom =
+      (gameRoom) => { const h1Name = document.getElementById('game-room-name');
+      h1Name.textContent = `Game Room: ${gameRoom.name}`; // Update Red Team
       const redTeamList = document.getElementById('red-team');
-      redTeamList.innerHTML = '';  // Clear the list
-      gameRoom.redTeam.forEach(player => {
-        const li = document.createElement('li');
-        li.textContent = player.name;
-        if (gameRoom.host === player.userId) {
-          assignHostSvg(li);
-        }
-        li.style.cursor = 'pointer';
-        li.style.color = 'black';
-        //li.style.textDecoration = 'underline';
-        li.addEventListener('click', () => {
-          fetchUserStats(player.name);
-        });
-        redTeamList.appendChild(li);
-      });
-
-      // Update Blue Team
-      const blueTeamList = document.getElementById('blue-team');
-      blueTeamList.innerHTML = '';
-      gameRoom.blueTeam.forEach(player => {
-        const li = document.createElement('li');
-        li.textContent = player.name;
-        if (gameRoom.host === player.userId) {
-          assignHostSvg(li);
-        }
-        li.style.cursor = 'pointer';
-        li.style.color = 'black';
-        //li.style.textDecoration = 'underline';
-        li.addEventListener('click', () => {
-          fetchUserStats(player.name);
-        });
-        blueTeamList.appendChild(li);
-      });
-
-
-      // Check if the current user is the host and display Start Game button
-      const isHost = gameRoom.host === localStorage.getItem('userId');
-      const startGameBtn = document.getElementById('start-game-button');
-      startGameBtn.style.display = isHost ? 'block' : 'none';
-    };
-
-    function fetchUserStats(userName) {
-      console.log('Fetching user stats for:', userName);
-      socket.emit('user-stats:get', { userName });
-    }
-
-    function showUserStats(userInfo) {
-      $('#userName').text(userInfo.userName);
+      redTeamList.innerHTML = ''; // Clear the list
+      gameRoom.redTeam.forEach(player => { const li =
+      document.createElement('li'); li.textContent = player.name; if
+      (gameRoom.host === player.userId) { assignHostSvg(li); } li.style.cursor =
+      'pointer'; li.style.color = 'black'; //li.style.textDecoration =
+      'underline'; li.addEventListener('click', () => {
+      fetchUserStats(player.name); }); redTeamList.appendChild(li); }); //
+      Update Blue Team const blueTeamList =
+      document.getElementById('blue-team'); blueTeamList.innerHTML = '';
+      gameRoom.blueTeam.forEach(player => { const li =
+      document.createElement('li'); li.textContent = player.name; if
+      (gameRoom.host === player.userId) { assignHostSvg(li); } li.style.cursor =
+      'pointer'; li.style.color = 'black'; //li.style.textDecoration =
+      'underline'; li.addEventListener('click', () => {
+      fetchUserStats(player.name); }); blueTeamList.appendChild(li); }); //
+      Check if the current user is the host and display Start Game button const
+      isHost = gameRoom.host === localStorage.getItem('userId'); const
+      startGameBtn = document.getElementById('start-game-button');
+      startGameBtn.style.display = isHost ? 'block' : 'none'; }; function
+      fetchUserStats(userName) { console.log('Fetching user stats for:',
+      userName); socket.emit('user-stats:get', { userName }); } function
+      showUserStats(userInfo) { $('#userName').text(userInfo.userName);
       $('#gamesPlayed').text(userInfo.gamesPlayed);
-      $('#wins').text(userInfo.wins);
-      $('#loses').text(userInfo.loses);
-      $('#draw').text(userInfo.draw); 
+      $('#wins').text(userInfo.wins); $('#loses').text(userInfo.loses);
+      $('#draw').text(userInfo.draw);
       $('#wordsGuessed').text(userInfo.wordsGuessed);
-      $('#wellDescribed').text(userInfo.wellDescribed);
-      
-      // Show the modal
-      $('#profileModal').modal('show');
-    }
+      $('#wellDescribed').text(userInfo.wellDescribed); // Show the modal
+      $('#profileModal').modal('show'); } function leaveRoom() {
+      window.location.href = '/lobby'; console.log('leaving room'); } function
+      joinRedTeam() { socket.emit('game-room:join', { team: 'redTeam' });
+      console.log('joining red team'); } function joinBlueTeam() {
+      socket.emit('game-room:join', { team: 'blueTeam' }); console.log('joining
+      blue team'); } function renderErrorMessage(message) {
+      describerError.play(); const errorModalBody =
+      document.getElementById('errorModalBody'); errorModalBody.innerHTML =
+      `${message}`; $('#errorModal').modal('show'); // { // setTimeout(() => {
+      // $('#errorModal').modal('hide'); // }, 3000); // } } function
+      startGame() { socket.emit('game-room:start'); console.log('starting
+      game'); } //extra functions function myTeam(userName, gameData) { return
+      gameData[ gameData.turn.team ].find(player => player[ 0 ] === userName); }
+      // Function to append the SVG to host function assignHostSvg(li) { const
+      svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+      svg.setAttribute('version', '1.1'); svg.setAttribute('viewBox', '0 0 512
+      512'); svg.setAttribute('style', 'enable-background:new 0 0 512 512;
+      width: 20px; height: 20px; margin-left: 10px;'); const polygon =
+      document.createElementNS('http://www.w3.org/2000/svg', 'polygon');
+      polygon.setAttribute('class', 'st1'); polygon.setAttribute('points',
+      '352.31,276.28 256,151.9 159.69,276.28 50,193.36 91.46,360.1 201.15,360.1
+      310.85,360.1 420.54,360.1 462,193.36'); polygon.setAttribute('style',
+      'fill:#F2BE22;stroke:#231F20;stroke-width:15;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:10;');
+      svg.appendChild(polygon); li.appendChild(svg); // Append the SVG to the
+      list item } const navbar = document.querySelector('.custom-navbar'); const
+      mainTitle = document.querySelector('#game-room-name'); function
+      checkUserInTeam(userId, redTeam, blueTeam) { return redTeam.some(player =>
+      player[ 2 ] === userId) ? 'red' : blueTeam.some(player => player[ 2 ] ===
+      userId) ? 'blue' : 'none'; } function hideNavbar() {
+      navbar.classList.add('hidden'); mainTitle.classList.remove('title') }
+      function showNavbar() { navbar.classList.remove('hidden');
+      mainTitle.classList.add('title') }
 
-    function leaveRoom() {
-      window.location.href = '/lobby';
-      console.log('leaving room');
-    }
+    </script>
 
-    function joinRedTeam() {
-      socket.emit('game-room:join', { team: 'redTeam' });
-      console.log('joining red team');
-    }
-
-    function joinBlueTeam() {
-      socket.emit('game-room:join', { team: 'blueTeam' });
-      console.log('joining blue team');
-    }
-
-    function renderErrorMessage(message) {
-      describerError.play();
-      const errorModalBody = document.getElementById('errorModalBody');
-      errorModalBody.innerHTML = `${message}`;
-
-      $('#errorModal').modal('show');
-
-      {{!-- setTimeout(() => {
-        $('#errorModal').modal('hide');
-      }, 3000);  --}}
-    }
-
-    function startGame() {
-      socket.emit('game-room:start');
-      console.log('starting game');
-    }
-
-    //extra functions
-    function myTeam(userName, gameData) {
-      return gameData[ gameData.turn.team ].find(player => player[ 0 ] === userName);
-    }
-
-    // Function to append the SVG to host
-    function assignHostSvg(li) {
-      const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
-      svg.setAttribute('version', '1.1');
-      svg.setAttribute('viewBox', '0 0 512 512');
-      svg.setAttribute('style', 'enable-background:new 0 0 512 512; width: 20px; height: 20px; margin-left: 10px;');
-
-      const polygon = document.createElementNS('http://www.w3.org/2000/svg', 'polygon');
-      polygon.setAttribute('class', 'st1');
-      polygon.setAttribute('points', '352.31,276.28 256,151.9 159.69,276.28 50,193.36 91.46,360.1 201.15,360.1 310.85,360.1 420.54,360.1 462,193.36');
-      polygon.setAttribute('style', 'fill:#F2BE22;stroke:#231F20;stroke-width:15;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:10;');
-      
-      svg.appendChild(polygon);
-      li.appendChild(svg); // Append the SVG to the list item
-    }
-
-    const navbar = document.querySelector('.custom-navbar');
-    const mainTitle = document.querySelector('#game-room-name');
-
-    function hideNavbar() {
-        navbar.classList.add('hidden');
-        mainTitle.classList.remove('title')
-    }
-
-    function showNavbar() {
-        navbar.classList.remove('hidden');
-        mainTitle.classList.add('title')
-    }
-
-  </script>
-
-
-  <!-- Modal End Game -->
-  <div class="modal fade" id="gameEndModal" tabindex="-1" aria-labelledby="gameEndModalLabel" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered">
-      <div class="modal-content">
-        <div class="modal-header">
-          <h5 class="modal-title" id="gameEndModalLabel">Game Over</h5>
-        </div>
-        <div class="modal-body" id="gameEndMessage">
-          <!-- Winner or tie message will be displayed here -->
-        </div>
-        <div class="modal-footer">
-          <button type="button" class="btn btn-primary" id="redirectLobby">Go to Lobby</button>
+    <!-- Modal End Game -->
+    <div
+      class='modal fade'
+      id='gameEndModal'
+      tabindex='-1'
+      aria-labelledby='gameEndModalLabel'
+      aria-hidden='true'
+    >
+      <div class='modal-dialog modal-dialog-centered'>
+        <div class='modal-content'>
+          <div class='modal-header bg-dark text-white'>
+            <h5 class='modal-title' id='gameEndModalLabel'>Game Over</h5>
+          </div>
+          <div class='modal-body' id='gameEndMessage'>
+            <!-- Winner or tie message will be displayed here -->
+          </div>
+          <div class='modal-footer'>
+            <button type='button' class='btn btn-primary' id='redirectLobby'>Go
+              to Lobby</button>
+          </div>
         </div>
       </div>
     </div>
-  </div>
 
-  <!-- Countdown Modal -->
-  <div class="modal fade" id="countdownModal" tabindex="-1" aria-labelledby="countdownModalLabel" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered modal-full-width">
-      <div class="modal-content modal-countdown">
-        <div class="modal-body text-center">
-          <h1><strong>Game is starting in <span id="countdown-remaining"></span>...</strong></h1>
+    <!-- Countdown Modal -->
+    <div
+      class='modal fade'
+      id='countdownModal'
+      tabindex='-1'
+      aria-labelledby='countdownModalLabel'
+      aria-hidden='true'
+    >
+      <div class='modal-dialog modal-dialog-centered modal-full-width'>
+        <div class='modal-content modal-countdown'>
+          <div class='modal-body text-center'>
+            <h1><strong>Game is starting in
+                <span id='countdown-remaining'></span>...</strong></h1>
+          </div>
         </div>
       </div>
     </div>
-  </div>
-
-
-
-</body>
+  </body>
 
 </html>
