@@ -328,11 +328,6 @@
           startingGameSound.play();
         });
 
-        socket.on('game-room:left', () => {
-          console.log('Left game room');
-          // Redirect to the lobby
-          window.location.href = '/lobby';
-        });
 
         // MODULARIZ THIS ONE
         socket.on('game-started:updated', (gameRoom) => {
@@ -534,9 +529,6 @@
       const leaveBtn = document.getElementById('leave-game-button');
       leaveBtn.innerHTML = 'Go back to lobby';
       leaveBtn.style.display = 'block';
-      leaveBtn.onclick = () => {
-        window.location.href = '/lobby';
-      };
       const [type,message] = errMessage.split(':');
       switch (type) {
         case 'Unauthorized':
@@ -625,7 +617,7 @@
     }
 
     function leaveRoom() {
-      socket.emit('game-room:leave');
+      window.location.href = '/lobby';
       console.log('leaving room');
     }
 

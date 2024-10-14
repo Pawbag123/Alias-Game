@@ -117,18 +117,18 @@ export class GameRoomGateway
     }
   }
 
-  /**
-   * Handler for leaving game room
-   * Emits game-room:left to client so he gets redirected to lobby
-   * and disconnects him, so logic for disconnecting is called
-   * @param client - socket client
-   */
-  @SubscribeMessage('game-room:leave')
-  handleLeaveGame(@ConnectedSocket() client: Socket) {
-    this.logger.log(`User ${client.data.user.userName} leaving game room`);
-    client.emit('game-room:left');
-    client.disconnect();
-  }
+  // /**
+  //  * Handler for leaving game room
+  //  * Emits game-room:left to client so he gets redirected to lobby
+  //  * and disconnects him, so logic for disconnecting is called
+  //  * @param client - socket client
+  //  */
+  // @SubscribeMessage('game-room:leave')
+  // handleLeaveGame(@ConnectedSocket() client: Socket) {
+  //   this.logger.log(`User ${client.data.user.userName} leaving game room`);
+  //   client.emit('game-room:left');
+  //   client.disconnect();
+  // }
 
   /**
    * Handler to join red team
