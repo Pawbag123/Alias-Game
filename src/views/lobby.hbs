@@ -262,7 +262,6 @@
         //check that
         console.error('Connection error:');
         console.error(error.message);
-        console.error(error.type);
         renderError(error.message);
       });
 
@@ -304,18 +303,17 @@
       return { userId, userName };
     }
 
-    function renderError(message) {
+    function renderError(errMessage) {
       document.getElementById('profileBtn').style.display = 'none';
+      const [type,message] = message.split(':');
       const logoutBtn = document.getElementById('logoutBtn');
-      switch (message) {
+      switch (type) {
         case 'Unauthorized':
-          logoutBtn.style.display = 'block';
           logoutBtn.innerHTML = 'Go to login';
+          logoutBtn.style.display = 'block';
           break;
         case 'Conflict':
-          break;
         default:
-          logoutBtn.style.display = 'none';
           break;
       }
       const errorDiv = document.getElementById('error-message');
