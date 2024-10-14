@@ -78,7 +78,7 @@ const createTokenMiddleware =
     logger.log('Token middleware');
     if (!token) {
       logger.error('No token provided');
-      return next(new Error('Unauthorized: User is not logged in'));
+      return next(new Error('Unauthorized:User is not logged in'));
     }
 
     try {
@@ -89,7 +89,9 @@ const createTokenMiddleware =
       next();
     } catch (error) {
       logger.error('Error verifying token', error.message);
-      return next(new Error('Unauthorized'));
+      return next(
+        new Error('Unauthorized:Invalid login data, please log in again'),
+      );
     }
   };
 
@@ -100,13 +102,15 @@ const createSingleUserMiddleware =
     const user = socket.data.user;
     if (!user) {
       logger.error('No user in socket data');
-      return next(new Error('Unauthorized'));
+      return next(new Error('Unauthorized:User is not logged in'));
     }
 
     const activeUser = gameStateService.getActiveUserById(user.userId);
     if (activeUser && activeUser.socketId) {
       logger.error('User already connected');
-      return next(new Error('Conflict'));
+      return next(
+        new Error('Conflict:User on this account is already connected'),
+      );
     }
     next();
   };
@@ -120,12 +124,16 @@ const createAllowedToGameMiddleware =
 
     if (!gameStateService.gameExists(gameId)) {
       logger.error('Game not found');
-      return next(new Error('Not Found'));
+      return next(new Error('NotFound:Game not found'));
     }
 
     if (!gameStateService.isUserAllowedInGame(userId, gameId)) {
       logger.error('User not allowed to join the game');
-      return next(new Error('Forbidden'));
+      return next(
+        new Error(
+          'Forbidden:User not allowed to join the game. Join again from lobby',
+        ),
+      );
     }
     next();
   };

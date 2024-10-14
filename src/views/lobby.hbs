@@ -191,7 +191,7 @@
     </div>
   </div>
 
-  <div id="error-message" style="display: none; color: red;"></div>
+  <div id="error-message" style="display: none; color: #dc3545; text-align: center; font-size: 1.2rem; margin-top: 300px;"></div>
 
   <div class="container mt-5">
     <h1 class="text-center mb-4">Game Lobby</h1>
@@ -262,7 +262,6 @@
         //check that
         console.error('Connection error:');
         console.error(error.message);
-        console.error(error.type);
         renderError(error.message);
       });
 
@@ -304,22 +303,21 @@
       return { userId, userName };
     }
 
-    function renderError(message) {
+    function renderError(errMessage) {
       document.getElementById('profileBtn').style.display = 'none';
+      const [type,message] = errMessage.split(':');
       const logoutBtn = document.getElementById('logoutBtn');
-      switch (message) {
+      switch (type) {
         case 'Unauthorized':
-          logoutBtn.style.display = 'block';
           logoutBtn.innerHTML = 'Go to login';
+          logoutBtn.style.display = 'block';
           break;
         case 'Conflict':
-          break;
         default:
-          logoutBtn.style.display = 'none';
           break;
       }
       const errorDiv = document.getElementById('error-message');
-      const container = document.getElementsByClassName('container')[ 0 ];
+      const container = document.getElementsByClassName('container mt-5')[ 0 ];
       container.style.display = 'none';
       errorDiv.innerHTML = `Error: ${message}`;
       errorDiv.style.display = 'block';
