@@ -55,6 +55,8 @@ export interface Game {
   score: {
     red: number;
     blue: number;
+    redSkip: number;
+    blueSkip: number;
   };
   turn: Turn | null;
 }

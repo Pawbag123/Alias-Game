@@ -5,6 +5,7 @@ import {
   Logger,
   NotFoundException,
 } from '@nestjs/common';
+import { WsException } from '@nestjs/websockets';
 import { Namespace, Socket } from 'socket.io';
 import { ChatService } from 'src/chat/chat.service';
 import { GameStateService } from 'src/game-state/game-state.service';
@@ -54,8 +55,6 @@ export class GameMechanicsService {
       this.nextTurn(gameId); // Handles both game initialization and next turn
 
       this.emitGameStartedUpdated(gameRoom, gameId);
-      // this.logger.debug(`STATE NUMBER ${rounds}`, turn);
-      // this.logger.debug('current word', currentWord);
 
       await this.startTimer(gameId, time, gameRoom);
       const { turn, currentWord } = this.gameStateService.getGameById(gameId);
@@ -83,7 +82,7 @@ export class GameMechanicsService {
     duration: number,
     gameRoom: Namespace,
   ) {
-    for (let remaining = duration; remaining >= 0; remaining--) {
+    for (let remaining = duration; remaining > 0; remaining--) {
       gameRoom.to(gameId).emit('timer:update', { remaining });
       await this.delay(1000); // Wait for 1 second before next update
     }
@@ -117,7 +116,7 @@ export class GameMechanicsService {
 
     do {
       const wordIndex = this.getRandomNumber(0, words.length - 1);
-      selectedWord = words[wordIndex];
+      selectedWord = words[ wordIndex ];
     } while (wordsUsed.includes(selectedWord));
     wordsUsed.push(selectedWord);
     return selectedWord;
@@ -139,7 +138,7 @@ export class GameMechanicsService {
 
       // Randomly pick a player from the teamPlayers array
       const randomIndex = Math.floor(Math.random() * teamPlayers.length);
-      const randomPlayer = teamPlayers[randomIndex];
+      const randomPlayer = teamPlayers[ randomIndex ];
 
       game.turn = {
         alreadyDescribed: [],
@@ -191,9 +190,6 @@ export class GameMechanicsService {
   newWord(gameId: string) {
     const game = this.gameStateService.getGameById(gameId);
 
-    // if (game.currentWord) {
-    //   game.wordsUsed.push(game.currentWord);
-    // }
     game.currentWord = this.generateWord(game.wordsUsed);
     this.logger.debug('new word : ', game.currentWord);
     this.gameStateService.saveCurrentState(game);
@@ -294,7 +290,7 @@ export class GameMechanicsService {
       gameId,
       user: { userId, userName },
     } = client.data;
-    const [validatedMessage, wordStatus] = checkGuessedWord(
+    const [ validatedMessage, wordStatus ] = checkGuessedWord(
       currentWord,
       message,
     );
@@ -358,5 +354,17 @@ export class GameMechanicsService {
   async getUserStats(userName: string, client: Socket) {
     const userStats = await this.gameStateService.getUserStats(userName);
     client.emit('user-stats', userStats);
+  }
+
+  skipWord(client: Socket, gameRoom: Namespace) {
+    const { gameId, user } = client.data;
+
+    if (this.gameStateService.isDescriber(user.userId, gameId)) {
+      this.gameStateService.wordSkiped(gameId, user.userId);
+      this.newWord(gameId);
+      this.emitGameStartedUpdated(gameRoom, gameId);
+    }else{
+      //EXEPTION HERE
+    }
   }
 }
