@@ -2,7 +2,6 @@ import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Chat } from './schemas/chat.schema';
 import mongoose, { Model } from 'mongoose';
-import { GameStateService } from 'src/game-state/game-state.service';
 
 @Injectable()
 export class ChatService {

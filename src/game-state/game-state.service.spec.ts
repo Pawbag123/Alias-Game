@@ -7,8 +7,8 @@ import { Team } from '../types';
 
 describe('GameStateService', () => {
   let service: GameStateService;
-  let userModel: any;
-  let gamesModel: any;
+  // let userModel: any;
+  // let gamesModel: any;
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
@@ -31,8 +31,8 @@ describe('GameStateService', () => {
     }).compile();
 
     service = module.get<GameStateService>(GameStateService);
-    userModel = module.get(getModelToken(User.name));
-    gamesModel = module.get(getModelToken(Games.name));
+    // userModel = module.get(getModelToken(User.name));
+    // gamesModel = module.get(getModelToken(Games.name));
   });
 
   it('should be defined', () => {
