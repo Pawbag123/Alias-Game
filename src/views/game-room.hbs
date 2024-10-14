@@ -123,31 +123,31 @@
 </nav>
 
 <!-- PROFILE MODAL-->
-  <div class="modal fade" id="profileModal" tabindex="-1" role="dialog" aria-labelledby="profileModalLabel"
-    aria-hidden="true">
-    <div class="modal-dialog" role="document">
-      <div class="modal-content">
-        <div class="modal-header bg-dark text-white">
-          <h5 class="modal-title" id="profileModalLabel">Profile</h5>
-          <button type="button" class="close text-white" data-dismiss="modal" aria-label="Close">
-            <span aria-hidden="true">&times;</span>
-          </button>
-        </div>
-        <div class="modal-body">
-          <p><strong>User Name:</strong> <span id="userName"></span></p>
-          <p><strong>Games Played:</strong> <span id="gamesPlayed"></span></p>
-          <p><strong>Won:</strong> <span id="wins"></span></p>
-          <p><strong>Lose:</strong> <span id="loses"></span></p>
-          <p><strong>Draws:</strong> <span id="draw"></span></p>
-          <p><strong>Words Guessed:</strong> <span id="wordsGuessed"></span></p>
-          <p><strong>Words Well Described:</strong> <span id="wellDescribed"></span></p>
-        </div>
-        <div class="modal-footer">
-          <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
-        </div>
+<div class="modal fade" id="profileModal" tabindex="-1" role="dialog" aria-labelledby="profileModalLabel"
+  aria-hidden="true">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <div class="modal-header bg-dark text-white">
+        <h5 class="modal-title" id="profileModalLabel">Profile</h5>
+        <button type="button" class="close text-white" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body">
+        <p><strong>User Name:</strong> <span id="userName"></span></p>
+        <p><strong>Games Played:</strong> <span id="gamesPlayed"></span></p>
+        <p><strong>Won:</strong> <span id="wins"></span></p>
+        <p><strong>Lose:</strong> <span id="loses"></span></p>
+        <p><strong>Draws:</strong> <span id="draw"></span></p>
+        <p><strong>Words Guessed:</strong> <span id="wordsGuessed"></span></p>
+        <p><strong>Words Well Described:</strong> <span id="wellDescribed"></span></p>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
       </div>
     </div>
   </div>
+</div>
 
 <body class="bg-light">
   <div class="modal fade" id="errorModal" tabindex="-1" role="dialog" aria-labelledby="errorModalLabel"
@@ -204,8 +204,8 @@
           <p><strong><span id="describer-name-new" style="font-size: 1.3rem;"></span></strong></p>
           <p><strong></strong> <span id="word-for-teammates-new" style="font-size: 1.5rem;"></span></p>
         </div>
-        <div id="skip-button">
-          <button onclick="skipWord()">skip</button>
+        <div class="d-flex justify-content-center" style="margin: 1rem 0;">
+          <button id="skip-button" class="btn btn-secondary" onclick="skipWord()" style="display: none;">Skip</button>
         </div>
       </div>
     </div>
@@ -431,15 +431,14 @@
           } else if (gameRoom.turn.team === 'blueTeam') {
             gameInfoDiv.classList.add('blue-team-border');
           }
-
           // Update game state details - game-info2
           document.getElementById('team-turn-new').textContent = gameRoom.turn.team === 'redTeam' ? 'Red team plays!' : 'Blue team plays!';
           document.getElementById('score-team-red-new').textContent = gameRoom.score.red;
           document.getElementById('score-team-blue-new').textContent = gameRoom.score.blue;
           document.getElementById('describer-name-new').textContent = gameRoom.turn.describerName !== userName ? `${gameRoom.turn.describerName} is describing` : 'You have to describe the word!';
           document.getElementById('word-for-teammates-new').textContent = gameRoom.currentWord ? gameRoom.currentWord : '';
-          document.getElementById('described-word').style.display = gameRoom.currentWord ? 'block' : 'none';
           document.getElementById('skip-button').style.display = gameRoom.turn.describerName === userName ? 'block' : 'none';
+
         });
 
         socket.on('timer:update', (data) => {
@@ -486,7 +485,7 @@
           } else {
             winner = 'tie';
           }
-          
+
           console.log("WINENR:", winner);
 
           const userTeam = checkUserInTeam(userId, redTeam, blueTeam);
@@ -696,7 +695,7 @@
       li.appendChild(svg); // Append the SVG to the list item
     }
 
-    function skipWord(){
+    function skipWord() {
       socket.emit('game:skip-word')
     }
 
