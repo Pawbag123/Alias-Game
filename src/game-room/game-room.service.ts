@@ -74,6 +74,18 @@ export class GameRoomService {
     this.updateGamesInfoAfterDisconnect(client, gameRoom, lobby);
   }
 
+  changeTeam(userName: string, client: Socket, gameRoom: Namespace): void {
+    const { gameId } = client.data;
+
+    this.gameStateService.swapPlayerTeam(userName, gameId);
+    gameRoom
+      .to(gameId)
+      .emit(
+        'game-room:updated',
+        this.gameStateService.getSerializedGameRoom(gameId),
+      );
+  }
+
   joinTeam(team: Team, client: Socket, gameRoom: Namespace): void {
     const {
       gameId,

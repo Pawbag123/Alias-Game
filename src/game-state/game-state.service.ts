@@ -104,6 +104,19 @@ export class GameStateService {
     return this.games.find((game) => game.id === gameId);
   }
 
+  checkIfPlayerExistsInGame(userName: string, gameId: string): boolean {
+    const game = this.getGameById(gameId);
+    return game.players.some((player) => player.name === userName);
+  }
+
+  swapPlayerTeam(userName: string, gameId: string) {
+    const game = this.getGameById(gameId);
+    const player = game.players.find((player) => player.name === userName);
+    if (player) {
+      player.team = player.team === Team.RED ? Team.BLUE : Team.RED;
+    }
+  }
+
   checkIfGameHasTooFewPlayers(gameId: string): boolean {
     const game = this.getGameById(gameId);
     const redTeamPlayers = game.players.filter(

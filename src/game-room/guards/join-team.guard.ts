@@ -6,7 +6,6 @@ import {
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
-import { WsException } from '@nestjs/websockets';
 import { GameStateService } from 'src/game-state/game-state.service';
 import { Team } from 'src/types';
 

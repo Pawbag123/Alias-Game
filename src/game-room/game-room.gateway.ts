@@ -19,6 +19,7 @@ import { HostGuard } from './guards/host.guard';
 import { TooFewPlayersGuard } from './guards/too-few-players.guard';
 import { GuessingTeamGuard } from './guards/guessing-team.guard';
 import { WsAllExceptionsFilter } from 'src/exceptions/ws-all-exceptions-filter';
+import { PlayerInGameGuard } from './guards/player-in-game.guard';
 
 /**
  * Gateway that handles connections in game room, using game-room namespace
@@ -151,6 +152,15 @@ export class GameRoomGateway
   @UseGuards(HostGuard, TooFewPlayersGuard)
   handleStartGame(@ConnectedSocket() client: Socket) {
     this.gameMechanicsService.startGame(client, this.gameRoom, this.lobby);
+  }
+
+  @SubscribeMessage('game-room:change-team')
+  @UseGuards(HostGuard, PlayerInGameGuard)
+  handleChangeTeam(
+    @ConnectedSocket() client: Socket,
+    @MessageBody() { userName }: { userName: string },
+  ) {
+    this.gameRoomService.changeTeam(userName, client, this.gameRoom);
   }
 
   @SubscribeMessage('user-stats:get')
