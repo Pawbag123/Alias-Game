@@ -52,7 +52,7 @@ describe('GameStateService', () => {
       const userId = 'user123';
       const userName = 'Test User';
       const timeout = 30000;
-      const timeoutCb = jest.fn(); // Função callback para timeout
+      const timeoutCb = jest.fn();
 
       const gameId = service.createGame(createGameDto, userId, userName, timeout, timeoutCb);
 
