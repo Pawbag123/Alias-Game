@@ -3,6 +3,7 @@ import { GameStateService } from './game-state.service';
 import { getModelToken } from '@nestjs/mongoose';
 import { User } from '../auth/schemas/user.schema';
 import { Games } from '../game-room/schema/game.schema';
+import { CreateGameDto } from 'src/lobby/dto/create-game-dto'; 
 import { Team } from '../types';
 
 describe('GameStateService', () => {
@@ -41,19 +42,24 @@ describe('GameStateService', () => {
 
   describe('createGame', () => {
     it('should create a new game and add the user as the host', () => {
-      const gameName = 'Test Game';
+      const createGameDto: CreateGameDto = {
+        gameName: 'Test Game',
+        maxPlayers: 4,
+        rounds: 5,
+        time: 30,
+      };
+
       const userId = 'user123';
       const userName = 'Test User';
-      const maxUsers = 4;
       const timeout = 30000;
       const timeoutCb = jest.fn();
-      
-      const gameId = service.createGame(gameName, userId, userName, maxUsers, timeout, timeoutCb);
-      
+
+      const gameId = service.createGame(createGameDto, userId, userName, timeout, timeoutCb);
+
       expect(gameId).toBeDefined();
       expect(service['games']).toHaveLength(1);
       expect(service['games'][0]).toMatchObject({
-        name: gameName,
+        name: createGameDto.gameName,
         host: userId,
         players: [{ userId, name: userName, team: Team.RED }],
       });
@@ -62,13 +68,23 @@ describe('GameStateService', () => {
 
   describe('removePlayerFromGame', () => {
     it('should remove a player from the game', () => {
-      const gameId = service.createGame('Test Game', 'user1', 'User One', 4, 30000, jest.fn());
+      const createGameDto: CreateGameDto = {
+        gameName: 'Test Game',
+        maxPlayers: 4,
+        rounds: 5,
+        time: 30,
+      };
+
+      const timeout = 30000;
+      const timeoutCb = jest.fn();
+
+      const gameId = service.createGame(createGameDto, 'user1', 'User One', timeout, timeoutCb);
       service.addUserToGame('user2', 'User Two', gameId);
-      
+
       expect(service.getGameById(gameId).players).toHaveLength(2);
-      
+
       service.removePlayerFromGame('user1', gameId);
-      
+
       expect(service.getGameById(gameId).players).toHaveLength(1);
       expect(service.getGameById(gameId).players[0].userId).toBe('user2');
     });
@@ -76,15 +92,35 @@ describe('GameStateService', () => {
 
   describe('isUserAllowedInGame', () => {
     it('should return true if user is in game', () => {
-      const gameId = service.createGame('Test Game', 'user1', 'User One', 4, 30000, jest.fn());
+      const createGameDto: CreateGameDto = {
+        gameName: 'Test Game',
+        maxPlayers: 4,
+        rounds: 5,
+        time: 30,
+      };
+
+      const timeout = 30000;
+      const timeoutCb = jest.fn();
+
+      const gameId = service.createGame(createGameDto, 'user1', 'User One', timeout, timeoutCb);
       service.addUserToGame('user2', 'User Two', gameId);
-      
+
       expect(service.isUserAllowedInGame('user2', gameId)).toBe(true);
     });
 
     it('should return false if user is not in game', () => {
-      const gameId = service.createGame('Test Game', 'user1', 'User One', 4, 30000, jest.fn());
-      
+      const createGameDto: CreateGameDto = {
+        gameName: 'Test Game',
+        maxPlayers: 4,
+        rounds: 5,
+        time: 30,
+      };
+
+      const timeout = 30000;
+      const timeoutCb = jest.fn();
+
+      const gameId = service.createGame(createGameDto, 'user1', 'User One', timeout, timeoutCb);
+
       expect(service.isUserAllowedInGame('user2', gameId)).toBe(false);
     });
   });

@@ -2,7 +2,8 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { LobbyService } from './lobby.service';
 import { GameStateService } from '../game-state/game-state.service';
 import { Namespace, Socket } from 'socket.io';
-import { JOIN_TIMEOUT, MAX_USERS } from '../types';
+import { JOIN_TIMEOUT } from '../types';
+import { CreateGameDto } from './dto/create-game-dto';
 
 describe('LobbyService', () => {
   let lobbyService: LobbyService;
@@ -53,16 +54,21 @@ describe('LobbyService', () => {
   describe('createGame', () => {
     it('should create a game and emit events correctly', () => {
       const gameId = 'game-id';
+      const gameSettings: CreateGameDto = {
+        gameName: 'Test Game',
+        maxPlayers: 4,
+        rounds: 5,
+        time: 30
+      };
       (gameStateService.createGame as jest.Mock).mockReturnValue(gameId);
       (gameStateService.getSerializedGames as jest.Mock).mockReturnValue([]);
 
-      lobbyService.createGame('Test Game', client, lobby);
+      lobbyService.createGame(gameSettings, client, lobby);
 
       expect(gameStateService.createGame).toHaveBeenCalledWith(
-        'Test Game',
+        gameSettings,
         'user-id',
         'Test User',
-        MAX_USERS,
         JOIN_TIMEOUT,
         expect.any(Function),
       );
@@ -70,7 +76,6 @@ describe('LobbyService', () => {
       expect(client.broadcast.emit).toHaveBeenCalledWith('games:updated', []);
     });
   });
-
 
   describe('joinGame', () => {
     it('should join a game and emit events correctly', () => {
@@ -94,7 +99,6 @@ describe('LobbyService', () => {
     });
   });
 
-  
   describe('handleConnection', () => {
     it('should handle client connection and emit game data', () => {
       (gameStateService.getGameOfUser as jest.Mock).mockReturnValue(null);
