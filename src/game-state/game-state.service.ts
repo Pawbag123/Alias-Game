@@ -397,7 +397,9 @@ export class GameStateService {
       }
     } catch (error) {
       console.error('Error details:', error);
-      throw new Error('Error saving the current game state');
+      throw new InternalServerErrorException(
+        'Error saving the current game state',
+      );
     }
   }
 

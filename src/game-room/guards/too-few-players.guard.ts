@@ -1,5 +1,9 @@
-import { CanActivate, ExecutionContext, Injectable } from '@nestjs/common';
-import { WsException } from '@nestjs/websockets';
+import {
+  BadRequestException,
+  CanActivate,
+  ExecutionContext,
+  Injectable,
+} from '@nestjs/common';
 import { GameStateService } from 'src/game-state/game-state.service';
 
 @Injectable()
@@ -12,7 +16,9 @@ export class TooFewPlayersGuard implements CanActivate {
 
     // Fetch the game details
     if (this.gameStateService.checkIfGameHasTooFewPlayers(gameId)) {
-      throw new WsException('Not enough players to start the game');
+      throw new BadRequestException(
+        'Each team has to have at least 2 players to start the game',
+      );
     }
 
     return true;
