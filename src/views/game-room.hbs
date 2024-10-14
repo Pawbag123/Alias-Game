@@ -155,8 +155,7 @@
     </div>
   </div>
 
-  <div id="error-message" style="display: none; color: #dc3545;"></div>
-  <button id="logoutBtn" class="btn btn-light" style="display: none; border: 2px solid #ccc;">Log out</button>
+  <div id="error-message" style="display: none; color: #dc3545; text-align: center; font-size: 1.2rem; margin-top: 300px;"></div>
   <div class="container mt-5">
 
     <h1 id="game-room-name" class="text-center mb-4 title"></h1>
@@ -518,7 +517,6 @@
         const { userId, userName } = getUserInfo();
 
         if (message && userName) {
-          {{!-- const data = { userId, userName, gameId: gameRoomId, message } --}}
           console.log('sending message:', message);
           socket.emit('chat:message', {message});
           messageInput.value = '';
@@ -532,19 +530,33 @@
       return { userId, userName };
     }
 
-    const renderError = (error) => {
+    const renderError = (errMessage) => {
       const logoutBtn = document.getElementById('logoutBtn');
-      logoutBtn.addEventListener('click', (e) => {
-        e.preventDefault();
-        localStorage.clear();
-        window.location.href = '/login';
-      });
+      const leaveBtn = document.getElementById('leave-game-button');
+      leaveBtn.innerHTML = 'Go back to lobby';
+      leaveBtn.style.display = 'block';
+      leaveBtn.onclick = () => {
+        window.location.href = '/lobby';
+      };
+      const [type,message] = errMessage.split(':');
+      switch (type) {
+        case 'Unauthorized':
+          logoutBtn.innerHTML = 'Go to login';
+          logoutBtn.style.display = 'block';
+          break;
+        case 'NotFound':
+        case 'Forbidden':
+        break;
+        case 'Conflict':
+        leaveBtn.style.display = 'none';
+        default:
+          break;
+      }
       const errorDiv = document.getElementById('error-message');
       const container = document.getElementsByClassName('container mt-5')[0];
       container.style.display = 'none';
-      errorDiv.innerHTML = `Error: ${error}`;
+      errorDiv.innerHTML = `Error: ${message}`;
       errorDiv.style.display = 'block';
-      logoutBtn.style.display = 'block';
     }
 
     const renderGameRoom = (gameRoom) => {
@@ -616,7 +628,6 @@
     function leaveRoom() {
       socket.emit('game-room:leave');
       console.log('leaving room');
-      window.alert('helloo')
     }
 
     function joinRedTeam() {
