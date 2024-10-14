@@ -23,6 +23,7 @@
     .btn-primary {
       font-size: 1rem;
     }
+    
   </style>
 
   <!-- Navbar -->
@@ -35,6 +36,7 @@
       </div>
     </div>
   </nav>
+  
 
   <!-- Profile Modal -->
   <div class="modal fade" id="profileModal" tabindex="-1" role="dialog" aria-labelledby="profileModalLabel" aria-hidden="true">
@@ -105,6 +107,7 @@
       const { userId, userName } = getUserInfo();
       const accessToken = localStorage.getItem('accessToken');
 
+
       if (!socket) {
         socket = io('/lobby', {
           auth: { token: accessToken }
@@ -126,8 +129,8 @@
 
       socket.on('connect_error', (error) => {
         //check that
-        error = error.error || error;
         console.error('Connection error:');
+        console.error(error.message);
         console.error(error.type);
         renderError(error.message);
       });
@@ -172,6 +175,18 @@
 
     function renderError(message) {
       document.getElementById('profileBtn').style.display = 'none';
+      const logoutBtn = document.getElementById('logoutBtn');
+      switch (message) {
+        case 'Unauthorized':
+          logoutBtn.style.display = 'block';
+          logoutBtn.innerHTML = 'Go to login';
+          break;
+        case 'Conflict':
+          break;
+        default:
+          logoutBtn.style.display = 'none';
+          break;
+      }
       const errorDiv = document.getElementById('error-message');
       const container = document.getElementsByClassName('container')[0];
       container.style.display = 'none';

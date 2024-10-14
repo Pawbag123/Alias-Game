@@ -1,15 +1,9 @@
-import {
-  INestApplicationContext,
-  Logger,
-  UnauthorizedException,
-} from '@nestjs/common';
+import { INestApplicationContext, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
 import { IoAdapter } from '@nestjs/platform-socket.io';
-import { WsException } from '@nestjs/websockets';
 import { Server, ServerOptions, Socket } from 'socket.io';
 import { GameStateService } from './game-state/game-state.service';
-import { CLIENT_PORT } from './types';
 
 export class SocketIOAdapter extends IoAdapter {
   private readonly logger = new Logger(SocketIOAdapter.name);
@@ -84,7 +78,7 @@ const createTokenMiddleware =
     logger.log('Token middleware');
     if (!token) {
       logger.error('No token provided');
-      return next(new WsException('Unauthorized'));
+      return next(new Error('Unauthorized'));
     }
 
     try {
@@ -95,7 +89,7 @@ const createTokenMiddleware =
       next();
     } catch (error) {
       logger.error('Error verifying token', error.message);
-      return next(new WsException('Unauthorized'));
+      return next(new Error('Unauthorized'));
     }
   };
 
@@ -106,13 +100,13 @@ const createSingleUserMiddleware =
     const user = socket.data.user;
     if (!user) {
       logger.error('No user in socket data');
-      return next(new WsException('Unauthorized'));
+      return next(new Error('Unauthorized'));
     }
 
     const activeUser = gameStateService.getActiveUserById(user.userId);
     if (activeUser && activeUser.socketId) {
       logger.error('User already connected');
-      return next(new WsException('User already connected'));
+      return next(new Error('Conflict'));
     }
     next();
   };
@@ -126,12 +120,12 @@ const createAllowedToGameMiddleware =
 
     if (!gameStateService.gameExists(gameId)) {
       logger.error('Game not found');
-      return next(new WsException('Game not found'));
+      return next(new Error('Not Found'));
     }
 
     if (!gameStateService.isUserAllowedInGame(userId, gameId)) {
       logger.error('User not allowed to join the game');
-      return next(new WsException('User not allowed to join the game'));
+      return next(new Error('Forbidden'));
     }
     next();
   };
