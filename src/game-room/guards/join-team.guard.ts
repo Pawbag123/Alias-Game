@@ -1,4 +1,11 @@
-import { CanActivate, ExecutionContext, Injectable } from '@nestjs/common';
+import {
+  BadRequestException,
+  CanActivate,
+  ExecutionContext,
+  ForbiddenException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { WsException } from '@nestjs/websockets';
 import { GameStateService } from 'src/game-state/game-state.service';
 import { Team } from 'src/types';
@@ -18,18 +25,18 @@ export class JoinTeamGuard implements CanActivate {
     const team: Team = data.team;
 
     if (!this.gameStateService.gameExists(gameId)) {
-      throw new WsException('Game not found');
+      throw new NotFoundException('Game not found');
     }
 
     if (!this.gameStateService.isUserAllowedInGame(userId, gameId)) {
-      throw new WsException('User not allowed to join game');
+      throw new ForbiddenException('User not allowed to join game');
     }
 
     if (this.gameStateService.isGameStarted(gameId)) {
-      throw new WsException('Game already started');
+      throw new ForbiddenException('Game already started');
     }
     if (team !== Team.BLUE && team !== Team.RED) {
-      throw new WsException('Invalid team');
+      throw new BadRequestException('Invalid team specified');
     }
 
     return true;

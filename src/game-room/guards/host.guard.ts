@@ -1,5 +1,9 @@
-import { CanActivate, ExecutionContext, Injectable } from '@nestjs/common';
-import { WsException } from '@nestjs/websockets';
+import {
+  CanActivate,
+  ExecutionContext,
+  ForbiddenException,
+  Injectable,
+} from '@nestjs/common';
 import { GameStateService } from 'src/game-state/game-state.service';
 
 @Injectable()
@@ -18,7 +22,7 @@ export class HostGuard implements CanActivate {
 
     // Check if the user is the host
     if (game.host !== userId) {
-      throw new WsException('You are not the host of this game');
+      throw new ForbiddenException('You are not the host of this game');
     }
 
     return true;

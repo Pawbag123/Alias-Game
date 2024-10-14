@@ -1,4 +1,9 @@
-import { Injectable, Logger } from '@nestjs/common';
+import {
+  Injectable,
+  InternalServerErrorException,
+  Logger,
+  NotFoundException,
+} from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { plainToClass } from 'class-transformer';
 import { Model } from 'mongoose';
@@ -406,7 +411,9 @@ export class GameStateService {
       }
     } catch (error) {
       console.error('Error details:', error);
-      throw new Error('Error saving the current game state');
+      throw new InternalServerErrorException(
+        'Error saving the current game state',
+      );
     }
   }
 
@@ -436,7 +443,7 @@ export class GameStateService {
       // Save the game document in the database
       return await newGame.save();
     } catch (error) {
-      throw new Error('Error saving in database');
+      throw new InternalServerErrorException('Error saving in database');
     }
   }
 
@@ -480,7 +487,8 @@ export class GameStateService {
         // Perform the update directly on the user document
         await this.userModel.updateOne({ _id: userId }, update);
       } catch (error) {
-        console.error(`Error updating stats for user ${userId}: `, error);
+        this.logger.error(`Error updating stats for user ${userId}: `, error);
+        throw new InternalServerErrorException('Error updating user stats');
       }
     }
   }
@@ -503,7 +511,7 @@ export class GameStateService {
   async getUserStats(userName: string) {
     const user = await this.userModel.findOne({ username: userName });
     if (!user) {
-      throw new Error(`User with username ${userName} not found`);
+      throw new NotFoundException(`User with name ${userName} not found`);
     }
     return {
       userName: userName,

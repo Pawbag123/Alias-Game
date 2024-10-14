@@ -1,5 +1,9 @@
-import { CanActivate, ExecutionContext, Injectable } from '@nestjs/common';
-import { WsException } from '@nestjs/websockets';
+import {
+  CanActivate,
+  ExecutionContext,
+  ForbiddenException,
+  Injectable,
+} from '@nestjs/common';
 import { GameStateService } from 'src/game-state/game-state.service';
 
 @Injectable()
@@ -17,7 +21,9 @@ export class GuessingTeamGuard implements CanActivate {
       this.gameStateService.isGameStarted(gameId) &&
       !this.gameStateService.isAllowedToGuess(userId, gameId)
     ) {
-      throw new WsException('You are not allowed to guess in this turn');
+      throw new ForbiddenException(
+        'You are not allowed to guess in this turn. Enemy team is guessing',
+      );
     }
 
     return true;

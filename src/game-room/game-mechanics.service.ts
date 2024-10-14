@@ -1,4 +1,10 @@
-import { Injectable, Logger } from '@nestjs/common';
+import {
+  ConflictException,
+  ForbiddenException,
+  Injectable,
+  Logger,
+  NotFoundException,
+} from '@nestjs/common';
 import { Namespace, Socket } from 'socket.io';
 import { ChatService } from 'src/chat/chat.service';
 import { GameStateService } from 'src/game-state/game-state.service';
@@ -94,16 +100,16 @@ export class GameMechanicsService {
     this.logger.log(`Reconnecting user ${userId} to game ${gameId}`);
     const user = this.gameStateService.getActiveUserById(userId);
     if (!user) {
-      throw new Error('User not found');
+      throw new NotFoundException('User not found');
     }
     if (!this.gameStateService.isUserAllowedInGame(userId, gameId)) {
-      throw new Error('User not allowed to join game');
+      throw new ForbiddenException('User not allowed to join game');
     }
     if (user.gameId !== gameId) {
-      throw new Error('User not added to this game');
+      throw new ForbiddenException('User not added to this game');
     }
     if (user.socketId) {
-      throw new Error('User already in game');
+      throw new ConflictException('User already in game');
     }
     this.gameStateService.addPlayerSocketId(userId, socketId);
   }
@@ -296,19 +302,13 @@ export class GameMechanicsService {
       currentWord,
       message,
     );
-    let chatResponse;
+    const chatResponse = await chatService.handleChatMessage(
+      userId,
+      userName,
+      gameId,
+      validatedMessage,
+    );
 
-    try {
-      chatResponse = await chatService.handleChatMessage(
-        userId,
-        userName,
-        gameId,
-        validatedMessage,
-      );
-    } catch (error) {
-      this.logger.error(error);
-      throw new Error(error.message);
-    }
     gameRoom.to(gameId).emit('chat:update', chatResponse);
     if (wordStatus === WordStatus.SIMILAR) {
       gameRoom.to(gameId).emit('chat:update', {
@@ -348,21 +348,14 @@ export class GameMechanicsService {
     } = client.data;
     const isAllowed = validateDescriberMessage(currentWord, message);
     if (!isAllowed) {
-      throw new Error('Message is not allowed');
+      throw new ForbiddenException('Message contains described word');
     }
-    let chatResponse;
-
-    try {
-      chatResponse = await chatService.handleChatMessage(
-        userId,
-        userName,
-        gameId,
-        message,
-      );
-    } catch (error) {
-      this.logger.error(error);
-      throw new Error(error.message);
-    }
+    const chatResponse = await chatService.handleChatMessage(
+      userId,
+      userName,
+      gameId,
+      message,
+    );
     gameRoom.to(gameId).emit('chat:update', chatResponse);
   }
 

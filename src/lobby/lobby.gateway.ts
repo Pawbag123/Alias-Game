@@ -6,20 +6,27 @@ import {
   OnGatewayConnection,
   OnGatewayDisconnect,
   ConnectedSocket,
-  WsException,
 } from '@nestjs/websockets';
 import { Namespace, Socket } from 'socket.io';
 
 import { LobbyService } from './lobby.service';
-import { Logger, UseGuards } from '@nestjs/common';
+import {
+  Logger,
+  UseFilters,
+  UseGuards,
+  UsePipes,
+  ValidationPipe,
+} from '@nestjs/common';
 import { JoinGameGuard } from './guards/join-game.guard';
 import { CreateGameGuard } from './guards/create-game.guard';
-import { GameSettingsDto } from './dto/game-settings.dto';
+import { WsAllExceptionsFilter } from 'src/exceptions/ws-all-exceptions-filter';
+import { CreateGameDto } from './dto/create-game-dto';
 
 /**
  * Gateway that handles connections in lobby, using lobby namespace
  * Handles game creation and joining
  */
+@UseFilters(new WsAllExceptionsFilter())
 @WebSocketGateway({
   namespace: 'lobby',
   cors: {
@@ -50,12 +57,7 @@ export class LobbyGateway implements OnGatewayConnection, OnGatewayDisconnect {
   @SubscribeMessage('user-stats:get')
   async handleUserStatsGet(@ConnectedSocket() client: Socket): Promise<void> {
     this.logger.log(`Getting user stats for ${client.data.user.userName}`);
-    try {
-      await this.lobbyService.getUserStats(client);
-    } catch (error) {
-      this.logger.error('Error getting user stats:', error);
-      throw new WsException(error.message);
-    }
+    await this.lobbyService.getUserStats(client);
   }
 
   /**
@@ -65,19 +67,17 @@ export class LobbyGateway implements OnGatewayConnection, OnGatewayDisconnect {
    * @param gameName - name of game to be created
    */
   @SubscribeMessage('game:create')
-  handleSettings(
+  @UseGuards(CreateGameGuard)
+  @UsePipes(new ValidationPipe({ transform: true, whitelist: true }))
+  handleGameCreate(
     @ConnectedSocket() client: Socket,
-    @MessageBody() gameSettings : GameSettingsDto,
+    @MessageBody() gameDto: CreateGameDto,
   ): void {
-
-    this.logger.log(`Creating game:${gameSettings.gameName}`);
-
-    try {
-      this.lobbyService.createGame(gameSettings, client, this.lobby);
-    } catch (error) {
-      this.logger.error('Error creating game:', error);
-      throw new WsException(error.message);
-    }
+    console.log("GAME SETTINGS", gameDto);
+    this.logger.log(`Creating game:${gameDto.gameName}`);
+    this.logger.debug('game settings');
+    this.logger.debug(gameDto);
+    this.lobbyService.createGame(gameDto, client, this.lobby);
   }
   /**
    * Handler for joining game
@@ -92,12 +92,6 @@ export class LobbyGateway implements OnGatewayConnection, OnGatewayDisconnect {
     @MessageBody() { gameId }: { gameId: string },
   ): void {
     this.logger.log(`Client ${client.id} Joining game:`, gameId);
-
-    try {
-      this.lobbyService.joinGame(gameId, client, this.lobby);
-    } catch (error) {
-      this.logger.error('Error joining game:', error);
-      throw new WsException(error.message);
-    }
+    this.lobbyService.joinGame(gameId, client, this.lobby);
   }
 }
