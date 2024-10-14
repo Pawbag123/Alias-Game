@@ -114,7 +114,7 @@ export class LobbyService {
   getUserStats = async (client: Socket) => {
     const { userName } = client.data.user;
     this.logger.log('Getting user stats:', userName);
-    const userStats = await this.gameStateService.getUserStats('userName');
+    const userStats = await this.gameStateService.getUserStats(userName);
     client.emit('user-stats', userStats);
   };
 }
