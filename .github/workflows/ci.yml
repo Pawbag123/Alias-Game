@@ -1,48 +1,47 @@
 name: CI Pipeline
 
-on:
+on: 
   push:
-    branches:
+    branches: 
       - 8-tests
-  pull_request:
-    branches:
+  pull_request: 
+    branches: 
       - 8-tests
 
-jobs:
-  lint-and-test:
+jobs: 
+  lint-and-test: 
     runs-on: ubuntu-latest
-
-    steps:
+    steps: 
       - name: Checkout code
         uses: actions/checkout@v3
-
+      
       - name: Set up Node.js
         uses: actions/setup-node@v3
-        with:
+        with: 
           node-version: '18'
-
+      
       - name: Cache npm modules
         uses: actions/cache@v3
-        with:
+        with: 
           path: |
             ~/.npm
             !~/.npm/_locks
           key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
           restore-keys: |
             ${{ runner.os }}-node-
-
+      
       - name: Install dependencies
         run: npm install
-
+      
       - name: Run lint
         run: npm run lint
-
+      
       - name: Run tests in CI mode
         run: npm test -- --ci
-        env:
+        env: 
           CI: true
-
+      
       - name: Run tests in parallel (optional)
         run: npm test -- --ci --maxWorkers=2
-        env:
+        env: 
           CI: true
