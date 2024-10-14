@@ -65,6 +65,16 @@ export enum WordStatus {
   NOT_GUESSED = 'notGuessed',
 }
 
+export enum WsExceptionType {
+  BadRequest = 'BadRequest',
+  Unauthorized = 'Unauthorized',
+  Forbidden = 'Forbidden',
+  NotFound = 'NotFound',
+  Unknown = 'Unknown',
+  Conflict = 'Conflict',
+  InternalServerError = 'InternalServerError',
+}
+
 export interface Turn {
   alreadyDescribed: string[];
   team: Team;

@@ -1,5 +1,9 @@
-import { CanActivate, ExecutionContext, Injectable } from '@nestjs/common';
-import { WsException } from '@nestjs/websockets';
+import {
+  CanActivate,
+  ConflictException,
+  ExecutionContext,
+  Injectable,
+} from '@nestjs/common';
 import { GameStateService } from 'src/game-state/game-state.service';
 
 @Injectable()
@@ -7,19 +11,18 @@ export class CreateGameGuard implements CanActivate {
   constructor(private gameStateService: GameStateService) {}
 
   canActivate(context: ExecutionContext): boolean {
-    // Access WebSocket client and message body
     const client = context.switchToWs().getClient();
-    const data = context.switchToWs().getData(); // Extract the message body
+    const data = context.switchToWs().getData();
 
-    const gameName = data.gameName; // `gameId` from the message body
-    const userId = client.data.user.userId; // `userId` from socket data
+    const gameName = data.gameName;
+    const userId = client.data.user.userId;
 
     if (this.gameStateService.isUserActive(userId)) {
-      throw new WsException('User already in game');
+      throw new ConflictException('User already active in a game');
     }
 
     if (this.gameStateService.gameNameExists(gameName)) {
-      throw new WsException('Game of specified name already exists');
+      throw new ConflictException('Game of specified name already exists');
     }
 
     return true;

@@ -54,7 +54,6 @@ export class LobbyService {
    */
   joinGame(gameId: string, client: Socket, lobby: Namespace): void {
     const { userId, userName } = client.data.user;
-
     this.logger.log(`User ${userName} joining game: ${gameId}`);
 
     this.gameStateService.createJoinUser(
@@ -111,12 +110,7 @@ export class LobbyService {
   getUserStats = async (client: Socket) => {
     const { userName } = client.data.user;
     this.logger.log('Getting user stats:', userName);
-    try {
-      const userStats = await this.gameStateService.getUserStats(userName);
-      client.emit('user-stats', userStats);
-    } catch (error) {
-      this.logger.error('Error getting user stats:', error);
-      throw new Error(error);
-    }
+    const userStats = await this.gameStateService.getUserStats(userName);
+    client.emit('user-stats', userStats);
   };
 }

@@ -30,7 +30,7 @@
     <div class="container-fluid">
       <a class="navbar-brand" href="#">Alias</a>
       <div class="ms-auto">
-        <button id="profileBtn" class="btn btn-light me-2" onclick="fetchUserStats()" data-target="#profileModal">Profile</button>
+        <button id="profileBtn" class="btn btn-light me-2" onclick="fetchUserStats()" >Profile</button>
         <button id="logoutBtn" class="btn btn-light">Log out</button>
       </div>
     </div>
@@ -124,14 +124,11 @@
         });
       });
 
-      document.getElementById('profileBtn').addEventListener('click', (e) => {
-        e.preventDefault();
-        const profileModal = new bootstrap.Modal(document.getElementById('profileModal'));
-        profileModal.show();
-      });
-
       socket.on('connect_error', (error) => {
-        console.error('Connection error:', error);
+        //check that
+        error = error.error || error;
+        console.error('Connection error:');
+        console.error(error.type);
         renderError(error.message);
       });
 
@@ -159,7 +156,9 @@
         });
 
         socket.on('exception', (error) => {
+          error = error.error || error;
           console.error('Server exception:', error.message);
+          console.error(error);
           renderErrorMessage(error.message);
         });
       });
