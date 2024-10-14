@@ -25,7 +25,9 @@ export class WsAllExceptionsFilter implements ExceptionFilter {
   private readonly logger = new Logger(WsAllExceptionsFilter.name);
   catch(exception: Error, host: ArgumentsHost) {
     const socket = host.switchToWs().getClient();
+
     this.logger.error(`Exception caught: ${exception.message}`);
+
     let wsException;
     console.log(exception);
     switch (true) {

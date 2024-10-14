@@ -78,7 +78,7 @@ const createTokenMiddleware =
     logger.log('Token middleware');
     if (!token) {
       logger.error('No token provided');
-      return next(new Error('Unauthorized'));
+      return next(new Error('Unauthorized: User is not logged in'));
     }
 
     try {
