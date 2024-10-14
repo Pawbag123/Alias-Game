@@ -325,8 +325,8 @@
 
         // Listen for the end of the countdown event
         socket.on('end:countdown', () => {
-          // Hide the modal
           countdownModal.hide();
+          window.scrollTo(0, 0);
           startingGameSound.play();
         });
 
@@ -340,7 +340,7 @@
         socket.on('game-started:updated', (gameRoom) => {
           console.log('Current game state: ', gameRoom);
 
-          hideNavbar();
+          //hideNavbar();
 
           let userState;
           if (gameRoom.currentWord)
@@ -483,7 +483,7 @@
           const blueTeamScore = score.blue;
           let message = '';
 
-          showNavbar();
+          // showNavbar();
 
           // Determine the result
           if(redTeamScore > blueTeamScore) {
@@ -549,6 +549,7 @@
 
     const renderGameRoom = (gameRoom) => {
 
+      console.log("ACA SE RENDERIZA EL JUEGO PIPITO", gameRoom);
       const h1Name = document.getElementById('game-room-name');
       h1Name.textContent = `Game Room: ${gameRoom.name}`;
 
