@@ -188,6 +188,8 @@ export class GameStateService {
       score: {
         red: 0,
         blue: 0,
+        redSkip: 0,
+        blueSkip: 0
       },
       turn: null,
     };
@@ -544,5 +546,24 @@ export class GameStateService {
       wordsGuessed: user.stats.wordsGuessed,
       wellDescribed: user.stats.wellDescribed,
     };
+  }
+
+  wordSkiped(gameId: string, userId: string){
+    const game = this.getGameById(gameId);
+
+    const player = game.players.find(p => p.userId === userId);
+
+    if (player) {
+      const playerTeam = player.team;
+      if (playerTeam === Team.RED) {
+          game.score.redSkip += 1;
+      } else if (playerTeam === Team.BLUE) {
+          game.score.blueSkip += 1;
+      }
+
+  } else {
+      console.error("Player not found");
+  }
+
   }
 }
