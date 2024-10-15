@@ -3,11 +3,14 @@ name: CI Pipeline
 on: 
   push:
     branches: 
-      - ci-implementation
+      - development
+      - main
+      - production
   pull_request: 
     branches: 
-      - ci-implementation
-
+      - development
+      - main
+      - production
 jobs: 
   lint-and-test: 
     runs-on: ubuntu-latest
