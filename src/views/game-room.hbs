@@ -8,6 +8,7 @@
   <title>Game Room</title>
   <!-- Bootstrap CSS CDN -->
   <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css" rel="stylesheet">
 
   <style>
     .red-team-border {
@@ -122,13 +123,14 @@
   </div>
 </nav>
 
+<!-- PROFILE MODAL-->
 <div class="modal fade" id="profileModal" tabindex="-1" role="dialog" aria-labelledby="profileModalLabel"
   aria-hidden="true">
   <div class="modal-dialog" role="document">
     <div class="modal-content">
-      <div class="modal-header">
+      <div class="modal-header bg-dark text-white">
         <h5 class="modal-title" id="profileModalLabel">Profile</h5>
-        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+        <button type="button" class="close text-white" data-dismiss="modal" aria-label="Close">
           <span aria-hidden="true">&times;</span>
         </button>
       </div>
@@ -174,13 +176,7 @@
   <div class="container mt-5">
 
     <h1 id="game-room-name" class="text-center mb-4 title"></h1>
-    <!--
-    <div class="d-flex justify-content-center">
-      <div id="countdown-timer" style="display: none;">
-        <h1><strong>Game is starting in <span id="countdown-remaining"></span>...</strong></h1>
-      </div>
-    </div>
--->
+
     <div class="d-flex justify-content-center">
       <div id="game-info2" class="card mb-4" style="width: 60%; display: none;">
         <div class="text-center mb-4">
@@ -209,7 +205,9 @@
           <p><strong><span id="describer-name-new" style="font-size: 1.3rem;"></span></strong></p>
           <p><strong></strong> <span id="word-for-teammates-new" style="font-size: 1.5rem;"></span></p>
         </div>
-
+        <div class="d-flex justify-content-center" style="margin: 1rem 0;">
+          <button id="skip-button" class="btn btn-secondary" onclick="skipWord()" style="display: none;">Skip</button>
+        </div>
       </div>
     </div>
 
@@ -273,11 +271,11 @@
     const describerError = new Audio('/media/describerError.mp3');
 
 
-      document.getElementById('logoutBtn').addEventListener('click', (e) => {
-        e.preventDefault();
-        localStorage.clear();
-        window.location.href = '/login';
-      });
+    document.getElementById('logoutBtn').addEventListener('click', (e) => {
+      e.preventDefault();
+      localStorage.clear();
+      window.location.href = '/login';
+    });
 
     window.onload = function () {
       const { userId, userName } = getUserInfo();
@@ -351,7 +349,7 @@
 
 
         socket.on('game-started:updated', (gameRoom) => {
-          //hideNavbar();
+          hideNavbar();
 
           let userState;
           if (gameRoom.currentWord) {
@@ -434,14 +432,13 @@
           } else if (gameRoom.turn.team === 'blueTeam') {
             gameInfoDiv.classList.add('blue-team-border');
           }
-
           // Update game state details - game-info2
           document.getElementById('team-turn-new').textContent = gameRoom.turn.team === 'redTeam' ? 'Red team plays!' : 'Blue team plays!';
           document.getElementById('score-team-red-new').textContent = gameRoom.score.red;
           document.getElementById('score-team-blue-new').textContent = gameRoom.score.blue;
           document.getElementById('describer-name-new').textContent = gameRoom.turn.describerName !== userName ? `${gameRoom.turn.describerName} is describing` : 'You have to describe the word!';
           document.getElementById('word-for-teammates-new').textContent = gameRoom.currentWord ? gameRoom.currentWord : '';
-          document.getElementById('described-word').style.display = gameRoom.currentWord ? 'block' : 'none';
+          document.getElementById('skip-button').style.display = gameRoom.turn.describerName === userName ? 'block' : 'none';
 
         });
 
@@ -486,35 +483,34 @@
             winner = 'red';
           } else if (score.blue > score.red) {
             winner = 'blue'
-          } else winner = 'tie';
-
-          console.log("SCORES: ", score.blue, score.red);
+          } else {
+            winner = 'tie';
+          }
 
           console.log("WINENR:", winner);
 
           const userTeam = checkUserInTeam(userId, redTeam, blueTeam);
-          console.log("USER TEAM", userTeam);
 
           const gameEndModal = new bootstrap.Modal(document.getElementById('gameEndModal'), {
             backdrop: 'static',
             keyboard: false
           });
 
-          if (userTeam === winner) {
+          if (winner === 'tie') {
+            document.getElementById('gameEndMessage').innerHTML = `
+            <h1 style="text-align: center;">Draw!</h1>
+            <br>
+            <p style="font-weight: normal; text-align: center;">Red Team ${score.red} - ${score.blue} Blue Team</p>
+            `;
+            youLoseSound.play();
+            gameEndModal.show();
+          } else if (userTeam === winner) {
             document.getElementById('gameEndMessage').innerHTML = `
             <h1 style="text-align: center;">You Win!</h1>
             <br>
             <p style="font-weight: normal; text-align: center;">Red Team ${score.red} - ${score.blue} Blue Team</p>
             `;
             winSound.play();
-            gameEndModal.show();
-          } else if (userTeam === 'tie') {
-            document.getElementById('gameEndMessage').innerHTML = `
-            <h1 style="text-align: center;">It's a Tie'!</h1>
-            <br>
-            <p style="font-weight: normal; text-align: center;">Red Team ${score.red} - ${score.blue} Blue Team</p>
-            `;
-            youLoseSound.play();
             gameEndModal.show();
           } else {
             document.getElementById('gameEndMessage').innerHTML = `
@@ -526,7 +522,7 @@
             gameEndModal.show();
           }
 
-          // showNavbar();
+           showNavbar();
 
           // Show the modal
 
@@ -560,7 +556,7 @@
       const logoutBtn = document.getElementById('logoutBtn');
       const leaveBtn = document.getElementById('leave-game-button');
       leaveBtn.innerHTML = 'Go back to lobby';
-      const [type,message] = errMessage.split(':');
+      const [ type, message ] = errMessage.split(':');
       switch (type) {
         case 'Unauthorized':
           logoutBtn.innerHTML = 'Go to login';
@@ -591,9 +587,20 @@
       gameRoom.redTeam.forEach(player => {
         const li = document.createElement('li');
         li.textContent = player.name;
+
         if (gameRoom.host === player.userId) {
           assignHostSvg(li);
         }
+
+        const { userId } = getUserInfo()
+
+        if(gameRoom.host === userId) {
+          li.classList.add('list-group-item', 'd-flex', 'justify-content-between', 'align-items-center');
+          if(player.userId !== gameRoom.host) {
+            addMoveButtonToBlue(li, player.name);
+          }
+        }
+
         li.style.cursor = 'pointer';
         li.style.color = 'black';
         //li.style.textDecoration = 'underline';
@@ -609,9 +616,22 @@
       gameRoom.blueTeam.forEach(player => {
         const li = document.createElement('li');
         li.textContent = player.name;
+
         if (gameRoom.host === player.userId) {
           assignHostSvg(li);
         }
+
+        const { userId } = getUserInfo()
+
+        if(gameRoom.host === userId) {
+          li.classList.add('list-group-item', 'd-flex', 'justify-content-between', 'align-items-center');
+
+          if(player.userId !== gameRoom.host) {
+            addMoveButtonToRed(li, player.name);
+          }
+        }
+
+
         li.style.cursor = 'pointer';
         li.style.color = 'black';
         //li.style.textDecoration = 'underline';
@@ -667,11 +687,11 @@
 
       $('#errorModal').modal('show');
 
-    //  {
-     //   setTimeout(() => {
+      //  {
+      //   setTimeout(() => {
       //    $('#errorModal').modal('hide');
-       // }, 3000);
-     // }
+      // }, 3000);
+      // }
     }
 
     function startGame() {
@@ -700,14 +720,54 @@
       li.appendChild(svg); // Append the SVG to the list item
     }
 
-    const navbar = document.querySelector('.custom-navbar');
-    const mainTitle = document.querySelector('#game-room-name');
+    //Function to add button to move player, for the host
+    function addMoveButtonToBlue(li,name) {
+      // Create the button with the right arrow (for Red Team)
+      const button = document.createElement('button');
+      button.classList.add('btn', 'btn-sm', 'btn-outline-primary');
+      button.innerHTML = '<i class="bi bi-arrow-right"></i>';  // Bootstrap Icon for right arrow
+      
+      // Prevent click event from bubbling to the li element
+      button.onclick = (e) => {
+        e.stopPropagation();  // Prevent the event from bubbling up
+        changeTeam(name);  
+      };
+
+      // Append the button to the list item (li)
+      li.appendChild(button);
+    }
+
+    function addMoveButtonToRed(li, name) {
+      // Create the button with the left arrow (for Blue Team)
+      const button = document.createElement('button');
+      button.classList.add('btn', 'btn-sm', 'btn-outline-danger');
+      button.innerHTML = '<i class="bi bi-arrow-left"></i>';  // Bootstrap Icon for left arrow
+      
+      // Prevent click event from bubbling to the li element
+      button.onclick = (e) => {
+        e.stopPropagation();  // Prevent the event from bubbling up
+        changeTeam(name);  
+      };
+
+      li.insertBefore(button, li.firstChild); 
+    }
+
+    function changeTeam(name) {
+      socket.emit('game-room:change-team', { userName: name });
+    }
+
+    function skipWord() {
+      socket.emit('game:skip-word')
+    }
 
     function checkUserInTeam(userId, redTeam, blueTeam) {
       return redTeam.some(player => player[ 2 ] === userId) ? 'red' :
         blueTeam.some(player => player[ 2 ] === userId) ? 'blue' :
           'none';
     }
+
+    const navbar = document.querySelector('.custom-navbar');
+    const mainTitle = document.querySelector('#game-room-name');
 
     function hideNavbar() {
       navbar.classList.add('hidden');

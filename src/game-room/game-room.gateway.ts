@@ -172,6 +172,13 @@ export class GameRoomGateway
     await this.gameMechanicsService.getUserStats(userName, client);
   }
 
+  @SubscribeMessage('game:skip-word')
+  async handleSkip(@ConnectedSocket() client: Socket) {
+    //console.log("CLIENT EN GATEWAY: ", client);
+    this.logger.log('Word skipped by');
+    this.gameMechanicsService.skipWord(client, this.gameRoom);
+  }
+
   @SubscribeMessage('chat:message')
   @UseGuards(GuessingTeamGuard)
   async handleChatMessage(

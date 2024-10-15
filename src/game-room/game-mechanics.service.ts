@@ -5,6 +5,7 @@ import {
   Logger,
   NotFoundException,
 } from '@nestjs/common';
+import { WsException } from '@nestjs/websockets';
 import { Namespace, Socket } from 'socket.io';
 import { ChatService } from 'src/chat/chat.service';
 import { GameStateService } from 'src/game-state/game-state.service';
@@ -54,8 +55,6 @@ export class GameMechanicsService {
       this.nextTurn(gameId); // Handles both game initialization and next turn
 
       this.emitGameStartedUpdated(gameRoom, gameId);
-      // this.logger.debug(`STATE NUMBER ${rounds}`, turn);
-      // this.logger.debug('current word', currentWord);
 
       await this.startTimer(gameId, time, gameRoom);
       const { turn, currentWord } = this.gameStateService.getGameById(gameId);
@@ -83,7 +82,7 @@ export class GameMechanicsService {
     duration: number,
     gameRoom: Namespace,
   ) {
-    for (let remaining = duration; remaining >= 0; remaining--) {
+    for (let remaining = duration; remaining > 0; remaining--) {
       gameRoom.to(gameId).emit('timer:update', { remaining });
       await this.delay(1000); // Wait for 1 second before next update
     }
@@ -191,9 +190,6 @@ export class GameMechanicsService {
   newWord(gameId: string) {
     const game = this.gameStateService.getGameById(gameId);
 
-    // if (game.currentWord) {
-    //   game.wordsUsed.push(game.currentWord);
-    // }
     game.currentWord = this.generateWord(game.wordsUsed);
     this.logger.debug('new word : ', game.currentWord);
     this.gameStateService.saveCurrentState(game);
@@ -294,7 +290,7 @@ export class GameMechanicsService {
       gameId,
       user: { userId, userName },
     } = client.data;
-    const [validatedMessage, wordStatus] = checkGuessedWord(
+    const [validatedMessage, wordStatus] = await checkGuessedWord(
       currentWord,
       message,
     );
@@ -310,6 +306,12 @@ export class GameMechanicsService {
       gameRoom.to(gameId).emit('chat:update', {
         userName: 'Server',
         message: `Your guess is close!`,
+        time: new Date(),
+      });
+    } else if (wordStatus === WordStatus.PLURAL) {
+      gameRoom.to(gameId).emit('chat:update', {
+        userName: 'Server',
+        message: `Your guess is the plural form of the word!`,
         time: new Date(),
       });
     } else if (wordStatus === WordStatus.GUESSED) {
@@ -358,5 +360,17 @@ export class GameMechanicsService {
   async getUserStats(userName: string, client: Socket) {
     const userStats = await this.gameStateService.getUserStats(userName);
     client.emit('user-stats', userStats);
+  }
+
+  skipWord(client: Socket, gameRoom: Namespace) {
+    const { gameId, user } = client.data;
+
+    if (this.gameStateService.isDescriber(user.userId, gameId)) {
+      this.gameStateService.wordSkiped(gameId, user.userId);
+      this.newWord(gameId);
+      this.emitGameStartedUpdated(gameRoom, gameId);
+    } else {
+      throw new ForbiddenException('Only describer can skip the word');
+    }
   }
 }
