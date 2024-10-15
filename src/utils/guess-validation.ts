@@ -6,7 +6,7 @@ import {
 import { calculateDamerauLevenshteinDistance } from './levenshtein-distance';
 
 import axios from 'axios';
-import pluralize from 'pluralize';
+const pluralize = require('pluralize')
 
 /**
  * Function that checks if the guessed word is correct, close, or incorrect.
