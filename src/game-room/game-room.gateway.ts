@@ -20,6 +20,7 @@ import { TooFewPlayersGuard } from './guards/too-few-players.guard';
 import { GuessingTeamGuard } from './guards/guessing-team.guard';
 import { WsAllExceptionsFilter } from 'src/exceptions/ws-all-exceptions-filter';
 import { PlayerInGameGuard } from './guards/player-in-game.guard';
+import { SkipWordGuard } from './guards/skip-word.guard';
 
 /**
  * Gateway that handles connections in game room, using game-room namespace
@@ -173,8 +174,8 @@ export class GameRoomGateway
   }
 
   @SubscribeMessage('game:skip-word')
+  @UseGuards(SkipWordGuard)
   async handleSkip(@ConnectedSocket() client: Socket) {
-    //console.log("CLIENT EN GATEWAY: ", client);
     this.logger.log('Word skipped by');
     this.gameMechanicsService.skipWord(client, this.gameRoom);
   }

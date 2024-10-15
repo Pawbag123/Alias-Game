@@ -10,7 +10,7 @@ import { Namespace, Socket } from 'socket.io';
 import { ChatService } from 'src/chat/chat.service';
 import { GameStateService } from 'src/game-state/game-state.service';
 
-import { Team, WORDS_TO_GUESS, WordStatus } from 'src/types';
+import { Team, TURN_SKIP_LIMIT, WORDS_TO_GUESS, WordStatus } from 'src/types';
 import { validateDescriberMessage } from 'src/utils/describe-validation';
 import { checkGuessedWord } from 'src/utils/guess-validation';
 
@@ -69,7 +69,10 @@ export class GameMechanicsService {
     gameRoom
       .to(gameId)
       .emit('game:end', this.gameStateService.getSerializedGameStarted(gameId));
-
+    this.logger.debug('Game stats:');
+    this.logger.debug(
+      JSON.stringify(this.gameStateService.getGameById(gameId)),
+    );
     this.gameStateService.endGame(gameId);
     // Disconnect all sockets connected to room gameId
     const sockets = await gameRoom.in(gameId).fetchSockets();
@@ -129,6 +132,7 @@ export class GameMechanicsService {
   nextTurn(gameId: string) {
     this.logger.log(`Next turn for game ${gameId}`);
     const game = this.gameStateService.getGameById(gameId);
+    game.score.turnSkip = TURN_SKIP_LIMIT;
 
     // Initialize game and set the first turn if it's not already set
     if (!game.turn) {
@@ -365,12 +369,17 @@ export class GameMechanicsService {
   skipWord(client: Socket, gameRoom: Namespace) {
     const { gameId, user } = client.data;
 
-    if (this.gameStateService.isDescriber(user.userId, gameId)) {
-      this.gameStateService.wordSkiped(gameId, user.userId);
-      this.newWord(gameId);
-      this.emitGameStartedUpdated(gameRoom, gameId);
-    } else {
-      throw new ForbiddenException('Only describer can skip the word');
-    }
+    // if (this.gameStateService.isDescriber(user.userId, gameId)) {
+    this.gameStateService.wordSkipped(gameId, user.userId);
+    gameRoom.to(gameId).emit('chat:update', {
+      userName: 'Server',
+      message: `Word skipped by describer! New word is provided`,
+      time: new Date(),
+    });
+    this.newWord(gameId);
+    this.emitGameStartedUpdated(gameRoom, gameId);
+    // } else {
+    //   throw new ForbiddenException('Only describer can skip the word');
+    // }
   }
 }

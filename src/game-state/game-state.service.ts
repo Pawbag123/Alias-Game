@@ -190,6 +190,7 @@ export class GameStateService {
         blue: 0,
         redSkip: 0,
         blueSkip: 0,
+        turnSkip: 0,
       },
       turn: null,
     };
@@ -272,7 +273,14 @@ export class GameStateService {
           }
         : null,
       currentWord: isDescriber ? game.currentWord : undefined,
-      score: game.score,
+      score: isDescriber
+        ? game.score
+        : {
+            red: game.score.red,
+            blue: game.score.blue,
+            redSkip: game.score.redSkip,
+            blueSkip: game.score.blueSkip,
+          },
     });
   }
 
@@ -548,7 +556,12 @@ export class GameStateService {
     };
   }
 
-  wordSkiped(gameId: string, userId: string) {
+  hasSkipsLeft(gameId: string) {
+    const game = this.getGameById(gameId);
+    return game.score.turnSkip > 0;
+  }
+
+  wordSkipped(gameId: string, userId: string) {
     const game = this.getGameById(gameId);
 
     const player = game.players.find((p) => p.userId === userId);
@@ -557,9 +570,12 @@ export class GameStateService {
       const playerTeam = player.team;
       if (playerTeam === Team.RED) {
         game.score.redSkip += 1;
+        console.log('Red team skipped');
       } else if (playerTeam === Team.BLUE) {
         game.score.blueSkip += 1;
+        console.log('Blue team skipped');
       }
+      game.score.turnSkip -= 1;
     } else {
       console.error('Player not found');
     }

@@ -1,6 +1,7 @@
 export const MAX_USERS = 6;
 export const MAX_TURNS = 4;
 export const TURN_TIME = 45;
+export const TURN_SKIP_LIMIT = 3;
 export const JOIN_TIMEOUT = 5000;
 export const CLIENT_PORT = 3000;
 export const DESCRIBER_LEVENSHTEIN_THRESHOLD = 2;
@@ -271,6 +272,7 @@ export interface Game {
   score: {
     red: number;
     blue: number;
+    turnSkip: number;
     redSkip: number;
     blueSkip: number;
   };
