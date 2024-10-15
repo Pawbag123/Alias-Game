@@ -760,9 +760,6 @@
       socket.emit('game:skip-word')
     }
 
-    const navbar = document.querySelector('.custom-navbar');
-    const mainTitle = document.querySelector('#game-room-name');
-
     function checkUserInTeam(userId, redTeam, blueTeam) {
       return redTeam.some(player => player[ 2 ] === userId) ? 'red' :
         blueTeam.some(player => player[ 2 ] === userId) ? 'blue' :
