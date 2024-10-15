@@ -294,7 +294,7 @@ export class GameMechanicsService {
       gameId,
       user: { userId, userName },
     } = client.data;
-    const [validatedMessage, wordStatus] = checkGuessedWord(
+    const [validatedMessage, wordStatus] = await checkGuessedWord(
       currentWord,
       message,
     );
@@ -310,6 +310,12 @@ export class GameMechanicsService {
       gameRoom.to(gameId).emit('chat:update', {
         userName: 'Server',
         message: `Your guess is close!`,
+        time: new Date(),
+      });
+    } else if (wordStatus === WordStatus.PLURAL) {
+      gameRoom.to(gameId).emit('chat:update', {
+        userName: 'Server',
+        message: `Your guess is the plural form of the word!`,
         time: new Date(),
       });
     } else if (wordStatus === WordStatus.GUESSED) {
