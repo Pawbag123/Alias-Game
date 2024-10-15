@@ -8,6 +8,7 @@ import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import * as bcrypt from 'bcryptjs';
 import { User } from './schemas/user.schema';
+import { CreateUserDto } from './dto/create-user.dto';
 
 @Injectable()
 export class AuthService {
@@ -127,5 +128,10 @@ export class AuthService {
     });
 
     return result;
+  }
+
+  async validateGoogleUser(google: CreateUserDto){
+    const user = await this.userModel.findOne({username: google.username})
+    if(user) return user;
   }
 }
