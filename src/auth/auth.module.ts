@@ -23,8 +23,8 @@ import { GoogleStrategy } from './stratergies/google.stratergy';
     }),
     MongooseModule.forFeature([{ name: User.name, schema: UserSchema }])
   ],
-  providers: [AuthService, JwtStrategy, GoogleStrategy],
+  providers: [AuthService, JwtStrategy],
   controllers: [AuthController],
-  exports: [JwtStrategy, PassportModule, GoogleStrategy],
+  exports: [JwtStrategy, AuthService],
 })
 export class AuthModule {}

@@ -12,7 +12,7 @@ export class GoogleStrategy extends PassportStrategy(Strategy){
     constructor(
         @Inject(googleOauthConfig.KEY) 
         private googleConfiguration: ConfigType<typeof googleOauthConfig>,
-        //private authService: AuthService
+        private authService: AuthService
     ){
         super({
             clientID:googleConfiguration.clientID,
@@ -26,10 +26,10 @@ export class GoogleStrategy extends PassportStrategy(Strategy){
         done:VerifyCallback
     ){
         console.log({profile})
-/*        const user = await this.authService.validateGoogleUser({
-           username:profile.emails[0].value,
-            password:""
+       const user = await this.authService.validateGoogleUser({
+           username:profile.name.givenName,
+            password:"HashedPassword231_"
         })
-        done(null, user) */
+        done(null, user)
     }
 }
