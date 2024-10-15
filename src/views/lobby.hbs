@@ -8,16 +8,7 @@
   <title>Lobby</title>
   <!-- Bootstrap CSS CDN -->
   <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
-</head>
-
-<body class="bg-light">
   <style>
-
-    .navbar-brand {
-      font-size: 3rem;
-      color: white;
-    }
-
     .btn-primary {
       font-size: 1rem;
     }
@@ -28,13 +19,11 @@
       width: 80px;
       height: 80px;
     }
+
     .custom-navbar {
       background-color: #2e2e2e;
       padding: 1.5rem;
-    }
-
-    .btn-primary {
-      font-size: 1rem;
+      height: 130px;
     }
 
     .container h1, .container h2, .container button {
@@ -44,6 +33,7 @@
     .card {
       box-shadow: 5px 5px 15px rgba(0, 0, 0, 0.2);
       border-radius: 10px;
+      margin: 15px 0;
     }
 
     .btn-success {
@@ -51,16 +41,13 @@
       margin-top: 10px;
       margin-bottom: 10px;
     }
-
-    .card {
-      margin: 15px 0;
-    }
   </style>
+</head>
 
-  <!-- Navbar -->
+<body class="bg-light">
+    <!-- Navbar -->
   <nav class="navbar navbar-expand-lg custom-navbar">
     <div class="container-fluid">
-      {{!-- <a class="navbar-brand" href="#">Alias</a> --}}
       <img src="https://alias.eu/wp-content/uploads/2020/07/alias-logo-1.png" alt="Alias Logo" class="logo">
       <div class="ms-auto">
         <button id="profileBtn" class="btn btn-light me-2" onclick="fetchUserStats()"
@@ -202,7 +189,6 @@
       </div>
     </div>
   </div>
-
 
   <!-- Bootstrap and JavaScript dependencies -->
   <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
