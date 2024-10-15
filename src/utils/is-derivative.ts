@@ -1,4 +1,4 @@
-import pluralize from 'pluralize';
+const pluralize = require('pluralize');
 
 export const isDerivative = (word: string, baseWord: string): boolean => {
   const suffixes = [
