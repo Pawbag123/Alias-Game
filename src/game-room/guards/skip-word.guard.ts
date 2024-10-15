@@ -7,7 +7,7 @@ import {
 import { GameStateService } from 'src/game-state/game-state.service';
 
 @Injectable()
-export class GuessingTeamGuard implements CanActivate {
+export class SkipWordGuard implements CanActivate {
   constructor(private gameStateService: GameStateService) {}
 
   canActivate(context: ExecutionContext): boolean {
@@ -17,13 +17,17 @@ export class GuessingTeamGuard implements CanActivate {
       user: { userId },
     } = client.data;
 
-    if (
-      this.gameStateService.isGameStarted(gameId) &&
-      !this.gameStateService.isAllowedToGuess(userId, gameId)
-    ) {
-      throw new ForbiddenException(
-        'You are not allowed to guess in this turn. Enemy team is guessing',
-      );
+    // Fetch the game details
+    if (!this.gameStateService.isGameStarted(gameId)) {
+      throw new ForbiddenException('Game not started');
+    }
+
+    if (!this.gameStateService.hasSkipsLeft(gameId)) {
+      throw new ForbiddenException('No skips left');
+    }
+
+    if (!this.gameStateService.isDescriber(userId, gameId)) {
+      throw new ForbiddenException('You are not the describer');
     }
 
     return true;

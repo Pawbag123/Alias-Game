@@ -22,7 +22,7 @@ export const validateDescriberMessage = (
   const baseWord = currentWord.toLowerCase();
 
   // Check each word in the message
-  for (let word of words) {
+  for (const word of words) {
     if (word === baseWord) {
       return false; // Exact match
     }

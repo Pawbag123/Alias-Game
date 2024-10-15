@@ -27,5 +27,8 @@ export class GameStartedDto {
   score: {
     red: number;
     blue: number;
+    turnSkip: number | undefined;
+    redSkip: number;
+    blueSkip: number;
   };
 }

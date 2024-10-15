@@ -1,4 +1,4 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { BadRequestException, Injectable, Logger } from '@nestjs/common';
 import { Namespace, Socket } from 'socket.io';
 
 import { Team } from '../types';
@@ -72,6 +72,18 @@ export class GameRoomService {
     this.gameStateService.handleUserRemove(userId, gameId);
 
     this.updateGamesInfoAfterDisconnect(client, gameRoom, lobby);
+  }
+
+  changeTeam(userName: string, client: Socket, gameRoom: Namespace): void {
+    const { gameId } = client.data;
+
+    this.gameStateService.swapPlayerTeam(userName, gameId);
+    gameRoom
+      .to(gameId)
+      .emit(
+        'game-room:updated',
+        this.gameStateService.getSerializedGameRoom(gameId),
+      );
   }
 
   joinTeam(team: Team, client: Socket, gameRoom: Namespace): void {

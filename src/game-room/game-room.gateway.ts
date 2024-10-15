@@ -13,16 +13,20 @@ import { Namespace, Socket } from 'socket.io';
 import { GameRoomService } from './game-room.service';
 import { GameMechanicsService } from './game-mechanics.service';
 import { Team } from 'src/types';
-import { Logger, UseGuards } from '@nestjs/common';
+import { Logger, UseFilters, UseGuards } from '@nestjs/common';
 import { ChatService } from 'src/chat/chat.service';
 import { HostGuard } from './guards/host.guard';
 import { TooFewPlayersGuard } from './guards/too-few-players.guard';
 import { GuessingTeamGuard } from './guards/guessing-team.guard';
+import { WsAllExceptionsFilter } from 'src/exceptions/ws-all-exceptions-filter';
+import { PlayerInGameGuard } from './guards/player-in-game.guard';
+import { SkipWordGuard } from './guards/skip-word.guard';
 
 /**
  * Gateway that handles connections in game room, using game-room namespace
  * Handles connecting and disconnecting from game room, joining teams, leaving game
  */
+@UseFilters(new WsAllExceptionsFilter())
 @WebSocketGateway({
   namespace: 'game-room',
   cors: {
@@ -138,12 +142,7 @@ export class GameRoomGateway
     @MessageBody() { team }: { team: Team },
   ) {
     this.logger.log(`User ${client.data.user.userName} joining team: ${team}`);
-    try {
-      this.gameRoomService.joinTeam(team, client, this.gameRoom);
-    } catch (error) {
-      this.logger.error(error);
-      throw new WsException(error.message);
-    }
+    this.gameRoomService.joinTeam(team, client, this.gameRoom);
   }
 
   /**
@@ -153,12 +152,16 @@ export class GameRoomGateway
   @SubscribeMessage('game-room:start')
   @UseGuards(HostGuard, TooFewPlayersGuard)
   handleStartGame(@ConnectedSocket() client: Socket) {
-    try {
-      this.gameMechanicsService.startGame(client, this.gameRoom, this.lobby);
-    } catch (error) {
-      this.logger.error(error);
-      throw new WsException(error.message);
-    }
+    this.gameMechanicsService.startGame(client, this.gameRoom, this.lobby);
+  }
+
+  @SubscribeMessage('game-room:change-team')
+  @UseGuards(HostGuard, PlayerInGameGuard)
+  handleChangeTeam(
+    @ConnectedSocket() client: Socket,
+    @MessageBody() { userName }: { userName: string },
+  ) {
+    this.gameRoomService.changeTeam(userName, client, this.gameRoom);
   }
 
   @SubscribeMessage('user-stats:get')
@@ -167,12 +170,14 @@ export class GameRoomGateway
     @MessageBody() { userName }: { userName: string },
   ): Promise<void> {
     this.logger.log('User stats requested', userName);
-    try {
-      await this.gameMechanicsService.getUserStats(userName, client);
-    } catch (error) {
-      this.logger.error(error);
-      throw new WsException(error.message);
-    }
+    await this.gameMechanicsService.getUserStats(userName, client);
+  }
+
+  @SubscribeMessage('game:skip-word')
+  @UseGuards(SkipWordGuard)
+  async handleSkip(@ConnectedSocket() client: Socket) {
+    this.logger.log('Word skipped by');
+    this.gameMechanicsService.skipWord(client, this.gameRoom);
   }
 
   @SubscribeMessage('chat:message')
@@ -188,19 +193,12 @@ export class GameRoomGateway
     this.logger.log(`Chat message received: ${message}`);
 
     if (!this.gameRoomService.isGameStarted(gameId)) {
-      let chatResponse;
-
-      try {
-        chatResponse = await this.chatService.handleChatMessage(
-          userId,
-          userName,
-          gameId,
-          message,
-        );
-      } catch (error) {
-        this.logger.error(error);
-        throw new Error(error.message);
-      }
+      const chatResponse = await this.chatService.handleChatMessage(
+        userId,
+        userName,
+        gameId,
+        message,
+      );
       this.gameRoom.to(gameId).emit('chat:update', chatResponse);
       return;
     }
@@ -208,18 +206,13 @@ export class GameRoomGateway
     const isDescriber = this.gameMechanicsService.isDescriber(userId, gameId);
     const currentWord = this.gameMechanicsService.getCurrentWord(gameId);
     if (isDescriber) {
-      try {
-        await this.gameMechanicsService.handleDescriberMessage(
-          currentWord,
-          message,
-          this.chatService,
-          client,
-          this.gameRoom,
-        );
-      } catch (error) {
-        this.logger.error(error);
-        throw new WsException(error.message);
-      }
+      await this.gameMechanicsService.handleDescriberMessage(
+        currentWord,
+        message,
+        this.chatService,
+        client,
+        this.gameRoom,
+      );
     } else {
       await this.gameMechanicsService.handleGuessingPlayerMessage(
         currentWord,

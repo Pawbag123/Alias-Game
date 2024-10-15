@@ -1,8 +1,7 @@
-import { Injectable } from '@nestjs/common';
+import { BadRequestException, Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Chat } from './schemas/chat.schema';
 import mongoose, { Model } from 'mongoose';
-import { GameStateService } from 'src/game-state/game-state.service';
 
 @Injectable()
 export class ChatService {
@@ -24,7 +23,7 @@ export class ChatService {
     const timestamp = new Date();
 
     if (!this.isValidObjectId(userId)) {
-      throw new Error('Invalid userId');
+      throw new BadRequestException('Invalid userId');
     }
 
     // Convert userId string to ObjectId

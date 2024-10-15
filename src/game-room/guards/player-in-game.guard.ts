@@ -7,18 +7,18 @@ import {
 import { GameStateService } from 'src/game-state/game-state.service';
 
 @Injectable()
-export class TooFewPlayersGuard implements CanActivate {
+export class PlayerInGameGuard implements CanActivate {
   constructor(private gameStateService: GameStateService) {}
 
   canActivate(context: ExecutionContext): boolean {
     const client = context.switchToWs().getClient();
-    const gameId = client.data.gameId;
+    const data = context.switchToWs().getData();
+    const { gameId } = client.data;
+    const userName: string = data.userName;
 
-    // Fetch the game details
-    if (this.gameStateService.checkIfGameHasTooFewPlayers(gameId)) {
-      throw new BadRequestException(
-        'Each team has to have at least 2 players to start the game',
-      );
+    // Check if player is in game
+    if (!this.gameStateService.checkIfPlayerExistsInGame(userName, gameId)) {
+      throw new BadRequestException('User is not in game');
     }
 
     return true;

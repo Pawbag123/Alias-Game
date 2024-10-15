@@ -38,7 +38,6 @@ describe('GameRoomService', () => {
     expect(service).toBeDefined();
   });
 
-
   describe('addPlayerToGame', () => {
     it('should add player to game and set socketId', () => {
       const id = 'user1';
@@ -51,7 +50,9 @@ describe('GameRoomService', () => {
         gameId: 'game1',
       };
 
-      jest.spyOn(gameStateService, 'getActiveUserById').mockReturnValue(mockUser);
+      jest
+        .spyOn(gameStateService, 'getActiveUserById')
+        .mockReturnValue(mockUser);
 
       service.addPlayerToGame(gameId, id, socketId);
 
@@ -59,7 +60,6 @@ describe('GameRoomService', () => {
       expect(mockUser.socketId).toBe(socketId);
     });
   });
-
 
   describe('handleUserConnectToGameRoom', () => {
     it('should handle user connection and update game room', () => {
@@ -75,19 +75,21 @@ describe('GameRoomService', () => {
           emit: jest.fn(),
         },
       } as unknown as Socket;
-  
+
       const mockNamespace = {
         to: jest.fn().mockReturnThis(),
         emit: jest.fn(),
       } as unknown as Namespace;
-  
+
       const mockUser = {
         id: 'user1',
         socketId: 'socket1',
         gameId: 'game1',
       };
-  
-      jest.spyOn(gameStateService, 'getActiveUserById').mockReturnValue(mockUser);
+
+      jest
+        .spyOn(gameStateService, 'getActiveUserById')
+        .mockReturnValue(mockUser);
       jest.spyOn(gameStateService, 'getSerializedGameRoom').mockReturnValue({
         id: 'game1',
         name: 'Test Game',
@@ -95,9 +97,9 @@ describe('GameRoomService', () => {
         redTeam: ['user1'],
         blueTeam: [],
       });
-  
+
       service.handleUserConnectToGameRoom(mockClient, mockNamespace);
-  
+
       expect(mockClient.join).toHaveBeenCalledWith('game1');
       expect(mockNamespace.emit).toHaveBeenCalledWith(
         'game-room:updated',
@@ -112,7 +114,6 @@ describe('GameRoomService', () => {
       );
     });
   });
-  
 
   describe('handleUserDisconnectFromGameRoom', () => {
     it('should handle user disconnection and update game room', () => {
@@ -122,24 +123,24 @@ describe('GameRoomService', () => {
           user: { userId: 'user1' },
         },
       } as unknown as Socket;
-  
+
       const mockGameRoom = {
         to: jest.fn().mockReturnThis(),
         emit: jest.fn(),
       } as unknown as Namespace;
-  
+
       const mockLobby = {
         emit: jest.fn(),
       } as unknown as Namespace;
-  
+
       jest.spyOn(gameStateService, 'getActiveUserById').mockReturnValue({
         id: 'user1',
         gameId: 'game1',
         socketId: 'socket1',
       });
-  
+
       jest.spyOn(gameStateService, 'gameExists').mockReturnValue(true);
-  
+
       jest.spyOn(gameStateService, 'getSerializedGameRoom').mockReturnValue({
         id: 'game1',
         name: 'Test Game',
@@ -147,7 +148,7 @@ describe('GameRoomService', () => {
         redTeam: ['user1'],
         blueTeam: [],
       } as GameRoomDto);
-  
+
       jest.spyOn(gameStateService, 'getSerializedGames').mockReturnValue([
         {
           id: 'game1',
@@ -157,16 +158,28 @@ describe('GameRoomService', () => {
           started: false,
         },
       ] as InLobbyGameDto[]);
-  
-      service.handleUserDisconnectFromGameRoom(mockClient, mockGameRoom, mockLobby);
-  
-      expect(gameStateService.handleUserRemove).toHaveBeenCalledWith('user1', 'game1');
-      expect(mockGameRoom.emit).toHaveBeenCalledWith('game-room:updated', expect.anything());
-      expect(mockLobby.emit).toHaveBeenCalledWith('games:updated', expect.anything());
+
+      service.handleUserDisconnectFromGameRoom(
+        mockClient,
+        mockGameRoom,
+        mockLobby,
+      );
+
+      expect(gameStateService.handleUserRemove).toHaveBeenCalledWith(
+        'user1',
+        'game1',
+      );
+      expect(mockGameRoom.emit).toHaveBeenCalledWith(
+        'game-room:updated',
+        expect.anything(),
+      );
+      expect(mockLobby.emit).toHaveBeenCalledWith(
+        'games:updated',
+        expect.anything(),
+      );
     });
   });
-  
-  
+
   describe('joinTeam', () => {
     it('should move player to a new team and update the game room', () => {
       const mockClient = {
@@ -175,14 +188,14 @@ describe('GameRoomService', () => {
           user: { userId: 'user1' },
         },
       } as unknown as Socket;
-  
+
       const mockGameRoom = {
         to: jest.fn().mockReturnThis(),
         emit: jest.fn(),
       } as unknown as Namespace;
-  
+
       const team = 'RED' as Team.RED;
-  
+
       jest.spyOn(gameStateService, 'getSerializedGameRoom').mockReturnValue({
         id: 'game1',
         name: 'Test Game',
@@ -190,14 +203,20 @@ describe('GameRoomService', () => {
         redTeam: ['user1'],
         blueTeam: [],
       });
-  
+
       service.joinTeam(team, mockClient, mockGameRoom);
-  
-      expect(gameStateService.movePlayerToTeam).toHaveBeenCalledWith('user1', 'game1', team);
-      expect(mockGameRoom.emit).toHaveBeenCalledWith('game-room:updated', expect.anything());
+
+      expect(gameStateService.movePlayerToTeam).toHaveBeenCalledWith(
+        'user1',
+        'game1',
+        team,
+      );
+      expect(mockGameRoom.emit).toHaveBeenCalledWith(
+        'game-room:updated',
+        expect.anything(),
+      );
     });
   });
-
 
   describe('isGameStarted', () => {
     it('should return true if the game is started', () => {

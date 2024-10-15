@@ -13,9 +13,16 @@ dotenv.config();
 async function bootstrap() {
   const logger = new Logger('Main (main.ts)');
   const app = await NestFactory.create<NestExpressApplication>(AppModule, {
-    logger: ['error', 'warn', 'log'],
+    // logger: ['error', 'warn', 'log'],
   });
-  app.useGlobalPipes(new ValidationPipe());
+
+  app.useGlobalPipes(
+    new ValidationPipe({
+      transform: true,
+      whitelist: true,
+      forbidNonWhitelisted: true,
+    }),
+  );
 
   const configService = app.get(ConfigService);
 

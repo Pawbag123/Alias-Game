@@ -1,4 +1,9 @@
-import { Injectable, Logger } from '@nestjs/common';
+import {
+  Injectable,
+  InternalServerErrorException,
+  Logger,
+  NotFoundException,
+} from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { plainToClass } from 'class-transformer';
 import { Model } from 'mongoose';
@@ -10,6 +15,8 @@ import { Games } from '../game-room/schema/game.schema';
 import { InLobbyGameDto } from '../lobby/dto/in-lobby-game-dto';
 import { ActiveUser, Game, Player, Team } from '../types';
 import { v4 as uuidv4 } from 'uuid';
+import { GameSettingsDto } from 'src/lobby/dto/game-settings.dto';
+import { CreateGameDto } from 'src/lobby/dto/create-game-dto';
 
 /**
  * Service that handles the state of the game,
@@ -97,6 +104,19 @@ export class GameStateService {
     return this.games.find((game) => game.id === gameId);
   }
 
+  checkIfPlayerExistsInGame(userName: string, gameId: string): boolean {
+    const game = this.getGameById(gameId);
+    return game.players.some((player) => player.name === userName);
+  }
+
+  swapPlayerTeam(userName: string, gameId: string) {
+    const game = this.getGameById(gameId);
+    const player = game.players.find((player) => player.name === userName);
+    if (player) {
+      player.team = player.team === Team.RED ? Team.BLUE : Team.RED;
+    }
+  }
+
   checkIfGameHasTooFewPlayers(gameId: string): boolean {
     const game = this.getGameById(gameId);
     const redTeamPlayers = game.players.filter(
@@ -115,7 +135,7 @@ export class GameStateService {
 
   isGameFull(gameId: string): boolean {
     const game = this.getGameById(gameId);
-    return game.players.length >= game.maxUsers;
+    return game.players.length >= game.settings.maxPlayers;
   }
 
   isGameStarted(gameId: string): boolean {
@@ -136,10 +156,9 @@ export class GameStateService {
   }
 
   createGame(
-    gameName: string,
+    gameSettings: CreateGameDto,
     userId: string,
     userName: string,
-    maxUsers: number,
     timeout: number,
     timeoutCb: (gameId?: string) => void,
   ): string {
@@ -155,16 +174,23 @@ export class GameStateService {
 
     const newGame: Game = {
       id: uuidv4(),
-      name: gameName,
+      name: gameSettings.gameName,
       host: userId,
       isGameStarted: false,
       players: [newPlayer],
-      maxUsers: maxUsers,
+      settings: {
+        maxPlayers: gameSettings.maxPlayers,
+        rounds: gameSettings.rounds,
+        time: gameSettings.time,
+      },
       wordsUsed: [],
       currentWord: '',
       score: {
         red: 0,
         blue: 0,
+        redSkip: 0,
+        blueSkip: 0,
+        turnSkip: 0,
       },
       turn: null,
     };
@@ -182,7 +208,7 @@ export class GameStateService {
         id: game.id,
         name: game.name,
         players: game.players.length,
-        maxPlayers: game.maxUsers,
+        maxPlayers: game.settings.maxPlayers,
         started: game.isGameStarted,
       }),
     );
@@ -197,10 +223,20 @@ export class GameStateService {
       host: game.host,
       redTeam: game.players
         .filter((player) => player.team === Team.RED)
-        .map((player) => player.name),
+        .map((player) => {
+          return {
+            name: player.name,
+            userId: player.userId,
+          };
+        }),
       blueTeam: game.players
         .filter((player) => player.team === Team.BLUE)
-        .map((player) => player.name),
+        .map((player) => {
+          return {
+            name: player.name,
+            userId: player.userId,
+          };
+        }),
     });
   }
 
@@ -216,10 +252,18 @@ export class GameStateService {
       host: game.host,
       redTeam: game.players
         .filter((player) => player.team === Team.RED)
-        .map((player) => [player.name, this.hasUserSocketId(player.userId)]),
+        .map((player) => [
+          player.name,
+          this.hasUserSocketId(player.userId),
+          player.userId,
+        ]),
       blueTeam: game.players
         .filter((player) => player.team === Team.BLUE)
-        .map((player) => [player.name, this.hasUserSocketId(player.userId)]),
+        .map((player) => [
+          player.name,
+          this.hasUserSocketId(player.userId),
+          player.userId,
+        ]),
       turn: game.turn
         ? {
             alreadyDescribed: game.turn.alreadyDescribed,
@@ -229,7 +273,14 @@ export class GameStateService {
           }
         : null,
       currentWord: isDescriber ? game.currentWord : undefined,
-      score: game.score,
+      score: isDescriber
+        ? game.score
+        : {
+            red: game.score.red,
+            blue: game.score.blue,
+            redSkip: game.score.redSkip,
+            blueSkip: game.score.blueSkip,
+          },
     });
   }
 
@@ -392,7 +443,9 @@ export class GameStateService {
       }
     } catch (error) {
       console.error('Error details:', error);
-      throw new Error('Error saving the current game state');
+      throw new InternalServerErrorException(
+        'Error saving the current game state',
+      );
     }
   }
 
@@ -422,7 +475,7 @@ export class GameStateService {
       // Save the game document in the database
       return await newGame.save();
     } catch (error) {
-      throw new Error('Error saving in database');
+      throw new InternalServerErrorException('Error saving in database');
     }
   }
 
@@ -466,7 +519,8 @@ export class GameStateService {
         // Perform the update directly on the user document
         await this.userModel.updateOne({ _id: userId }, update);
       } catch (error) {
-        console.error(`Error updating stats for user ${userId}: `, error);
+        this.logger.error(`Error updating stats for user ${userId}: `, error);
+        throw new InternalServerErrorException('Error updating user stats');
       }
     }
   }
@@ -489,7 +543,7 @@ export class GameStateService {
   async getUserStats(userName: string) {
     const user = await this.userModel.findOne({ username: userName });
     if (!user) {
-      throw new Error(`User with username ${userName} not found`);
+      throw new NotFoundException(`User with name ${userName} not found`);
     }
     return {
       userName: userName,
@@ -500,5 +554,30 @@ export class GameStateService {
       wordsGuessed: user.stats.wordsGuessed,
       wellDescribed: user.stats.wellDescribed,
     };
+  }
+
+  hasSkipsLeft(gameId: string) {
+    const game = this.getGameById(gameId);
+    return game.score.turnSkip > 0;
+  }
+
+  wordSkipped(gameId: string, userId: string) {
+    const game = this.getGameById(gameId);
+
+    const player = game.players.find((p) => p.userId === userId);
+
+    if (player) {
+      const playerTeam = player.team;
+      if (playerTeam === Team.RED) {
+        game.score.redSkip += 1;
+        console.log('Red team skipped');
+      } else if (playerTeam === Team.BLUE) {
+        game.score.blueSkip += 1;
+        console.log('Blue team skipped');
+      }
+      game.score.turnSkip -= 1;
+    } else {
+      console.error('Player not found');
+    }
   }
 }

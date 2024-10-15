@@ -29,10 +29,15 @@ export const calculateLevenshteinDistance = (a: string, b: string): number => {
   return matrix[a.length][b.length];
 };
 
-export const calculateDamerauLevenshteinDistance = (a: string, b: string): number => {
+export const calculateDamerauLevenshteinDistance = (
+  a: string,
+  b: string,
+): number => {
   const lenA = a.length;
   const lenB = b.length;
-  const matrix: number[][] = Array.from({ length: lenA + 1 }, () => Array(lenB + 1).fill(0));
+  const matrix: number[][] = Array.from({ length: lenA + 1 }, () =>
+    Array(lenB + 1).fill(0),
+  );
 
   for (let i = 0; i <= lenA; i++) matrix[i][0] = i;
   for (let j = 0; j <= lenB; j++) matrix[0][j] = j;
@@ -43,13 +48,13 @@ export const calculateDamerauLevenshteinDistance = (a: string, b: string): numbe
       matrix[i][j] = Math.min(
         matrix[i - 1][j] + 1, // Deletion
         matrix[i][j - 1] + 1, // Insertion
-        matrix[i - 1][j - 1] + cost // Substitution
+        matrix[i - 1][j - 1] + cost, // Substitution
       );
 
       if (i > 1 && j > 1 && a[i - 1] === b[j - 2] && a[i - 2] === b[j - 1]) {
         matrix[i][j] = Math.min(
           matrix[i][j],
-          matrix[i - 2][j - 2] + cost // Transposition
+          matrix[i - 2][j - 2] + cost, // Transposition
         );
       }
     }

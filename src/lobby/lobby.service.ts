@@ -3,6 +3,8 @@ import { Injectable, Logger } from '@nestjs/common';
 import { JOIN_TIMEOUT, MAX_USERS } from '../types';
 import { GameStateService } from '../game-state/game-state.service';
 import { Namespace, Socket } from 'socket.io';
+import { GameSettingsDto } from './dto/game-settings.dto';
+import { CreateGameDto } from './dto/create-game-dto';
 
 @Injectable()
 export class LobbyService {
@@ -19,22 +21,24 @@ export class LobbyService {
    * - Set a timeout to remove the user from the game if they don't join from the lobby in a certain amount of time
    * @returns id of created games
    */
-  createGame(gameName: string, client: Socket, lobby: Namespace): void {
+  createGame(
+    gameSettings: CreateGameDto,
+    client: Socket,
+    lobby: Namespace,
+  ): void {
     const { userId, userName } = client.data.user;
-    this.logger.log(`Creating game: ${gameName} by ${userName}`);
+    this.logger.log(`Creating game: ${gameSettings.gameName} by ${userName}`);
 
     //* Create a new game
     const gameId = this.gameStateService.createGame(
-      gameName,
+      gameSettings,
       userId,
       userName,
-      MAX_USERS,
       JOIN_TIMEOUT,
       this.gameCreateHandler(lobby),
     );
 
     const games = this.gameStateService.getSerializedGames();
-
     client.emit('game:created', gameId);
 
     client.broadcast.emit('games:updated', games);
@@ -54,7 +58,6 @@ export class LobbyService {
    */
   joinGame(gameId: string, client: Socket, lobby: Namespace): void {
     const { userId, userName } = client.data.user;
-
     this.logger.log(`User ${userName} joining game: ${gameId}`);
 
     this.gameStateService.createJoinUser(
@@ -111,12 +114,7 @@ export class LobbyService {
   getUserStats = async (client: Socket) => {
     const { userName } = client.data.user;
     this.logger.log('Getting user stats:', userName);
-    try {
-      const userStats = await this.gameStateService.getUserStats(userName);
-      client.emit('user-stats', userStats);
-    } catch (error) {
-      this.logger.error('Error getting user stats:', error);
-      throw new Error(error);
-    }
+    const userStats = await this.gameStateService.getUserStats(userName);
+    client.emit('user-stats', userStats);
   };
 }

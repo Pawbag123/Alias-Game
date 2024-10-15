@@ -47,46 +47,50 @@ describe('AuthService', () => {
     it('should throw a ConflictException if user already exists', async () => {
       mockUserModel.findOne.mockResolvedValue({});
 
-      await expect(authService.signup('existingUser', 'password')).rejects.toThrow(ConflictException);
+      await expect(
+        authService.signup('existingUser', 'password'),
+      ).rejects.toThrow(ConflictException);
     });
 
-  //   it('should create a new user and return tokens', async () => {
-  //     const mockTokens = {
-  //       accessToken: 'mockAccessToken',
-  //       refreshToken: 'mockRefreshToken',
-  //     };
+    //   it('should create a new user and return tokens', async () => {
+    //     const mockTokens = {
+    //       accessToken: 'mockAccessToken',
+    //       refreshToken: 'mockRefreshToken',
+    //     };
 
-  //     mockUserModel.findOne.mockResolvedValue(null);
+    //     mockUserModel.findOne.mockResolvedValue(null);
 
-  //     const newUser = {
-  //       _id: 'userId',
-  //       username: 'existingUser',
-  //       password: 'hashedPassword',
-  //       save: jest.fn().mockResolvedValue({ 
-  //         _id: 'userId', 
-  //         username: 'existingUser' 
-  //       }),
-  //     };
+    //     const newUser = {
+    //       _id: 'userId',
+    //       username: 'existingUser',
+    //       password: 'hashedPassword',
+    //       save: jest.fn().mockResolvedValue({
+    //         _id: 'userId',
+    //         username: 'existingUser'
+    //       }),
+    //     };
 
-  //     mockUserModel.prototype.save = newUser.save;
+    //     mockUserModel.prototype.save = newUser.save;
 
-  //     jest.spyOn(authService, 'generateTokens').mockResolvedValue(mockTokens);
+    //     jest.spyOn(authService, 'generateTokens').mockResolvedValue(mockTokens);
 
-  //     const result = await authService.signup('existingUser', 'password');
+    //     const result = await authService.signup('existingUser', 'password');
 
-  //     expect(result).toEqual({
-  //       accessToken: 'mockAccessToken',
-  //       refreshToken: 'mockRefreshToken',
-  //       user: { id: newUser._id, username: newUser.username },
-  //     });
-  //   });
+    //     expect(result).toEqual({
+    //       accessToken: 'mockAccessToken',
+    //       refreshToken: 'mockRefreshToken',
+    //       user: { id: newUser._id, username: newUser.username },
+    //     });
+    //   });
   });
-//-------------
+  //-------------
   describe('login', () => {
     it('should throw UnauthorizedException if user not found', async () => {
       mockUserModel.findOne.mockResolvedValue(null);
 
-      await expect(authService.login('nonExistentUser', 'password')).rejects.toThrow(UnauthorizedException);
+      await expect(
+        authService.login('nonExistentUser', 'password'),
+      ).rejects.toThrow(UnauthorizedException);
     });
 
     it('should throw UnauthorizedException if password is incorrect', async () => {
@@ -97,7 +101,9 @@ describe('AuthService', () => {
         password: hashedPassword,
       });
 
-      await expect(authService.login('existingUser', 'wrongPassword')).rejects.toThrow(UnauthorizedException);
+      await expect(
+        authService.login('existingUser', 'wrongPassword'),
+      ).rejects.toThrow(UnauthorizedException);
     });
 
     it('should return tokens on successful login', async () => {
@@ -131,7 +137,9 @@ describe('AuthService', () => {
         throw new Error('Invalid token');
       });
 
-      await expect(authService.refresh(refreshToken)).rejects.toThrow(UnauthorizedException);
+      await expect(authService.refresh(refreshToken)).rejects.toThrow(
+        UnauthorizedException,
+      );
     });
 
     it('should return new tokens on successful refresh', async () => {
@@ -166,7 +174,9 @@ describe('AuthService', () => {
       const result = await authService.verifyValidToken(token);
 
       expect(result).toEqual(payload);
-      expect(mockJwtService.verify).toHaveBeenCalledWith(token, { secret: process.env.JWT_SECRET });
+      expect(mockJwtService.verify).toHaveBeenCalledWith(token, {
+        secret: process.env.JWT_SECRET,
+      });
     });
   });
 });

@@ -1,15 +1,16 @@
-import { Injectable, Logger } from '@nestjs/common';
+import {
+  ConflictException,
+  ForbiddenException,
+  Injectable,
+  Logger,
+  NotFoundException,
+} from '@nestjs/common';
+import { WsException } from '@nestjs/websockets';
 import { Namespace, Socket } from 'socket.io';
 import { ChatService } from 'src/chat/chat.service';
 import { GameStateService } from 'src/game-state/game-state.service';
 
-import {
-  MAX_TURNS,
-  Team,
-  TURN_TIME,
-  WORDS_TO_GUESS,
-  WordStatus,
-} from 'src/types';
+import { Team, TURN_SKIP_LIMIT, WORDS_TO_GUESS, WordStatus } from 'src/types';
 import { validateDescriberMessage } from 'src/utils/describe-validation';
 import { checkGuessedWord } from 'src/utils/guess-validation';
 
@@ -25,8 +26,18 @@ export class GameMechanicsService {
     const { gameId } = client.data;
     this.logger.log(`Starting game ${gameId}`);
     this.gameStateService.setGameStarted(gameId);
-    lobby.emit('games:updated', this.gameStateService.getSerializedGames());
-    this.handleTurns(gameId, gameRoom, lobby);
+    this.countdown(gameId, gameRoom).then(() => {
+      lobby.emit('games:updated', this.gameStateService.getSerializedGames());
+      this.handleTurns(gameId, gameRoom, lobby);
+    });
+  }
+
+  async countdown(gameId: string, gameRoom: Namespace): Promise<void> {
+    for (let i = 3; i > 0; i--) {
+      gameRoom.to(gameId).emit('countdown', i);
+      await this.delay(1000); // Wait for 1 second before next update
+      if (i === 1) gameRoom.to(gameId).emit('end:countdown');
+    }
   }
 
   private async handleTurns(
@@ -34,31 +45,34 @@ export class GameMechanicsService {
     gameRoom: Namespace,
     lobby: Namespace,
   ) {
-    let rounds = 0;
-    const totalRounds = MAX_TURNS;
+    const game = this.gameStateService.getGameById(gameId);
+    const totalRounds = game.settings.rounds;
+    const time = game.settings.time;
+    let currentRound = 0;
 
-    while (rounds < totalRounds) {
+    while (currentRound < totalRounds) {
       this.newWord(gameId); // Generate a new word
       this.nextTurn(gameId); // Handles both game initialization and next turn
 
       this.emitGameStartedUpdated(gameRoom, gameId);
-      // this.logger.debug(`STATE NUMBER ${rounds}`, turn);
-      // this.logger.debug('current word', currentWord);
 
-      await this.startTimer(gameId, TURN_TIME, gameRoom);
+      await this.startTimer(gameId, time, gameRoom);
       const { turn, currentWord } = this.gameStateService.getGameById(gameId);
       gameRoom.to(gameId).emit('chat:update', {
         userName: 'Server',
         message: `${turn.describerName} ran out of time. The word was "${currentWord}"`,
         time: new Date(),
       });
-      rounds++;
+      currentRound++;
     }
 
     gameRoom
       .to(gameId)
       .emit('game:end', this.gameStateService.getSerializedGameStarted(gameId));
-
+    this.logger.debug('Game stats:');
+    this.logger.debug(
+      JSON.stringify(this.gameStateService.getGameById(gameId)),
+    );
     this.gameStateService.endGame(gameId);
     // Disconnect all sockets connected to room gameId
     const sockets = await gameRoom.in(gameId).fetchSockets();
@@ -84,16 +98,16 @@ export class GameMechanicsService {
     this.logger.log(`Reconnecting user ${userId} to game ${gameId}`);
     const user = this.gameStateService.getActiveUserById(userId);
     if (!user) {
-      throw new Error('User not found');
+      throw new NotFoundException('User not found');
     }
     if (!this.gameStateService.isUserAllowedInGame(userId, gameId)) {
-      throw new Error('User not allowed to join game');
+      throw new ForbiddenException('User not allowed to join game');
     }
     if (user.gameId !== gameId) {
-      throw new Error('User not added to this game');
+      throw new ForbiddenException('User not added to this game');
     }
     if (user.socketId) {
-      throw new Error('User already in game');
+      throw new ConflictException('User already in game');
     }
     this.gameStateService.addPlayerSocketId(userId, socketId);
   }
@@ -118,6 +132,7 @@ export class GameMechanicsService {
   nextTurn(gameId: string) {
     this.logger.log(`Next turn for game ${gameId}`);
     const game = this.gameStateService.getGameById(gameId);
+    game.score.turnSkip = TURN_SKIP_LIMIT;
 
     // Initialize game and set the first turn if it's not already set
     if (!game.turn) {
@@ -179,9 +194,6 @@ export class GameMechanicsService {
   newWord(gameId: string) {
     const game = this.gameStateService.getGameById(gameId);
 
-    // if (game.currentWord) {
-    //   game.wordsUsed.push(game.currentWord);
-    // }
     game.currentWord = this.generateWord(game.wordsUsed);
     this.logger.debug('new word : ', game.currentWord);
     this.gameStateService.saveCurrentState(game);
@@ -282,28 +294,28 @@ export class GameMechanicsService {
       gameId,
       user: { userId, userName },
     } = client.data;
-    const [validatedMessage, wordStatus] = checkGuessedWord(
+    const [validatedMessage, wordStatus] = await checkGuessedWord(
       currentWord,
       message,
     );
-    let chatResponse;
+    const chatResponse = await chatService.handleChatMessage(
+      userId,
+      userName,
+      gameId,
+      validatedMessage,
+    );
 
-    try {
-      chatResponse = await chatService.handleChatMessage(
-        userId,
-        userName,
-        gameId,
-        validatedMessage,
-      );
-    } catch (error) {
-      this.logger.error(error);
-      throw new Error(error.message);
-    }
     gameRoom.to(gameId).emit('chat:update', chatResponse);
     if (wordStatus === WordStatus.SIMILAR) {
       gameRoom.to(gameId).emit('chat:update', {
         userName: 'Server',
         message: `Your guess is close!`,
+        time: new Date(),
+      });
+    } else if (wordStatus === WordStatus.PLURAL) {
+      gameRoom.to(gameId).emit('chat:update', {
+        userName: 'Server',
+        message: `Your guess is the plural form of the word!`,
         time: new Date(),
       });
     } else if (wordStatus === WordStatus.GUESSED) {
@@ -338,26 +350,36 @@ export class GameMechanicsService {
     } = client.data;
     const isAllowed = validateDescriberMessage(currentWord, message);
     if (!isAllowed) {
-      throw new Error('Message is not allowed');
+      throw new ForbiddenException('Message contains described word');
     }
-    let chatResponse;
-
-    try {
-      chatResponse = await chatService.handleChatMessage(
-        userId,
-        userName,
-        gameId,
-        message,
-      );
-    } catch (error) {
-      this.logger.error(error);
-      throw new Error(error.message);
-    }
+    const chatResponse = await chatService.handleChatMessage(
+      userId,
+      userName,
+      gameId,
+      message,
+    );
     gameRoom.to(gameId).emit('chat:update', chatResponse);
   }
 
   async getUserStats(userName: string, client: Socket) {
     const userStats = await this.gameStateService.getUserStats(userName);
     client.emit('user-stats', userStats);
+  }
+
+  skipWord(client: Socket, gameRoom: Namespace) {
+    const { gameId, user } = client.data;
+
+    // if (this.gameStateService.isDescriber(user.userId, gameId)) {
+    this.gameStateService.wordSkipped(gameId, user.userId);
+    gameRoom.to(gameId).emit('chat:update', {
+      userName: 'Server',
+      message: `Word skipped by describer! New word is provided`,
+      time: new Date(),
+    });
+    this.newWord(gameId);
+    this.emitGameStartedUpdated(gameRoom, gameId);
+    // } else {
+    //   throw new ForbiddenException('Only describer can skip the word');
+    // }
   }
 }
