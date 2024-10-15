@@ -116,7 +116,7 @@ export class GameMechanicsService {
 
     do {
       const wordIndex = this.getRandomNumber(0, words.length - 1);
-      selectedWord = words[ wordIndex ];
+      selectedWord = words[wordIndex];
     } while (wordsUsed.includes(selectedWord));
     wordsUsed.push(selectedWord);
     return selectedWord;
@@ -138,7 +138,7 @@ export class GameMechanicsService {
 
       // Randomly pick a player from the teamPlayers array
       const randomIndex = Math.floor(Math.random() * teamPlayers.length);
-      const randomPlayer = teamPlayers[ randomIndex ];
+      const randomPlayer = teamPlayers[randomIndex];
 
       game.turn = {
         alreadyDescribed: [],
@@ -290,7 +290,7 @@ export class GameMechanicsService {
       gameId,
       user: { userId, userName },
     } = client.data;
-    const [ validatedMessage, wordStatus ] = checkGuessedWord(
+    const [validatedMessage, wordStatus] = checkGuessedWord(
       currentWord,
       message,
     );
@@ -363,8 +363,8 @@ export class GameMechanicsService {
       this.gameStateService.wordSkiped(gameId, user.userId);
       this.newWord(gameId);
       this.emitGameStartedUpdated(gameRoom, gameId);
-    }else{
-      //EXEPTION HERE
+    } else {
+      throw new ForbiddenException('Only describer can skip the word');
     }
   }
 }
