@@ -318,7 +318,7 @@
 
         socket.on('games:updated', (games) => {
           console.log('Games updated:', games);
-          //renderLobby(games);
+          renderLobby(games);
         });
 
         socket.on('game:joined', (gameId) => {
