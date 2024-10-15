@@ -72,6 +72,7 @@ export class AuthController {
     const tokens = await this.authService.login(user.username, user.password, true);
   
     // Redirect to frontend with the access token
-    res.redirect(`http://localhost:3000/?token=${tokens.accessToken}&userId=${user._id}&userName=${user.username}`);
+    const frontendUrl = process.env.FRONTEND_URL;
+    res.redirect(`${frontendUrl}/?token=${tokens.accessToken}&userId=${user._id}&userName=${user.username}`);
   }
 }
