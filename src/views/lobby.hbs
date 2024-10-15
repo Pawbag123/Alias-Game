@@ -224,7 +224,7 @@
     let socket;
 
     function showLoading() {
-      //document.getElementById('loading-page').style.display = 'flex'; // Show loading
+      document.getElementById('loading-page').style.cssText = 'display: flex !important;'; // Show loading
     }
 
     function hideLoading() {
@@ -258,8 +258,8 @@
 
     window.onload = function () {
       const { userId, userName } = getUserInfo();
-      hideLoading();
-      //showLoading();
+      //hideLoading();
+      showLoading();
       //hideContent();
       const accessToken = localStorage.getItem('accessToken');
 
@@ -305,13 +305,13 @@
         //check that
         console.error('Connection error:');
         console.error(error.message);
-        //hideLoading();
+        hideLoading();
         //showNavbar();
         renderError(error.message);
       });
 
       socket.on('connect', () => {
-        //hideLoading();
+        hideLoading();
         //showContent();
         //showNavbar();
         console.log(`Connected as ${userName} (ID: ${userId})`);
