@@ -189,7 +189,7 @@ export class GameStateService {
         red: 0,
         blue: 0,
         redSkip: 0,
-        blueSkip: 0
+        blueSkip: 0,
       },
       turn: null,
     };
@@ -548,22 +548,20 @@ export class GameStateService {
     };
   }
 
-  wordSkiped(gameId: string, userId: string){
+  wordSkiped(gameId: string, userId: string) {
     const game = this.getGameById(gameId);
 
-    const player = game.players.find(p => p.userId === userId);
+    const player = game.players.find((p) => p.userId === userId);
 
     if (player) {
       const playerTeam = player.team;
       if (playerTeam === Team.RED) {
-          game.score.redSkip += 1;
+        game.score.redSkip += 1;
       } else if (playerTeam === Team.BLUE) {
-          game.score.blueSkip += 1;
+        game.score.blueSkip += 1;
       }
-
-  } else {
-      console.error("Player not found");
-  }
-
+    } else {
+      console.error('Player not found');
+    }
   }
 }

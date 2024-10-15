@@ -58,7 +58,7 @@ describe('LobbyService', () => {
         gameName: 'Test Game',
         maxPlayers: 4,
         rounds: 5,
-        time: 30
+        time: 30,
       };
       (gameStateService.createGame as jest.Mock).mockReturnValue(gameId);
       (gameStateService.getSerializedGames as jest.Mock).mockReturnValue([]);

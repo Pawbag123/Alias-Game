@@ -173,12 +173,10 @@ export class GameRoomGateway
   }
 
   @SubscribeMessage('game:skip-word')
-  async handleSkip(
-    @ConnectedSocket() client: Socket,
-  ){
+  async handleSkip(@ConnectedSocket() client: Socket) {
     //console.log("CLIENT EN GATEWAY: ", client);
     this.logger.log('Word skipped by');
-    this.gameMechanicsService.skipWord(client, this.gameRoom)
+    this.gameMechanicsService.skipWord(client, this.gameRoom);
   }
 
   @SubscribeMessage('chat:message')

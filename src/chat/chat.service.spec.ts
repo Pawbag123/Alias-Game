@@ -36,7 +36,11 @@ describe('ChatService', () => {
 
       const chatMock = {
         messages: [
-          { _id: new mongoose.Types.ObjectId(), content: message, timestamp: new Date() },
+          {
+            _id: new mongoose.Types.ObjectId(),
+            content: message,
+            timestamp: new Date(),
+          },
         ],
       };
 
@@ -77,14 +81,20 @@ describe('ChatService', () => {
     it('should throw an error if userId is invalid', async () => {
       const invalidUserId = 'invalid-user-id';
       await expect(
-        chatService.handleChatMessage(invalidUserId, 'Test User', 'test-game-id', 'Hello'),
+        chatService.handleChatMessage(
+          invalidUserId,
+          'Test User',
+          'test-game-id',
+          'Hello',
+        ),
       ).rejects.toThrow('Invalid userId');
     });
   });
 
   describe('getMessagesAfter', () => {
     it('should return messages after a given messageId', async () => {
-      const lastMessageId = new mongoose.Types.ObjectId() as unknown as mongoose.Schema.Types.ObjectId;
+      const lastMessageId =
+        new mongoose.Types.ObjectId() as unknown as mongoose.Schema.Types.ObjectId;
       const gameId = 'test-game-id';
 
       const chatDocument = {
@@ -120,13 +130,17 @@ describe('ChatService', () => {
     });
 
     it('should return an empty array if no messages are found', async () => {
-      const lastMessageId = new mongoose.Types.ObjectId() as unknown as mongoose.Schema.Types.ObjectId;
+      const lastMessageId =
+        new mongoose.Types.ObjectId() as unknown as mongoose.Schema.Types.ObjectId;
 
       chatModel.findOne.mockReturnValue({
         exec: jest.fn().mockResolvedValue(null),
       });
 
-      const result = await chatService.getMessagesAfter(lastMessageId, 'test-game-id');
+      const result = await chatService.getMessagesAfter(
+        lastMessageId,
+        'test-game-id',
+      );
 
       expect(result).toEqual([]);
     });
@@ -147,7 +161,8 @@ describe('ChatService', () => {
           gameId,
           message: 'Hello',
           time: new Date(),
-          messageId: new mongoose.Types.ObjectId() as unknown as mongoose.Schema.Types.ObjectId,
+          messageId:
+            new mongoose.Types.ObjectId() as unknown as mongoose.Schema.Types.ObjectId,
         },
         {
           userId: 'user2',
@@ -155,18 +170,30 @@ describe('ChatService', () => {
           gameId,
           message: 'Hi',
           time: new Date(),
-          messageId: new mongoose.Types.ObjectId() as unknown as mongoose.Schema.Types.ObjectId,
+          messageId:
+            new mongoose.Types.ObjectId() as unknown as mongoose.Schema.Types.ObjectId,
         },
       ];
 
-      jest.spyOn(chatService, 'getMessagesAfter').mockResolvedValue(recoveredMessages);
+      jest
+        .spyOn(chatService, 'getMessagesAfter')
+        .mockResolvedValue(recoveredMessages);
 
       await chatService.recoverAndEmitMessages(clientMock, gameId);
 
-      expect(chatService.getMessagesAfter).toHaveBeenCalledWith('lastMessageId', gameId);
+      expect(chatService.getMessagesAfter).toHaveBeenCalledWith(
+        'lastMessageId',
+        gameId,
+      );
       expect(clientMock.emit).toHaveBeenCalledTimes(2);
-      expect(clientMock.emit).toHaveBeenCalledWith('chat:update', recoveredMessages[0]);
-      expect(clientMock.emit).toHaveBeenCalledWith('chat:update', recoveredMessages[1]);
+      expect(clientMock.emit).toHaveBeenCalledWith(
+        'chat:update',
+        recoveredMessages[0],
+      );
+      expect(clientMock.emit).toHaveBeenCalledWith(
+        'chat:update',
+        recoveredMessages[1],
+      );
     });
   });
 });
