@@ -347,6 +347,12 @@
           startingGameSound.play();
         });
 
+        socket.on('game-room:left', () => {
+          console.log('Left game room');
+          // Redirect to the lobby
+          window.location.href = '/lobby';
+        });
+
 
         socket.on('game-started:updated', (gameRoom) => {
           hideNavbar();
@@ -564,6 +570,9 @@
           break;
         case 'NotFound':
         case 'Forbidden':
+          leaveBtn.addEventListener('click', () => {
+          window.location.href = '/lobby';
+          });
           break;
         case 'Conflict':
           leaveBtn.style.display = 'none';
@@ -666,7 +675,7 @@
     }
 
     function leaveRoom() {
-      window.location.href = '/lobby';
+      socket.emit('game-room:leave');
       console.log('leaving room');
     }
 
