@@ -66,7 +66,6 @@ export class AuthController {
   @UseGuards(GoogleAuthGuard)
   async googleCallback(@Req() req, @Res() res) {
     const user = req.user;
-    console.log("USER HERE:", user)
   
     // Set isOAuthUser to true when logging in via OAuth
     const tokens = await this.authService.login(user.username, user.password, true);
