@@ -349,7 +349,7 @@
 
 
         socket.on('game-started:updated', (gameRoom) => {
-          //hideNavbar();
+          hideNavbar();
 
           let userState;
           if (gameRoom.currentWord) {
@@ -522,7 +522,7 @@
             gameEndModal.show();
           }
 
-          // showNavbar();
+           showNavbar();
 
           // Show the modal
 
@@ -768,6 +768,9 @@
         blueTeam.some(player => player[ 2 ] === userId) ? 'blue' :
           'none';
     }
+
+    const navbar = document.querySelector('.custom-navbar');
+    const mainTitle = document.querySelector('#game-room-name');
 
     function hideNavbar() {
       navbar.classList.add('hidden');
