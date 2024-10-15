@@ -12,6 +12,7 @@ import { CreateUserDto } from './dto/create-user.dto';
 import { LoginUserDto } from './dto/login-user.dto';
 import { RefreshTokenDto } from './dto/refresh-token.dto';
 import { JwtAuthGuard } from './jwtAuthGuard';
+import { GoogleAuthGuard } from './guards/google-auth/google-auth.guard';
 
 @Controller('auth')
 export class AuthController {
@@ -51,5 +52,17 @@ export class AuthController {
   @UseGuards(JwtAuthGuard) // Only allows requests with valid tokens
   async verifyToken() {
     return { valid: true }; // Return a simple response if the token is valid
+  }
+
+  @Get("google/login")
+  @UseGuards(GoogleAuthGuard)
+  googleLogin(){
+
+  }
+
+  @Get("google/callback")
+  @UseGuards(GoogleAuthGuard)
+  googleCallback(){
+
   }
 }
