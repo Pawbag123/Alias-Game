@@ -294,7 +294,7 @@ export class GameMechanicsService {
       gameId,
       user: { userId, userName },
     } = client.data;
-    const [validatedMessage, wordStatus] = checkGuessedWord(
+    const [validatedMessage, wordStatus] = await checkGuessedWord(
       currentWord,
       message,
     );
