@@ -1,26 +1,35 @@
-# Use the official Node.js 18 image as the base image
-FROM node:18
+#Build stage
+FROM node:18 AS build
 
-# Set the working directory inside the container
-WORKDIR /app
+WORKDIR /usr/src/app
 
-# Copy package.json and package-lock.json to the working directory
 COPY package*.json ./
 
-# Install dependencies
 RUN npm install
 
-# Copy the rest of the application code to the working directory
 COPY . .
 
-# Build the NestJS application
 RUN npm run build
 
-# Expose the port the app runs on
+#prod stage
+FROM node:18
+
+WORKDIR /usr/src/app
+
+ARG NODE_ENV=production
+ENV NODE_ENV=${NODE_ENV}
+
+COPY --from=build /usr/src/app/dist ./dist
+# Copy the views directory
+COPY --from=build /usr/src/app/src/views ./src/views  
+# Copy the public directory (if you serve static assets)
+COPY --from=build /usr/src/app/src/public ./src/public 
+COPY package*.json ./
+
+RUN npm install --only=production
+
+RUN rm package*.json
+
 EXPOSE 3000
 
-# Define environment variables
-ENV PORT=3000
-
-# Command to run the application
-CMD ["npm", "run", "start:prod"]
+CMD [ "node", "dist/main.js" ]
