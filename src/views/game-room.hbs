@@ -207,6 +207,7 @@
         </div>
         <div class="d-flex justify-content-center" style="margin: 1rem 0;">
           <button id="skip-button" class="btn btn-secondary" onclick="skipWord()" style="display: none;">Skip</button>
+            <span id="skip-count" style="margin-left: 10px; display: none;"></span>
         </div>
       </div>
     </div>
@@ -444,7 +445,11 @@
           document.getElementById('score-team-blue-new').textContent = gameRoom.score.blue;
           document.getElementById('describer-name-new').textContent = gameRoom.turn.describerName !== userName ? `${gameRoom.turn.describerName} is describing` : 'You have to describe the word!';
           document.getElementById('word-for-teammates-new').textContent = gameRoom.currentWord ? gameRoom.currentWord : '';
-          document.getElementById('skip-button').style.display = gameRoom.turn.describerName === userName ? 'block' : 'none';
+            document.getElementById('skip-button').style.display = gameRoom.turn.describerName === userName ? 'block' : 'none';
+            const skipCountElement = document.getElementById('skip-count');
+            skipCountElement.style.display = gameRoom.turn.describerName === userName ? 'block' : 'none';
+            skipCountElement.innerHTML = `Skips left: ${gameRoom.score.turnSkip}`;
+            document.getElementById('skip-button').disabled = gameRoom.score.turnSkip <= 0;
 
         });
 
@@ -484,16 +489,24 @@
           const { score, redTeam, blueTeam } = gameRoom;
           let message = '';
           let winner;
+          let bySkip = false;
+          console.log(score.red, score.blue, score.redSkip, score.blueSkip);
 
           if (score.red > score.blue) {
             winner = 'red';
           } else if (score.blue > score.red) {
             winner = 'blue'
+          } else if (score.redSkip > score.blueSkip) {
+            winner = 'red';
+            bySkip = true;
+          } else if (score.blueSkip > score.redSkip) {
+            winner = 'blue';
+            bySkip = true;
           } else {
             winner = 'tie';
           }
 
-          console.log("WINENR:", winner);
+          console.log("WINNER:", winner);
 
           const userTeam = checkUserInTeam(userId, redTeam, blueTeam);
 
@@ -501,6 +514,7 @@
             backdrop: 'static',
             keyboard: false
           });
+          const skippedMessage = `Red Team ${score.redSkip} - ${score.blueSkip} Blue Team`;
 
           if (winner === 'tie') {
             document.getElementById('gameEndMessage').innerHTML = `
@@ -514,7 +528,10 @@
             document.getElementById('gameEndMessage').innerHTML = `
             <h1 style="text-align: center;">You Win!</h1>
             <br>
+            <h3 style="text-align: center;">Guessed Words:</h3>
             <p style="font-weight: normal; text-align: center;">Red Team ${score.red} - ${score.blue} Blue Team</p>
+            <h3 style="text-align: center;">${bySkip ? 'Skipped Words:' : ''}</h3>
+            <p style="font-weight: normal; text-align: center;">${bySkip ? skippedMessage : ''}</p>
             `;
             winSound.play();
             gameEndModal.show();
@@ -522,7 +539,10 @@
             document.getElementById('gameEndMessage').innerHTML = `
             <h1 style="text-align: center;">You Lose!</h1>
             <br>
+            <h3 style="text-align: center;">Guessed Words:</h3>
             <p style="font-weight: normal; text-align: center;">Red Team ${score.red} - ${score.blue} Blue Team</p>
+            <h3 style="text-align: center;">${bySkip ? 'Skipped Words:' : ''}</h3>
+            <p style="font-weight: normal; text-align: center;">${bySkip ? skippedMessage : ''}</p>
             `;
             youLoseSound.play();
             gameEndModal.show();
