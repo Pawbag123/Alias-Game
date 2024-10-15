@@ -62,6 +62,7 @@ export interface Game {
 export enum WordStatus {
   GUESSED = 'guessed',
   SIMILAR = 'similar',
+  PLURAL = 'plural',
   NOT_GUESSED = 'notGuessed',
 }
 
