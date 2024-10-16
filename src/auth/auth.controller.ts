@@ -66,12 +66,12 @@ export class AuthController {
   @UseGuards(GoogleAuthGuard)
   async googleCallback(@Req() req, @Res() res) {
     const user = req.user;
-    console.log("USER HERE:", user)
   
     // Set isOAuthUser to true when logging in via OAuth
     const tokens = await this.authService.login(user.username, user.password, true);
   
     // Redirect to frontend with the access token
-    res.redirect(`http://localhost:3000/?token=${tokens.accessToken}&userId=${user._id}&userName=${user.username}`);
+    const frontendUrl = process.env.FRONTEND_URL;
+    res.redirect(`${frontendUrl}/?token=${tokens.accessToken}&userId=${user._id}&userName=${user.username}`);
   }
 }
