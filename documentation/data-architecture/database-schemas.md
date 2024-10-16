@@ -43,7 +43,7 @@
 
 This document provides a detailed overview of the database structure used in the project.
 
-![Captura de pantalla 2024-10-11 112828](https://github.com/user-attachments/assets/2d937479-b580-4ec5-9271-ef69412f0e72)
+<img src="../../src/public/images/Dbschema.png">
 
 # Schemas
 
