@@ -539,10 +539,10 @@
             winner = 'red';
           } else if (score.blue > score.red) {
             winner = 'blue'
-          } else if (score.redSkip > score.blueSkip) {
+          } else if (score.redSkip < score.blueSkip) {
             winner = 'red';
             bySkip = true;
-          } else if (score.blueSkip > score.redSkip) {
+          } else if (score.blueSkip < score.redSkip) {
             winner = 'blue';
             bySkip = true;
           } else {
