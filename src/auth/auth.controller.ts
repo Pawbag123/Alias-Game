@@ -6,12 +6,15 @@ import {
   HttpStatus,
   Get,
   UseGuards,
+  Req,
+  Res,
 } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { CreateUserDto } from './dto/create-user.dto';
 import { LoginUserDto } from './dto/login-user.dto';
 import { RefreshTokenDto } from './dto/refresh-token.dto';
 import { JwtAuthGuard } from './jwtAuthGuard';
+import { GoogleAuthGuard } from './guards/google-auth/google-auth.guard';
 
 @Controller('auth')
 export class AuthController {
@@ -51,5 +54,24 @@ export class AuthController {
   @UseGuards(JwtAuthGuard) // Only allows requests with valid tokens
   async verifyToken() {
     return { valid: true }; // Return a simple response if the token is valid
+  }
+
+  @Get("google/login")
+  @UseGuards(GoogleAuthGuard)
+  googleLogin(){
+
+  }
+
+  @Get('google/callback')
+  @UseGuards(GoogleAuthGuard)
+  async googleCallback(@Req() req, @Res() res) {
+    const user = req.user;
+  
+    // Set isOAuthUser to true when logging in via OAuth
+    const tokens = await this.authService.login(user.username, user.password, true);
+  
+    // Redirect to frontend with the access token
+    const frontendUrl = process.env.FRONTEND_URL;
+    res.redirect(`${frontendUrl}/?token=${tokens.accessToken}&userId=${user._id}&userName=${user.username}`);
   }
 }

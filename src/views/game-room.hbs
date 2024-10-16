@@ -76,7 +76,7 @@
       position: fixed;
       top: 0px;
       width: 100%;
-
+      height: 100px;
       transition: top 0.5s ease;
       z-index: 1000;
     }
@@ -195,23 +195,25 @@
   </div>
 
   <div id="error-message"
-    style="display: none; color: #dc3545; text-align: center; font-size: 1.2rem; margin-top: 300px;"></div>
+    style="display: none; color: #dc3545; text-align: center; font-size: 1.2rem; margin-top: 300px;">
+  </div>
+
   <div class="container mt-5">
 
-    <h1 id="game-room-name" class="text-center mb-4 title"></h1>
+    <h1 id="game-room-name" class="text-center mb-3 title" style="font-size: 2rem;"></h1>
 
     <div class="d-flex justify-content-center">
-      <div id="game-info2" class="card mb-4" style="width: 60%; display: none;">
-        <div class="text-center mb-4">
+      <div id="game-info2" class="card mb-2 p-2" style="width: 60%; display: none; height: auto;">
+        <div class="text-center mb-2">
           <!-- Team turn message centered -->
-          <p style="font-size: 26px;"><strong><span id="team-turn-new"></span></strong></p>
+          <p style="font-size: 22px; margin-bottom: 10px;"><strong><span id="team-turn-new"></span></strong></p>
         </div>
 
         <!-- Grid layout for scores and timer -->
-        <div class="row mb-4">
+        <div class="row mb-2">
           <!-- Red team score on the left -->
           <div class="col-4 text-center">
-            <p><strong></strong><span id="score-team-red-new" style="color: #dc3545; font-size: 2rem;">0</span></p>
+            <p style="margin-bottom: 5px;"><strong></strong><span id="score-team-red-new" style="color: #dc3545; font-size: 1.8rem;">0</span></p>
           </div>
           <!-- Timer in the center -->
           <div class="col-4 text-center">
@@ -219,32 +221,35 @@
           </div>
           <!-- Blue team score on the right -->
           <div class="col-4 text-center">
-            <p><strong></strong> <span id="score-team-blue-new" style="color: #007bff; font-size: 2rem;">0</span></p>
+            <p style="margin-bottom: 5px;"><strong></strong> <span id="score-team-blue-new" style="color: #007bff; font-size: 1.8rem;">0</span></p>
           </div>
         </div>
 
         <!-- Describer name and word centered and stacked -->
         <div class="text-center">
-          <p><strong><span id="describer-name-new" style="font-size: 1.3rem;"></span></strong></p>
-          <p><strong></strong> <span id="word-for-teammates-new" style="font-size: 1.5rem;"></span></p>
+          <p style="font-size: 1.1rem; margin-bottom: 5px;"><strong><span id="describer-name-new"></span></strong></p>
+          <p style="font-size: 1.5rem; margin-bottom: 5px;"><strong></strong> <span id="word-for-teammates-new"></span></p>
         </div>
-        <div class="d-flex justify-content-center" style="margin: 1rem 0;">
-          <button id="skip-button" class="btn btn-secondary" onclick="skipWord()" style="display: none;">Skip</button>
-            <span id="skip-count" style="margin-left: 10px; display: none;"></span>
+        <div class="d-flex justify-content-center" style="margin: 0.5rem 0;">
+          <button id="skip-button" class="btn btn-secondary btn-sm" onclick="skipWord()" style="display: none;">Skip</button>
+          <span id="skip-count" style="margin-left: 10px; display: none;"></span>
         </div>
       </div>
     </div>
 
-    <div class="card shadow-sm mb-4">
-      <div class="card-body">
-        <ul id="messages" class="list-group mb-4" style="height: 300px; overflow-y: auto;">
-          <!-- Messages will appear here -->
-        </ul>
 
-        <form id="chat-form" class="input-group mb-3">
-          <input type="text" class="form-control" id="message" placeholder="Type a message..." required>
-          <button type="submit" class="btn btn-primary">Send</button>
-        </form>
+    <div class="d-flex justify-content-center">
+      <div class="card shadow-sm mb-4" style="width: 80%;">
+        <div id="body-chat-messages" class="card-body">
+          <ul id="messages" class="list-group mb-4" style="height: 280px; overflow-y: auto;">
+            <!-- Messages will appear here -->
+          </ul>
+
+          <form id="chat-form" class="input-group mb-3">
+            <input type="text" class="form-control" id="message" placeholder="Type a message..." required>
+            <button type="submit" class="btn btn-primary">Send</button>
+          </form>
+        </div>
       </div>
     </div>
 
@@ -539,12 +544,12 @@
             winner = 'red';
           } else if (score.blue > score.red) {
             winner = 'blue'
-          } else if (score.redSkip > score.blueSkip) {
-            winner = 'red';
-            bySkip = true;
-          } else if (score.blueSkip > score.redSkip) {
-            winner = 'blue';
-            bySkip = true;
+          //else if (score.redSkip < score.blueSkip) {
+            //winner = 'red';
+            //bySkip = true;
+          //} else if (score.blueSkip < score.redSkip) {
+           // winner = 'blue';
+           // bySkip = true;
           } else {
             winner = 'tie';
           }
@@ -663,6 +668,8 @@
       const h1Name = document.getElementById('game-room-name');
       h1Name.textContent = `Game Room: ${gameRoom.name}`;
 
+      const { userId, userName } = getUserInfo()
+
       // Update Red Team
       const redTeamList = document.getElementById('red-team');
       redTeamList.innerHTML = '';  // Clear the list
@@ -673,8 +680,6 @@
         if (gameRoom.host === player.userId) {
           assignHostSvg(li);
         }
-
-        const { userId } = getUserInfo()
 
         if(gameRoom.host === userId) {
           li.classList.add('list-group-item', 'd-flex', 'justify-content-between', 'align-items-center');
@@ -703,8 +708,6 @@
           assignHostSvg(li);
         }
 
-        const { userId } = getUserInfo()
-
         if(gameRoom.host === userId) {
           li.classList.add('list-group-item', 'd-flex', 'justify-content-between', 'align-items-center');
 
@@ -727,6 +730,10 @@
       const isHost = gameRoom.host === localStorage.getItem('userId');
       const startGameBtn = document.getElementById('start-game-button');
       startGameBtn.style.display = isHost ? 'block' : 'none';
+
+      //change border for teams
+      const bodyChatMessages = document.getElementById('body-chat-messages')
+      bodyChatMessages.style.border = isInRedTeam(gameRoom.redTeam, userName) ? 'solid 2px #dc3545' : 'solid 2px #007bff';
     };
 
     function fetchUserStats(userName) {
@@ -859,6 +866,10 @@
     function showNavbar() {
       navbar.classList.remove('hidden');
       mainTitle.classList.add('title')
+    }
+
+    function isInRedTeam(team, username) {
+      return team.some(player => player.name === username)
     }
 
   </script>

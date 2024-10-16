@@ -8,6 +8,8 @@ import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import * as bcrypt from 'bcryptjs';
 import { User } from './schemas/user.schema';
+import { CreateUserDto } from './dto/create-user.dto';
+import { Stats } from '../types';
 
 @Injectable()
 export class AuthService {
@@ -41,29 +43,31 @@ export class AuthService {
     };
   }
 
-  async login(username: string, password: string) {
+  async login(username: string, password: string, isOAuthUser = false) {
     const user = await this.userModel.findOne({ username });
     if (!user) {
       throw new UnauthorizedException('User not found');
     }
-
-    const isPasswordValid = await bcrypt.compare(password, user.password);
-    if (!isPasswordValid) {
-      throw new UnauthorizedException('Incorrect password');
+  
+    // Skip password validation for OAuth users
+    if (!isOAuthUser) {
+      const isPasswordValid = await bcrypt.compare(password, user.password);
+      if (!isPasswordValid) {
+        throw new UnauthorizedException('Incorrect password');
+      }
     }
-
+  
     const tokens = await this.generateTokens(
       user._id.toString(),
       user.username,
     );
     await this.updateRefreshToken(user._id.toString(), tokens.refreshToken);
-
+  
     return {
       ...tokens,
       user: { id: user._id, username: user.username },
     };
   }
-
   async generateTokens(userId: string, userName: string) {
     const payload = { userId, userName };
 
@@ -127,5 +131,19 @@ export class AuthService {
     });
 
     return result;
+  }
+
+  async findUserByUsername(username: string): Promise<User> {
+    return this.userModel.findOne({ username });
+  }
+  
+  async createUser(userData: { username: string; password: string; stats: Stats }): Promise<User> {
+    const newUser = new this.userModel(userData);
+    return newUser.save();
+  }
+
+  async validateGoogleUser(google: CreateUserDto){
+    const user = await this.userModel.findOne({username: google.username})
+    if(user) return user;
   }
 }

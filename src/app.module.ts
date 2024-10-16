@@ -10,6 +10,8 @@ import { LobbyModule } from './lobby/lobby.module';
 import { GameRoomModule } from './game-room/game-room.module';
 import { GameStateModule } from './game-state/game-state.module';
 import { ChatModule } from './chat/chat.module';
+import googleOauthConfig from './auth/config/google-oauth.config';
+import { GoogleStrategy } from './auth/stratergies/google.stratergy';
 
 @Module({
   imports: [
@@ -24,10 +26,15 @@ import { ChatModule } from './chat/chat.module';
       useFactory: (configService: ConfigService) => ({
         uri: process.env.MONGO_URI || configService.get<string>('MONGO_URI'),
       }),
+      
     }),
     ChatModule,
+    ConfigModule.forFeature(googleOauthConfig)
   ],
   controllers: [AppController],
-  providers: [AppService],
+  providers: [
+    AppService,
+    GoogleStrategy
+  ],
 })
 export class AppModule {}
