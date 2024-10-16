@@ -63,7 +63,9 @@ Points are awarded for each correct guess. Similar words are checked for validat
 The game concludes after a predetermined number of rounds, with the highest-scoring team winning. Also teams can draw.
 
 ## System Requirements
-**Backend**: Node.js - Nest.js<br>
+**Enviorment**: Node.js
+
+**Backend**: Nest.js<br>
 
 **Database**: MongoDB<br>
 
@@ -82,19 +84,64 @@ The game concludes after a predetermined number of rounds, with the highest-scor
   <a title="MongoDB">
     <img src="https://skillicons.dev/icons?i=mongodb" width="48" alt="PostgreSQL">
   </a>
-<a title="Handlebars">
-  <img src="https://github.com/user-attachments/assets/06aef053-dd04-437f-a353-943e3d100215" width="48" alt="Handlebars">
-</a>
+  <a title="Docker">
+  <img src="https://skillicons.dev/icons?i=docker" width="48" alt="Docker">
+  </a>
+  <a title="Handlebars">
+    <img src="./src/public/images/Handlebars.png" width="48" alt="Handlebars">
+  </a>
 </p>
 
 ## Setup and Installation
 
 Follow these instructions to set up and run the game:
 
-### Prerequisites
+### Environment Variables
+   - Create a `.env` file in the root folder `/Alias-Game`.
+   - Inside this file, add the following variables with your own values:
+   
+   ```bash
+   MONGO_URI = mongodb://localhost/aliasGame
+   JWT_SECRET = <your-jwt-secret>
+   JWT_REFRESH_SECRET = <your-jwt-refresh-secret>
+
+   GOOGLE_CLIENT_ID = <your-google-client-id>
+   GOOGLE_SECRET = <your-google-client-secret>
+   GOOGLE_CALLBACK_URL = http://localhost:3000/auth/google/callback
+
+   FRONTEND_URL = http://localhost:3000
+   ```
+   *Replace `<your-jwt-secret>`, `<your-jwt-refresh-secret>`, `<your-google-client-id>`, and `<your-google-client-secret>` with your own credentials.*
+
+---
+
+### Running the Project with Docker
+
+1. **Ensure Docker is Installed**
+   - Make sure Docker is installed and running on your machine. You can download Docker from the [official website](https://www.docker.com/products/docker-desktop).
+
+2. **Set Up the `.env` File**
+   - Ensure the `.env` file is created with the required environment variables. Refer to [this step](#environment-variables) in the previous guide for details.
+
+3. **Build and Run the Docker Containers**
+   - Run the following command to build and start the Docker containers:
+   `docker-compose up --build`
+
+4. **Access the Game**
+   - Once the Docker containers are running, open your web browser and navigate to `http://localhost:3000` to start playing the game.
+
+---
+
+### Runing the project localy
+
+#### Prerequisites
 
 - Ensure you have **Node.js** installed on your machine. You can download it from [nodejs.org](https://nodejs.org/).
 - Make sure you have **MongoDB** installed. You can find installation instructions on the [MongoDB website](https://www.mongodb.com/try/download/community).
+- Set up a **Google Cloud** project for OAuth 2.0 authentication. For more details, refer to the [Google Cloud documentation](https://cloud.google.com/docs).
+  - Create OAuth credentials (Client ID and Secret).
+  - Set authorized JavaScript origins URI to `http://localhost:3000`
+  - Set the callback URI to `http://localhost:3000/auth/google/callback`.
 
 ### Steps
 
@@ -105,39 +152,26 @@ Follow these instructions to set up and run the game:
    Use the command: 
    ```bash
    use aliasGame
-    ```
-
+   ```
 2. **Clone the Repository**
    - Use the following command to clone the repository to your local machine:
    ```bash
    git clone https://github.com/Pawbag123/Alias-Game
     ```
-
 3. **Navigate to the Project Directory**
    - Change into the cloned repository directory:
    ```bash
    cd ./Alias-Game
     ```
-
 4. **Install Dependencies**
    - Run the following command to install the necessary dependencies:
-   ```bash
-   npm install
-    ```
-5. **Enviroment Variables**
-   - Add .env file in root folder /Alias-Game
-   ```bash
-   MONGO_URI = mongodb://localhost/aliasGame
-   JWT_SECRET = 9XEvn7G-Ip56QBVEo9cD4xC5BqtBTMyLGC5aj3Qcs1s=
-   JWT_REFRESH_SECRET = AxI2tJ6FLVii9Ra9JDC7Wb0hydO9uAKUaDTrPgDrm4g
-    ```
+   `npm install`
 
-6. **Start the Development Server**
+5. **Start the Development Server**
    - Launch the server using:
-   ```bash
-   npm run start:dev
-    ```
-7. **Access the Game**
+   `npm run start:dev`
+
+6. **Access the Game**
    - Open your web browser and navigate to `http://localhost:3000` to start playing the game.
 
 ### Troubleshooting
