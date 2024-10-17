@@ -24,7 +24,7 @@
     - [Socket Events](../APIs/socket-events.md#socket-events-documentation)
 - Guides
     - [Testing](#running-tests-in-nestjs-with-jest)
-    - [Deployment](./deployment.md#deploying-a-nestjs-application-to-heroku)
+    - [Deployment](./deployment.md#deploying-a-nestjs-application-to-aws-ec2)
 
 ### Additional Information
 

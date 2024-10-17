@@ -24,7 +24,7 @@
     - [Socket Events](../APIs/socket-events.md#socket-events-documentation)
 - Guides
     - [Testing](../guides/testing.md#running-tests-in-nestjs-with-jest)
-    - [Deployment](../guides/deployment.md#deploying-a-nestjs-application-to-heroku)
+    - [Deployment](../guides/deployment.md#deploying-a-nestjs-application-to-aws-ec2)
 
 ### Additional Information
 
@@ -60,11 +60,11 @@ The `Game` interface represents the state of a game, including its participants,
 - **maxUsers**: number - Maximum number of users allowed in the game.
 - **wordsUsed**: string[] - Array of words that have been used in the game.
 - **currentWord**: string - The word currently being guessed.
-- **score**: { red: number; blue: number; } - Object representing the scores of each team.
+- **score**: { red: number; blue: number; } - Object representing the scores and skips of each team.
 - **turn**: Turn | null - Represents the current turn or null if it's not set.
 
 ```typescript
-class Game {
+interface Game {
     id: string;
     name: string;
     host: string;
@@ -73,7 +73,7 @@ class Game {
     maxUsers: number;
     wordsUsed: string[];
     currentWord: string;
-    score: { red: number; blue: number };
+    score: { red: number; blue: number; redSkip: number; blueSkip: number };
     turn: Turn | null;
 }
 ```
@@ -87,12 +87,14 @@ The `WordStatus` enum defines the possible statuses of a word during the game.
 ### Values
 - **GUESSED**: 'guessed' - Indicates the word has been guessed correctly.
 - **SIMILAR**: 'similar' - Indicates the word is similar to the guessed word.
+- **PLURAL**: 'plural' - Indicates that the word used is the plural version of the word to guess.
 - **NOT_GUESSED**: 'notGuessed' - Indicates the word has not been guessed.
 
 ```typescript
 enum WordStatus {
     GUESSED = 'guessed',
     SIMILAR = 'similar',
+    PLURAL = 'plural',
     NOT_GUESSED = 'notGuessed',
 }
 ```
@@ -110,7 +112,7 @@ The `Turn` interface encapsulates the details of the current turn in the game.
 - **describerName**: string - Name of the player describing the word.
 
 ```typescript
-class Turn {
+interface Turn {
     alreadyDescribed: string[];
     team: Team;
     describerId: string;
@@ -122,7 +124,7 @@ class Turn {
 ## Stats Interface
 
 ### Description
-The `Stats` interface tracks a player's overall game performance.
+The `Stats` interface tracks a player's overall game performance. It is an extension of `InGameStats`
 
 ### Properties
 - **gamesPlayed**: number - Total number of games played.
@@ -133,7 +135,7 @@ The `Stats` interface tracks a player's overall game performance.
 - **wellDescribed**: number - Number of words well described.
 
 ```typescript
-class Stats {
+interface Stats{
     gamesPlayed: number;
     wins: number;
     loses: number;
@@ -154,7 +156,7 @@ The `InGameStats` interface holds statistics specific to a player's performance 
 - **wellDescribed**: number - Number of words described well during the game.
 
 ```typescript
-class InGameStats {
+interface InGameStats {
     wordsGuessed: number;
     wellDescribed: number;
 }
@@ -173,7 +175,7 @@ The `ActiveUser` interface represents a user currently in a game, holding connec
 - **initialJoinTimeout**: NodeJS.Timeout (optional) - Timeout for removing the user from the game if they don’t join.
 
 ```typescript
-class ActiveUser {
+interface ActiveUser {
     id: string;
     socketId?: string;
     gameId?: string;
@@ -223,7 +225,7 @@ The `Player` interface holds all relevant data about a player in the game.
 - **inGameStats**: InGameStats - Statistics specific to the player's performance in the current game.
 
 ```typescript
-class Player {
+interface Player {
     userId: string;
     name: string;
     team: Team;

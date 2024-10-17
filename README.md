@@ -69,7 +69,7 @@ The game concludes after a predetermined number of rounds, with the highest-scor
 
 **Database**: MongoDB<br>
 
-**Frontend**: Handlebars 
+**Frontend**: Handlebars - Bootstrap
 
 <p>
   <a title="NodeJs">
@@ -89,6 +89,9 @@ The game concludes after a predetermined number of rounds, with the highest-scor
   </a>
   <a title="Handlebars">
     <img src="./src/public/images/Handlebars.png" width="48" alt="Handlebars">
+  </a>
+    <a title="Bootstrap">
+    <img src="https://skillicons.dev/icons?i=bootstrap" width="48" alt="Bootstrap">
   </a>
 </p>
 

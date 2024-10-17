@@ -32,102 +32,16 @@
 - [FAQ](../FAQ.md#faq)
 ## In this file:
 
-1. [Deploying on Heroku](#deploying-a-nestjs-application-to-heroku)
-   -  [Introduction (Heroku)](#introduction-heroku)
-   -  [Prerequisites (Heroku)](#prerequisites-heroku)
-   -  [Creating a Heroku App](#creating-a-heroku-app)
-   -  [Configure Heroku to Properly Run the Application](#configure-heroku-to-properly-run-the-application)
-   -  [Accessing The Application](#accessing-the-application)
-   -  [Conclusion (Heroku)](#conclusion-heroku)
-   
-2. [Deploying on AWS EC2](#deploying-a-nestjs-application-to-aws-ec2)
-   -  [Introduction (AWS EC2)](#introduction-aws-ec2)
-   -  [Prerequisites (AWS EC2)](#prerequisites-aws-ec2)
-   -  [Launching an EC2 Instance](#launching-an-ec2-instance)
-   -  [Setting up the EC2 Instance](#setting-up-the-ec2-instance)
-   -  [Configuring Docker](#configuring-docker)
-   -  [Running the App with Docker Compose](#running-the-app-with-docker-compose)
-   -  [Testing the Deployment](#testing-the-deployment)
-   -  [Conclusion (AWS EC2)](#conclusion-aws-ec2)
+1. [Deploying on AWS EC2](#deploying-a-nestjs-application-to-aws-ec2)
+2. [Introduction (AWS EC2)](#introduction-aws-ec2)
+3. [Prerequisites (AWS EC2)](#prerequisites-aws-ec2)
+4. [Launching an EC2 Instance](#launching-an-ec2-instance)
+5. [Setting up the EC2 Instance](#setting-up-the-ec2-instance)
+6. [Configuring Docker](#configuring-docker)
+7. [Running the App with Docker Compose](#running-the-app-with-docker-compose)
+8. [Testing the Deployment](#testing-the-deployment)
+9. [Conclusion (AWS EC2)](#conclusion-aws-ec2)
 
-<br>
-
-# Deploying a NestJS Application to Heroku
-
-## Introduction (Heroku)
-
-This guide provides a step-by-step process for deploying a NestJS application to Heroku.
-
-## Prerequisites (Heroku)
-
-- A NestJS application ready for deployment.
-- A credit card (It just blocks $1 on your account to verify if it's legit).
-
-## Creating a Heroku App
-
-### Step 1 - Create a Heroku Account
-
-1. Go to the Heroku website (https://www.heroku.com/).
-2. Click on "Sign Up" and fill out the required information to create your account.
-3. Follow the verification process, including confirming your email address.
-
-### Step 2 - Link Your GitHub Repository with Heroku
-
-1. Click on "New" in the upper right corner and select "Create new app."
-
-2. Enter a unique name for your app and choose your region, then click "Create app."
-
-3. After the app is created, navigate to the "Deploy" tab.
-
-4. In the "Deployment method" section, select "GitHub."
-
-5. Click on "Connect to GitHub" and authorize Heroku to access your GitHub account if prompted.
-
-6. Once connected, search for your GitHub repository name in the provided field and click "Connect."
-
-7. Click on "Deploy Branch" to deploy your application directly from your GitHub repository to Heroku.
-
-## Configure Heroku to Properly Run the Application
-
-1. Set environment variables necessary for your application. Use the following command for each variable:
-   ```bash
-      heroku config:set VARIABLE_NAME=value
-   ```
-      For example, to set the MongoDB URI:
-   ```bash
-      heroku config:set MONGO_URI=mongodb://<username>:<password>@host:port/database
-   ```
-2. Ensure your application listens on the correct port. In your main application file (usually `main.ts`), modify it to use the environment variable for the port:
-   ```typescript
-      const port = process.env.PORT || 3000;
-      await app.listen(port);
-   ```
-3. Add a Procfile to the root of your project to specify the command to run your application:
-   ```bash
-      web: npm run start:prod
-   ```
-4. Make sure your package.json includes the necessary scripts. For example:
-   ```json
-      "scripts": {
-      "start": "node dist/main.js",
-      "build": "tsc",
-      "start:prod": "npm run build && node dist/main.js"
-      }
-   ```
-
-## Accessing The Application
-
-Once the deployment is complete, you can access your application using the URL provided by Heroku:
-
-   ```bash
-   https://<your-app-name>.herokuapp.com
-   ```
-
-## Conclusion (Heroku)
-
-This guide provides a basic overview of deploying a NestJS application to Heroku. For more advanced features and configurations, check out the official Heroku documentation (https://devcenter.heroku.com/categories/reference).
-
-<br>
 <br>
 
 # Deploying a NestJS Application to AWS EC2
@@ -239,8 +153,3 @@ This guide provides a step-by-step process for deploying a NestJS application to
    ```
 
 -  ### Step 2 - Ensure that the NestJS app responds as expected.
-
-
-## Conclusion (AWS EC2)
-
-This guide provides a basic overview of deploying a NestJS application to AWS EC2.
