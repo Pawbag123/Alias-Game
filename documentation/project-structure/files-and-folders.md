@@ -54,13 +54,21 @@
 │   └── future-enhancements.md
 ├── src
 │   ├── auth
+│   │   ├── config
+│   │   │   └── google-oauth.config.ts
 │   │   ├── dto
 │   │   │   ├── create-user.dto.ts
 │   │   │   ├── login-user.dto.ts
 │   │   │   └── refresh-token.dto.ts
+│   │   ├── guards
+│   │   │   └── google-auth
+│   │   │       ├── google-auth.guard.spec.ts
+│   │   │       └── google-auth.guard.ts
 │   │   ├── schemas
 │   │   │   └── user.schema.ts
-│   │   ├── auth.controller.spec.ts
+│   │   ├── stratergies
+│   │   │   └── google.stratergy.ts
+│   │   ├── auth.controller.specs.ts
 │   │   ├── auth.controller.ts
 │   │   ├── auth.module.ts
 │   │   ├── auth.service.spec.ts
@@ -73,6 +81,9 @@
 │   │   ├── chat.module.ts
 │   │   ├── chat.service.spec.ts
 │   │   └── chat.service.ts
+│   ├── exceptions
+│   │   ├── ws-all-exceptions-filter.ts
+│   │   └── ws-exceptions.ts
 │   ├── game-room
 │   │   ├── dto
 │   │   │   ├── game-room-dto.ts
@@ -81,6 +92,8 @@
 │   │   │   ├── guessing-team.guard.ts
 │   │   │   ├── host.guard.ts
 │   │   │   ├── join-team.guard.ts
+│   │   │   ├── player-in-game.guard.ts
+│   │   │   ├── skip-word.guard.ts
 │   │   │   └── too-few-players.guard.ts
 │   │   ├── schema
 │   │   │   └── game.schema.ts
@@ -95,15 +108,30 @@
 │   │   └── game-state.service.ts
 │   ├── lobby
 │   │   ├── dto
+│   │   │   ├── create-game-dto.ts
+│   │   │   ├── game-settings.dto.ts
 │   │   │   └── in-lobby-game-dto.ts
 │   │   ├── guards
 │   │   │   ├── create-game.guard.ts
 │   │   │   └── join-game.guard.ts
-│   │   ├── lobby.gateway.spec.ts
 │   │   ├── lobby.gateway.ts
 │   │   ├── lobby.module.ts
 │   │   ├── lobby.service.spec.ts
 │   │   └── lobby.service.ts
+│   ├── public
+│   │   ├── audio
+│   │   │   ├── countDown2.mp3
+│   │   │   ├── describerError.mp3
+│   │   │   ├── scorePoint2.mp3
+│   │   │   ├── scorePoint.mp3
+│   │   │   ├── startingGame.mp3
+│   │   │   ├── turnEnding.mp3
+│   │   │   ├── win.mp3
+│   │   │   └── youlose.mp3
+│   │   └── images
+│   │       ├── alias-logo-1.png
+│   │       ├── Dbschema.png
+│   │       └── Handlebars.png
 │   ├── utils
 │   │   ├── describe-validation.ts
 │   │   ├── guess-validation.ts
@@ -117,7 +145,7 @@
 │   │   ├── lobby.hbs
 │   │   ├── login.hbs
 │   │   └── register.hbs
-│   ├── app.controller.spec.ts
+│   ├── app.controller.specs.ts
 │   ├── app.controller.ts
 │   ├── app.module.ts
 │   ├── app.service.ts
@@ -127,14 +155,14 @@
 ├── test
 │   ├── app.e2e-spec.ts
 │   └── jest-e2e.json
-├── directory_structure.md
-├── jest.config.ts
+├── directory_structure.txt
+├── docker-compose.yml
+├── Dockerfile
 ├── nest-cli.json
 ├── package.json
 ├── package-lock.json
 ├── Procfile
 ├── README.md
-├── text.txt
 ├── tsconfig.build.json
 └── tsconfig.json
 ```
