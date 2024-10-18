@@ -15,9 +15,9 @@ export class GoogleStrategy extends PassportStrategy(Strategy){
         private authService: AuthService
     ){
         super({
-            clientID: process.env.GOOGLE_CLIENT_ID,
-            clientSecret: process.env.GOOGLE_SECRET,
-            callbackURL: process.env.GOOGLE_CALLBACK_URL,
+            clientID:googleConfiguration.clientID,
+            clientSecret: googleConfiguration.clientSecret,
+            callbackURL: googleConfiguration.callbackURL,
             scope:["email", 'profile']
         })
     }

@@ -150,46 +150,40 @@ The AuthController manages authentication-related routes, including user signup,
   }
   ```
 
+- **GET /auth/google/login**
+
+  - **Description**: Initiates Google OAuth login flow.
+  - **Guards**: GoogleAuthGuard
+  - **Response**: Redirect to Google for authentication.
+  - **HTTP Status**: 302 Found
+
+  **Example Response**:
+  ```json
+  {
+    "redirect": "https://accounts.google.com/..."
+  }
+  ```
+- **GET /auth/google/callback**
+
+  - **Description**: Handles Google OAuth callback and logs the user in.
+  - **Guards**: GoogleAuthGuard
+  - **Request**: The request contains the OAuth response.
+  - **Response**: Redirects to frontend with access token.
+  - **HTTP Status**: 302 Found
+
+  **Example Request**:
+  ```json
+  {
+    "user": {
+      "username": "googleUser",
+      "password": "OAuthGooglePassword"
+    }
+  }
+  ```
+  **Example Response**:
+  ```json
+  {
+    "redirect": "https://frontend.com/?token=newAccessToken&userId=6705c7b8e34928a78930d6f7&userName=googleUser"
+  }
+  ```
 ---
-
-## CreateUserDto
-
-### Description
-
-The CreateUserDto is used for user registration, validating the username and password during the signup process.
-
-### Properties
-
-- **username**: string - Unique username for the user. Must be at least 6 characters long and can only contain letters and numbers.
-- **password**: string - Password for user authentication. Must include at least one uppercase letter, one lowercase letter, one number, and one special character, with a minimum length of 6 characters.
-
----
-
-## LoginUserDto
-
-### Description
-
-The LoginUserDto is used for user login, validating the username and password.
-
-### Properties
-
-- **username**: string - Username for user authentication.
-- **password**: string - Password for user authentication.
-
----
-
-## RefreshTokenDto
-
-### Description
-
-The RefreshTokenDto is used for refreshing user authentication tokens.
-
-### Properties
-
-- **refreshToken**: string - The refresh token used to obtain new authentication tokens.
-
----
-
-## Conclusion
-
-This authentication module is crucial for managing user sessions and securing access to the application. Understanding the endpoints and DTOs helps in implementing robust authentication and user management features effectively.

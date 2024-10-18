@@ -24,7 +24,7 @@
     - [Socket Events](../APIs/socket-events.md#socket-events-documentation)
 - Guides
     - [Testing](../guides/testing.md#running-tests-in-nestjs-with-jest)
-    - [Deployment](../guides/deployment.md#deploying-a-nestjs-application-to-heroku)
+    - [Deployment](../guides/deployment.md#deploying-a-nestjs-application-to-aws-ec2)
 
 ### Additional Information
 
@@ -43,7 +43,7 @@
 
 This document provides a detailed overview of the database structure used in the project.
 
-![Captura de pantalla 2024-10-11 112828](https://github.com/user-attachments/assets/2d937479-b580-4ec5-9271-ef69412f0e72)
+<img src="../../src/public/images/Dbschema.png">
 
 # Schemas
 

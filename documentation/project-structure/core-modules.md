@@ -16,15 +16,15 @@
   - [Files & Folders](./files-and-folders.md#directory-structure)
   - [Modules](#core-modules)
 - Data Architecture
-  - [Data Base Schemas](./database-schemas.md#structure)
-  - [Interfaces](#game-interfaces-documentation)
-  - [Dtos](./dtos.md#dtos)
+    - [Data Base Schemas](../data-architecture/database-schemas.md#structure)
+    - [Interfaces](../data-architecture/interfaces.md#game-interfaces-documentation)
+    - [Dtos](../data-architecture/dtos.md#dtos)
 - APIs
   - [Auth](../APIs/auth.md#authentication)
   - [Socket Events](../APIs/socket-events.md#socket-events-documentation)
 - Guides
   - [Testing](../guides/testing.md#running-tests-in-nestjs-with-jest)
-  - [Deployment](../guides/deployment.md#deploying-a-nestjs-application-to-heroku)
+  - [Deployment](../guides/deployment.md#deploying-a-nestjs-application-to-aws-ec2)
 
 ### Additional Information
 

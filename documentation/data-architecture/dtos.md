@@ -24,7 +24,7 @@
     - [Socket Events](../APIs/socket-events.md#socket-events-documentation)
 - Guides
     - [Testing](../guides/testing.md#running-tests-in-nestjs-with-jest)
-    - [Deployment](../guides/deployment.md#deploying-a-nestjs-application-to-heroku)
+    - [Deployment](../guides/deployment.md#deploying-a-nestjs-application-to-aws-ec2)
 
 ### Additional Information
 
@@ -145,6 +145,46 @@ class GameStartedDto {
 
 ## Lobby DTOs
 
+### CreateGameDto
+
+Represents the details required to create a new game.
+
+### Values
+
+- `gameName`: The name of the game room.
+- `maxPlayers`: Maximum number of players allowed.
+- `rounds`: Number of rounds in the game.
+- `time`: Time duration of the game.
+
+```typescript
+class CreateGameDto {
+  gameName: string;
+  maxPlayers: number;
+  rounds: number;
+  time: number;
+}
+```
+
+### GameSettingsDto
+
+Represents the game settings.
+
+### Values
+
+- `gameName`: The name of the game room.
+- `maxPlayers`: Maximum number of players allowed.
+- `rounds`: Number of rounds in the game.
+- `time`: Time duration of the game.
+
+```typescript
+class GameSettingsDto {
+  gameName: string;
+  maxPlayers: number;
+  rounds: number;
+  time: number;
+}
+```
+
 ### InLobbyGameDto
 
 Represents a game that is visible in the lobby.
@@ -166,3 +206,6 @@ class InLobbyGameDto {
   started: boolean;
 }
 ```
+<br>
+
+---
